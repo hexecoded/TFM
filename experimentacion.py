@@ -15,6 +15,7 @@ import sys
 import argparse
 import torch
 import numpy as np
+import csv
 
 METRIC_LABS = ["MAE", "MSE", "RMSE", "MAPE", "MSPE"]
 # Establecemos el nombre del modelo, ie, su nombre en carpeta
@@ -54,7 +55,7 @@ parser.add_argument('--dropout', type=float, default=0.05, help='dropout')
 parser.add_argument('--attn', type=str, default='prob', help='attention used in encoder, options:[prob, full]')
 parser.add_argument('--embed', type=str, default='timeF', help='time features encoding, options:[timeF, fixed, learned]')
 parser.add_argument('--activation', type=str, default='gelu',help='activation')
-parser.add_argument('--output_attention', action='store_true', help='whether to output attention in ecoder')
+parser.add_argument('--output_attention', action='store_true', help='whether to output attention in encoder')
 parser.add_argument('--do_predict', action='store_true', help='whether to predict unseen future data')
 parser.add_argument('--mix', action='store_false', help='use mix attention in generative decoder', default=True)
 parser.add_argument('--cols', type=str, nargs='+', help='certain cols from the data files as the input features')
@@ -151,10 +152,17 @@ for i in range(args.itr):
 # Mostramos la media de las métricas evaluadas
 print("========================= Resultados del experimento =========================")
 
-# Calculamos la media
+# Calculamosla media
 mean = metrics / args.itr
 metric_dict = {label: mean[i] for i, label in enumerate(METRIC_LABS)}
 
 # Mostramos las métricas
 for label, value in metric_dict.items():
     print(f"{label} >> {value}")
+
+# Guardado en disco de las métricas
+with open(f"metricas_{setting[:-2]}.csv", mode="w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(["Métrica", "Valor"])
+    for label, value in metric_dict.items():
+        writer.writerow([label, value])
