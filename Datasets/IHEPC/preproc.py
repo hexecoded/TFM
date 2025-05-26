@@ -18,12 +18,12 @@ import pandas as pd
 df = pd.read_csv("household_power_consumption.txt", sep=';')
 
 # Unimos fecha y hora en una sola columna tipo datetime
-df['date'] = pd.to_datetime(df['Date'] + ' ' + df['Time'], format='%d/%m/%Y %H:%M:%S')
+df['date'] = pd.to_datetime(
+    df['Date'] + ' ' + df['Time'], format='%d/%m/%Y %H:%M:%S')
 
 # Cambio de formato a 'YYYY-MM-DD HH:MM:SS'
 df['date'] = df['date'].dt.strftime('%Y-%m-%d %H:%M:%S')
-df = df.drop(columns=['Date','Time'])
+df = df.drop(columns=['Date', 'Time'])
 
 # Guardamos en CSV
-df.to_csv("IHEPC.csv",index=False)
-
+df.to_csv("IHEPC.csv", index=False)
