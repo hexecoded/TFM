@@ -25,5 +25,5 @@ df['date'] = df['date'].dt.strftime('%Y-%m-%d %H:%M:%S')
 df = df.drop(columns=['Date','Time'])
 
 # Guardamos en CSV
-df.to_csv("IHEPC.csv",index="False")
+df.to_csv("IHEPC.csv",index=False)
 
