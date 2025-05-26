@@ -14,16 +14,19 @@ y la ubicación de los datos, así como sus propiedades.
 import sys
 import argparse
 import torch
+import numpy as np
 
+METRIC_LABS = ["MAE", "MSE", "RMSE", "MAPE", "MSPE"]
 # Establecemos el nombre del modelo, ie, su nombre en carpeta
 
 
-# --------------------------------Parámetros----------------------------------
+# Inserción de parámetros. Se usa el formato argparse para obtener realimentación en caso de requerir ayuda para conocer
+# las opciones disponibles
 parser = argparse.ArgumentParser(description='[Experimentación Informer] Long Sequences Forecasting')
 
-parser.add_argument('--model', type=str, required=False, default='informer',help='model of experiment, options: [informer, informerstack, informerlight(TBD)]')
-parser.add_argument('--folder', type=str, required=False, default='InformerPE',help='model folder for experiment')
-parser.add_argument('--data', type=str, required=False, default='ETTh1', help='data')
+parser.add_argument('--model', type=str, required=True, default='informer',help='model of experiment, options: [informer, informerstack, informerlight(TBD)]')
+parser.add_argument('--folder', type=str, required=True, default='InformerPE',help='model folder for experiment')
+parser.add_argument('--data', type=str, required=True, default='ETTh1', help='data')
 parser.add_argument('--root_path', type=str, default='./ETDataset/ETT-small', help='root path of the data file')
 parser.add_argument('--data_path', type=str, default='ETTh1.csv', help='data file')
 parser.add_argument('--features', type=str, default='M', help='forecasting task, options:[M, S, MS]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate')
@@ -34,7 +37,6 @@ parser.add_argument('--checkpoints', type=str, default='./checkpoints/', help='l
 parser.add_argument('--seq_len', type=int, default=96, help='input sequence length of Informer encoder')
 parser.add_argument('--label_len', type=int, default=48, help='start token length of Informer decoder')
 parser.add_argument('--pred_len', type=int, default=24, help='prediction sequence length')
-# Informer decoder input: concat[start token series(label_len), zero padding series(pred_len)]
 
 parser.add_argument('--enc_in', type=int, default=7, help='encoder input size')
 parser.add_argument('--dec_in', type=int, default=7, help='decoder input size')
@@ -57,8 +59,8 @@ parser.add_argument('--do_predict', action='store_true', help='whether to predic
 parser.add_argument('--mix', action='store_false', help='use mix attention in generative decoder', default=True)
 parser.add_argument('--cols', type=str, nargs='+', help='certain cols from the data files as the input features')
 parser.add_argument('--num_workers', type=int, default=0, help='data loader num workers')
-parser.add_argument('--itr', type=int, default=2, help='experiments times')
-parser.add_argument('--train_epochs', type=int, default=6, help='train epochs')
+parser.add_argument('--itr', type=int, default=1, help='experiments times')
+parser.add_argument('--train_epochs', type=int, default=10, help='train epochs')
 parser.add_argument('--batch_size', type=int, default=32, help='batch size of train input data')
 parser.add_argument('--patience', type=int, default=3, help='early stopping patience')
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='optimizer learning rate')
@@ -75,10 +77,11 @@ parser.add_argument('--devices', type=str, default='0,1,2,3',help='device ids of
 
 args = parser.parse_args()
 
-# Cargamos el modelo
+# Cargamos el modelo seleccionado
 sys.path += [args.folder]
 from exp.exp_informer import Exp_Informer
 
+# Comprobación de uso de CUDA para el cómputo
 args.use_gpu = True if torch.cuda.is_available() and args.use_gpu else False
 print(f"Usando CUDA: {torch.cuda.is_available()}")
 
@@ -88,15 +91,12 @@ if args.use_gpu and args.use_multi_gpu:
     args.device_ids = [int(id_) for id_ in device_ids]
     args.gpu = args.device_ids[0]
 
-# Datasets Disponibles
+# Datasets Disponibles en el paper de Informer
 data_parser = {
     'ETTh1': {'data': 'ETTh1.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
     'ETTh2': {'data': 'ETTh2.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
     'ETTm1': {'data': 'ETTm1.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
-    'ETTm2': {'data': 'ETTm2.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
-    'WTH': {'data': 'WTH.csv', 'T': 'WetBulbCelsius', 'M': [12, 12, 12], 'S': [1, 1, 1], 'MS': [12, 12, 1]},
-    'ECL': {'data': 'ECL.csv', 'T': 'MT_320', 'M': [321, 321, 321], 'S': [1, 1, 1], 'MS': [321, 321, 1]},
-    'Solar': {'data': 'solar_AL.csv', 'T': 'POWER_136', 'M': [137, 137, 137], 'S': [1, 1, 1], 'MS': [137, 137, 1]},
+    'ETTm2': {'data': 'ETTm2.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]}
 }
 
 # Insertamos parámetros al modelo
@@ -106,10 +106,11 @@ if args.data in data_parser.keys():
     args.target = data_info['T']
     args.enc_in, args.dec_in, args.c_out = data_info[args.features]
 
+# Iniciamos el experimento
 Exp = Exp_Informer
 
-# Iniciamos el experimento
 for ii in range(args.itr):
+    print("========================= Ejecución {} =========================".format(ii))
     # setting record of experiments
     setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}'.format(args.model,
                                                                                                          args.data,
@@ -129,15 +130,31 @@ for ii in range(args.itr):
                                                                                                          args.mix,
                                                                                                          args.des, ii)
 
-    # set experiments
+    # Insertamos la información del experimento a realizar
     exp = Exp(args)
-
-    # train
-    print('>>>>>>>start training : {}>>>>>>>>>>>>>>>>>>>>>>>>>>'.format(setting))
+    # Entrenamiento
     exp.train(setting)
-
-    # test
-    print('>>>>>>>testing : {}<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<'.format(setting))
+    # Evaluación
     exp.test(setting)
 
+    # Limpieza de cachés para nueva ejecición desde 0.
     torch.cuda.empty_cache()
+
+# Recopilamos los experimentos realizados
+
+metrics = np.zeros(5)
+
+for i in range(args.itr):
+    datos = np.load("results/" + setting[:-1] + str(i) + "/metrics.npy")
+    metrics += np.array(datos)
+
+# Mostramos la media de las métricas evaluadas
+print("========================= Resultados del experimento =========================")
+
+# Calculamos la media
+mean = metrics / args.itr
+metric_dict = {label: mean[i] for i, label in enumerate(METRIC_LABS)}
+
+# Mostramos las métricas
+for label, value in metric_dict.items():
+    print(f"{label} >> {value}")
