@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(description='[Experimentación Informer] Long S
 parser.add_argument('--model', type=str, required=True, default='informer',help='model of experiment, options: [informer, informerstack, informerlight(TBD)]')
 parser.add_argument('--folder', type=str, required=True, default='InformerPE',help='model folder for experiment')
 parser.add_argument('--data', type=str, required=True, default='ETTh1', help='data')
-parser.add_argument('--root_path', type=str, default='./ETDataset/ETT-small', help='root path of the data file')
+parser.add_argument('--root_path', type=str, default='./Datasets/ETT-small', help='root path of the data file')
 parser.add_argument('--data_path', type=str, default='ETTh1.csv', help='data file')
 parser.add_argument('--features', type=str, default='M', help='forecasting task, options:[M, S, MS]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate')
 parser.add_argument('--target', type=str, default='OT', help='target feature in S or MS task')
@@ -61,7 +61,7 @@ parser.add_argument('--mix', action='store_false', help='use mix attention in ge
 parser.add_argument('--cols', type=str, nargs='+', help='certain cols from the data files as the input features')
 parser.add_argument('--num_workers', type=int, default=0, help='data loader num workers')
 parser.add_argument('--itr', type=int, default=1, help='experiments times')
-parser.add_argument('--train_epochs', type=int, default=10, help='train epochs')
+parser.add_argument('--train_epochs', type=int, default=100, help='train epochs')
 parser.add_argument('--batch_size', type=int, default=32, help='batch size of train input data')
 parser.add_argument('--patience', type=int, default=3, help='early stopping patience')
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='optimizer learning rate')
@@ -161,7 +161,7 @@ for label, value in metric_dict.items():
     print(f"{label} >> {value}")
 
 # Guardado en disco de las métricas
-with open(f"metricas_{setting[:-2]}.csv", mode="w", newline="") as f:
+with open(f"results/metricas_{setting[:-2]}.csv", mode="w", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(["Métrica", "Valor"])
     for label, value in metric_dict.items():
