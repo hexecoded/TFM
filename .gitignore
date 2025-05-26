@@ -5,7 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
-Datasets/
+Datasets/ETT-small/
+Datasets/IHEPC/household_power_consumption.txt
 results/
 checkpoints/
 # Distribution / packaging
