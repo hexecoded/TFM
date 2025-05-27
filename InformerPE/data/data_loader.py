@@ -52,6 +52,8 @@ class Dataset_ETT_hour(Dataset):
         df_raw = pd.read_csv(os.path.join(self.root_path,
                                           self.data_path))
 
+        print(df_raw.head())
+
         border1s = [0, 12 * 30 * 24 - self.seq_len,
                     12 * 30 * 24 + 4 * 30 * 24 - self.seq_len]
         border2s = [12 * 30 * 24, 12 * 30 * 24 +
@@ -554,7 +556,6 @@ class Dataset_HPC_hour(Dataset):
         assert flag in ['train', 'test', 'val']
         type_map = {'train': 0, 'val': 1, 'test': 2}
         self.set_type = type_map[flag]
-
         self.features = features
         self.target = target
         self.scale = scale
@@ -565,6 +566,7 @@ class Dataset_HPC_hour(Dataset):
 
         self.root_path = root_path
         self.data_path = data_path
+        print("Preprocesado HPC")
         self.__read_data__()
 
     def __read_data__(self):
@@ -577,10 +579,16 @@ class Dataset_HPC_hour(Dataset):
 
         # Leer datos, separador ';', parsear fechas compuestas
         df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path), sep=';',
-                             parse_dates={'datetime': ['Date', 'Time']}, infer_datetime_format=True, low_memory=False)
+                             parse_dates={'datetime': ['Date', 'Time']}, infer_datetime_format=True, low_memory=False,
+                             na_values=['?', ''])
         df_raw.set_index('datetime', inplace=True)
         df_raw.fillna(method='ffill', inplace=True)
+        for col in df_raw.columns:
+            df_raw[col] = pd.to_numeric(df_raw[col], errors='coerce')
+        df_raw.dropna(how='all', inplace=True)
+        df_raw = df_raw.resample('H').mean()
 
+        print(df_raw.head())
         # Filtrado de columnas
         if self.features in ['M', 'MS']:
             cols_data = self.cols or df_raw.columns.tolist()
@@ -597,7 +605,8 @@ class Dataset_HPC_hour(Dataset):
         borders2 = [n_train, n_train + n_val, n]
         b1 = borders1[self.set_type]
         b2 = borders2[self.set_type]
-
+        print("Borders: ", borders1)
+        print("Borders: ", borders2)
         # Escalado
         if self.scale:
             train_data = df_data.iloc[0:n_train]
@@ -605,11 +614,11 @@ class Dataset_HPC_hour(Dataset):
             data_values = self.scaler.transform(df_data.values)
         else:
             data_values = df_data.values
-
+        print("Data values: ", data_values[:5])
         # Time features
         df_stamp = df_data.index[b1:b2].to_frame(index=False, name='date')
         data_stamp = time_features(df_stamp, timeenc=self.timeenc, freq=self.freq)
-
+        print("Stamps")
         # Asignamos los atributos
         self.data_x = data_values[b1:b2]
         self.data_y = (df_data.values[b1:b2] if self.inverse else data_values[b1:b2])
