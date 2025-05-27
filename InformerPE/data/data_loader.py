@@ -369,6 +369,16 @@ class Dataset_Custom(Dataset):
 
 
 class Dataset_Pred(Dataset):
+    """
+    Permite realizar la predicción para cualquier conjunto de datos de entrada
+    Dispone de una estructura bastante similar a la clase de DatasetCustom, pero
+    haciendo uso de los valores y patrones de estandarización aplicados en entreamiento
+    para evitar DataSnooping. 
+
+    Args:
+        Dataset: _description_
+    """
+
     def __init__(self, root_path, flag='pred', size=None,
                  features='S', data_path='ETTh1.csv',
                  target='OT', scale=True, inverse=False, timeenc=0, freq='15min', cols=None):
@@ -397,6 +407,11 @@ class Dataset_Pred(Dataset):
         self.__read_data__()
 
     def __read_data__(self):
+        """
+        Realiza la lectura del fichero que contiene las entradas de datos, teniendo en cuenta la
+        frecuencia de muestreo elegida, el tamaño de las particiones, y el número de columnas.
+        Dichos parámetros son especificados por la partición de entrenamiento.
+        """
         self.scaler = StandardScaler()
         df_raw = pd.read_csv(os.path.join(self.root_path,
                                           self.data_path))
@@ -445,6 +460,20 @@ class Dataset_Pred(Dataset):
         self.data_stamp = data_stamp
 
     def __getitem__(self, index):
+        """
+        Permite seleccionar una posición concreta del dataset una vez
+        leído y preprocesado
+
+        Args:
+            index: índice que quiere ser escogido. Este no tiene porqué
+            coincider con los índices del dataset original, ya que si este
+            fue tomado por minutos,  pero el dataset es procesado por horas, 
+            habrá menos tuplas, y no hay correspondencia directa de índice.
+            Se trata un valor de índice especifico para los datos ya procesados
+
+        Returns:
+            La posición escogida del dataset.
+        """
         s_begin = index
         s_end = s_begin + self.seq_len
         r_begin = s_end - self.label_len
@@ -461,7 +490,180 @@ class Dataset_Pred(Dataset):
         return seq_x, seq_y, seq_x_mark, seq_y_mark
 
     def __len__(self):
+        """
+        Devuelve la longitud del dataset procesado
+
+        Returns:
+            Longitud una vez procesado
+        """
         return len(self.data_x) - self.seq_len + 1
 
     def inverse_transform(self, data):
+        """
+        Permite obtener una copia de los datos originales antes de ser
+        procesado, para fines de visualización principalmente.
+
+        Args:
+            data: Datos de entrada preprocesados
+
+        Returns:
+            Copia de los datos originales sin estandarización
+        """
+        return self.scaler.inverse_transform(data)
+
+
+class Dataset_HPC_hour(Dataset):
+    """
+    Clase que permite el procesadod el conjunto de datos HPC, proveniente del repositorio UCI. Se encarga de realizar
+    el preprocesado adecuado para obtener los timestamps, y realiza el procesado implementado en la clase de referencia
+    DatasetCustom.
+    """
+
+    def __init__(self, root_path, flag='train', size=None,
+                 features='S', data_path='household_power_consumption.txt',
+                 target='Global_active_power', scale=True, inverse=False,
+                 timeenc=0, freq='h', cols=None):
+        """
+        Constructor para el procesado y preparado del conjunto de Household Power Consumption.
+        Args:
+            root_path: Directorio principal de trabajo donde se encuentran todos los ficheros.
+            flag: fracción del conjunto de datos que se quiere tomar. Puede ser train, val o test. Defaults to 'train'.
+            size: Tamaño del conjunto de datos de entrada, ie, número de tuplas. Defaults to None.
+            features: Características a tener en cuenta. Pueden ser un problema univariante (S), multivariante (M),
+                        o bien multivariante + target (MS) , . Defaults to 'S'.
+            data_path: Nombre del fichero de datos que se encuentra dentro de root_path. Defaults to 'ETTh1.csv'.
+            target: Columna que ha de tomarse como atributo objetivo. Defaults to 'OT'.
+            scale: Booleano que especifica si se desean o no estandarizar los datos. Defaults to True.
+            inverse: Flag que especifica si se desea conservar una copia estandarizada de los valores
+                        para posterior representación. Defaults to False.
+            timeenc: Permite especificar si se desea hacer encoding de los timestamps. Defaults to 0.
+            freq: Frecuencia de muestreo del dataset. Habitualmente, expresable en horas (h) o minutos (m). Defaults to 'h'.
+            cols: Número de columnas del dataset. Defaults to None.
+        """
+        # size [seq_len, label_len, pred_len]
+        # info
+        if size == None:
+            self.seq_len = 24 * 7
+            self.label_len = 24
+            self.pred_len = 24
+        else:
+            self.seq_len = size[0]
+            self.label_len = size[1]
+            self.pred_len = size[2]
+        # init
+        assert flag in ['train', 'test', 'val']
+        type_map = {'train': 0, 'val': 1, 'test': 2}
+        self.set_type = type_map[flag]
+
+        self.features = features
+        self.target = target
+        self.scale = scale
+        self.inverse = inverse
+        self.timeenc = timeenc
+        self.freq = freq
+        self.cols = cols
+
+        self.root_path = root_path
+        self.data_path = data_path
+        self.__read_data__()
+
+    def __read_data__(self):
+        """
+        Realiza la lectura del fichero que contiene las entradas de datos, teniendo en cuenta la
+        frecuencia de muestreo elegida, el tamaño de las particiones, y el número de columnas.
+        """
+        # Inicializar escalador
+        self.scaler = StandardScaler()
+
+        # Leer datos, separador ';', parsear fechas compuestas
+        df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path), sep=';',
+                             parse_dates={'datetime': ['Date', 'Time']}, infer_datetime_format=True, low_memory=False)
+        df_raw.set_index('datetime', inplace=True)
+        df_raw.fillna(method='ffill', inplace=True)
+
+        # Filtrado de columnas
+        if self.features in ['M', 'MS']:
+            cols_data = self.cols or df_raw.columns.tolist()
+            cols_data = [c for c in cols_data if (c != self.target and c != "datetime")]
+            df_data = df_raw[cols_data]
+        else:
+            df_data = df_raw[[self.target]]
+
+        # Dividimos en train/val/test mediante porcentajes
+        n = len(df_data)
+        n_train = int(n * 0.7)
+        n_val = int(n * 0.2)
+        borders1 = [0, n_train - self.seq_len, n_train + n_val - self.seq_len]
+        borders2 = [n_train, n_train + n_val, n]
+        b1 = borders1[self.set_type]
+        b2 = borders2[self.set_type]
+
+        # Escalado
+        if self.scale:
+            train_data = df_data.iloc[0:n_train]
+            self.scaler.fit(train_data.values)
+            data_values = self.scaler.transform(df_data.values)
+        else:
+            data_values = df_data.values
+
+        # Time features
+        df_stamp = df_data.index[b1:b2].to_frame(index=False, name='date')
+        data_stamp = time_features(df_stamp, timeenc=self.timeenc, freq=self.freq)
+
+        # Asignamos los atributos
+        self.data_x = data_values[b1:b2]
+        self.data_y = (df_data.values[b1:b2] if self.inverse else data_values[b1:b2])
+        self.data_stamp = data_stamp
+
+    def __getitem__(self, index):
+        """
+        Permite seleccionar una posición concreta del dataset una vez
+        leído y preprocesado
+
+        Args:
+            index: índice que quiere ser escogido. Este no tiene porqué
+            coincider con los índices del dataset original, ya que si este
+            fue tomado por minutos,  pero el dataset es procesado por horas,
+            habrá menos tuplas, y no hay correspondencia directa de índice.
+            Se trata un valor de índice especifico para los datos ya procesados
+
+        Returns:
+            La posición escogida del dataset.
+        """
+        s_begin = index
+        s_end = s_begin + self.seq_len
+        r_begin = s_end - self.label_len
+        r_end = r_begin + self.label_len + self.pred_len
+
+        seq_x = self.data_x[s_begin:s_end]
+        if self.inverse:
+            seq_y = np.concatenate(
+                [self.data_x[r_begin:r_begin + self.label_len], self.data_y[r_begin + self.label_len:r_end]], 0)
+        else:
+            seq_y = self.data_y[r_begin:r_end]
+        seq_x_mark = self.data_stamp[s_begin:s_end]
+        seq_y_mark = self.data_stamp[r_begin:r_end]
+
+        return seq_x, seq_y, seq_x_mark, seq_y_mark
+
+    def __len__(self):
+        """
+        Devuelve la longitud del dataset procesado
+
+        Returns:
+            Longitud una vez procesado
+        """
+        return len(self.data_x) - self.seq_len - self.pred_len + 1
+
+    def inverse_transform(self, data):
+        """
+        Permite obtener una copia de los datos originales antes de ser
+        procesado, para fines de visualización principalmente.
+
+        Args:
+            data: Datos de entrada preprocesados
+
+        Returns:
+            Copia de los datos originales sin estandarización
+        """
         return self.scaler.inverse_transform(data)

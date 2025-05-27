@@ -5,7 +5,7 @@ cumplir los formatos de fecha estándar.
 https://archive.ics.uci.edu/dataset/235/individual+household+electric+power+consumption
 
 
-Genera un archivo de salida, IHEPC.csv, ya estandarizado y preparado para pasar 
+Genera un archivo de salida, HPC.csv, ya estandarizado y preparado para pasar
 por parámetros a un modelo de aprendizaje de TS.
 
 Autor: Cristhian Moya Mota
@@ -26,4 +26,4 @@ df['date'] = df['date'].dt.strftime('%Y-%m-%d %H:%M:%S')
 df = df.drop(columns=['Date', 'Time'])
 
 # Guardamos en CSV
-df.to_csv("IHEPC.csv", index=False)
+df.to_csv("HPC.csv", index=False)
