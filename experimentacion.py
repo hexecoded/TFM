@@ -70,7 +70,7 @@ parser.add_argument('--itr', type=int, default=1, help='experiments times')
 parser.add_argument('--train_epochs', type=int, default=100, help='train epochs')
 parser.add_argument('--batch_size', type=int, default=32, help='batch size of train input data')
 parser.add_argument('--patience', type=int, default=3, help='early stopping patience')
-parser.add_argument('--learning_rate', type=float, default=0.0001, help='optimizer learning rate')
+parser.add_argument('--learning_rate', type=float, default=0.0005, help='optimizer learning rate')
 parser.add_argument('--des', type=str, default='test', help='exp description')
 parser.add_argument('--loss', type=str, default='mse', help='loss function')
 parser.add_argument('--lradj', type=str, default='type1', help='adjust learning rate')
@@ -91,6 +91,7 @@ from exp.exp_informer import Exp_Informer
 # Comprobación de uso de CUDA para el cómputo
 args.use_gpu = True if torch.cuda.is_available() and args.use_gpu else False
 print(f"Usando CUDA: {torch.cuda.is_available()}")
+print(args)
 
 if args.use_gpu and args.use_multi_gpu:
     args.devices = args.devices.replace(' ', '')
@@ -100,7 +101,7 @@ if args.use_gpu and args.use_multi_gpu:
 
 # Datasets Disponibles en el paper de Informer
 data_parser = {
-    'HPC': {'data': 'household_power_consumption.txt', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
+    'HPC': {'data': 'household_power_consumption.txt', 'T': 'Global_active_power', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
     'ETTh1': {'data': 'ETTh1.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
     'ETTh2': {'data': 'ETTh2.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
     'ETTm1': {'data': 'ETTm1.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},

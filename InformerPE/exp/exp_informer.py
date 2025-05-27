@@ -95,8 +95,6 @@ class Exp_Informer(Exp_Basic):
             batch_size = args.batch_size;
             freq = args.freq
 
-        print(args.root_path)
-        print(args.data_path)
         data_set = Data(
             root_path=args.root_path,
             data_path=args.data_path,

@@ -52,8 +52,6 @@ class Dataset_ETT_hour(Dataset):
         df_raw = pd.read_csv(os.path.join(self.root_path,
                                           self.data_path))
 
-        print(df_raw.head())
-
         border1s = [0, 12 * 30 * 24 - self.seq_len,
                     12 * 30 * 24 + 4 * 30 * 24 - self.seq_len]
         border2s = [12 * 30 * 24, 12 * 30 * 24 +
@@ -574,27 +572,29 @@ class Dataset_HPC_hour(Dataset):
         Realiza la lectura del fichero que contiene las entradas de datos, teniendo en cuenta la
         frecuencia de muestreo elegida, el tamaño de las particiones, y el número de columnas.
         """
-        # Inicializar escalador
+        # Preparamos el escalado
         self.scaler = StandardScaler()
 
-        # Leer datos, separador ';', parsear fechas compuestas
+        # Leemos los datos y unimos las fechas en una sola columna
         df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path), sep=';',
-                             parse_dates={'datetime': ['Date', 'Time']}, infer_datetime_format=True, low_memory=False,
+                             parse_dates={'date': ['Date', 'Time']}, infer_datetime_format=True, low_memory=False,
                              na_values=['?', ''])
-        df_raw.set_index('datetime', inplace=True)
+        df_raw.set_index('date', inplace=True)
         df_raw.fillna(method='ffill', inplace=True)
+
+        # Transformamos a valores numéricos
         for col in df_raw.columns:
             df_raw[col] = pd.to_numeric(df_raw[col], errors='coerce')
-        df_raw.dropna(how='all', inplace=True)
-        df_raw = df_raw.resample('H').mean()
 
-        print(df_raw.head())
+        # Agrupamos por horas y reestablecemos el índice para que sea creciente desde 0
+        df_raw = df_raw.resample('H').mean()
+        df_raw = df_raw.reset_index()
+
         # Filtrado de columnas
         if self.features in ['M', 'MS']:
-            cols_data = self.cols or df_raw.columns.tolist()
-            cols_data = [c for c in cols_data if (c != self.target and c != "datetime")]
+            cols_data = df_raw.columns[1:]
             df_data = df_raw[cols_data]
-        else:
+        elif self.features == 'S':
             df_data = df_raw[[self.target]]
 
         # Dividimos en train/val/test mediante porcentajes
@@ -605,8 +605,7 @@ class Dataset_HPC_hour(Dataset):
         borders2 = [n_train, n_train + n_val, n]
         b1 = borders1[self.set_type]
         b2 = borders2[self.set_type]
-        print("Borders: ", borders1)
-        print("Borders: ", borders2)
+
         # Escalado
         if self.scale:
             train_data = df_data.iloc[0:n_train]
@@ -614,11 +613,10 @@ class Dataset_HPC_hour(Dataset):
             data_values = self.scaler.transform(df_data.values)
         else:
             data_values = df_data.values
-        print("Data values: ", data_values[:5])
         # Time features
         df_stamp = df_data.index[b1:b2].to_frame(index=False, name='date')
         data_stamp = time_features(df_stamp, timeenc=self.timeenc, freq=self.freq)
-        print("Stamps")
+
         # Asignamos los atributos
         self.data_x = data_values[b1:b2]
         self.data_y = (df_data.values[b1:b2] if self.inverse else data_values[b1:b2])
