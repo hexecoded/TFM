@@ -7,7 +7,6 @@ __pycache__/
 *.so
 Datasets/ETT-small/
 Datasets/HPC/household_power_consumption.txt
-Datasets/HPC/HPC.csv
 results/
 checkpoints/
 # Distribution / packaging
