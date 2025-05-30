@@ -172,7 +172,7 @@ for label, value in metric_dict.items():
     print(f"{label} >> {value}")
 
 # Guardado en disco de las métricas
-with open(f"Experimentos/metricas_{setting[:-2]}.csv", mode="w", newline="") as f:
+with open(f"Experimentos/metricas_{args.folder}_{setting[:-2]}.csv", mode="w", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(["Métrica", "Valor"])
     for label, value in metric_dict.items():
