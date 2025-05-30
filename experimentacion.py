@@ -101,7 +101,8 @@ if args.use_gpu and args.use_multi_gpu:
 
 # Datasets Disponibles en el paper de Informer
 data_parser = {
-    'HPC': {'data': 'household_power_consumption.txt', 'T': 'Global_active_power', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
+    'HPC': {'data': 'household_power_consumption.txt', 'T': 'Global_active_power', 'M': [7, 7, 7], 'S': [1, 1, 1],
+            'MS': [7, 7, 1]},
     'ETTh1': {'data': 'ETTh1.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
     'ETTh2': {'data': 'ETTh2.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
     'ETTm1': {'data': 'ETTm1.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
@@ -171,7 +172,7 @@ for label, value in metric_dict.items():
     print(f"{label} >> {value}")
 
 # Guardado en disco de las métricas
-with open(f"results/metricas_{setting[:-2]}.csv", mode="w", newline="") as f:
+with open(f"Experimentos/metricas_{setting[:-2]}.csv", mode="w", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(["Métrica", "Valor"])
     for label, value in metric_dict.items():
