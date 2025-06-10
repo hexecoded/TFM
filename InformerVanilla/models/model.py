@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from utils.masking import TriangularCausalMask, ProbMask
-from models.encoder import Encoder, EncoderLayer, ConvLayer, EncoderStack
+from models.encoder import Encoder, EncoderLayer, EncoderStack
 from models.decoder import Decoder, DecoderLayer
 from models.attn import FullAttention, ProbAttention, AttentionLayer
 from models.embed import DataEmbedding
@@ -36,11 +36,6 @@ class Informer(nn.Module):
                     activation=activation
                 ) for l in range(e_layers)
             ],
-            [
-                ConvLayer(
-                    d_model
-                ) for l in range(e_layers-1)
-            ] if distil else None,
             norm_layer=torch.nn.LayerNorm(d_model)
         )
         # Decoder

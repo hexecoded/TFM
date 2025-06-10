@@ -30,8 +30,8 @@ class DecoderLayer(nn.Module):
         )[0])
 
         y = x = self.norm2(x)
-        y = self.dropout(self.activation(self.fc1(y.transpose(-1,1))))
-        y = self.dropout(self.fc2(y).transpose(-1,1))
+        y = self.dropout(self.activation(self.fc1(y)))
+        y = self.dropout(self.fc2(y))
 
         return self.norm3(x+y)
 
