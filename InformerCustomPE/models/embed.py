@@ -38,6 +38,27 @@ class FourierEncoding(nn.Module):
         return x_freq.permute(0, 2, 1)  # [B, L, d_model]
 
 
+class SlidingWindowEmbedding(nn.Module):
+    def __init__(self, c_in, d_model, window_size=5):
+        super(SlidingWindowEmbedding, self).__init__()
+        self.window_size = window_size
+        self.padding = window_size // 2
+        self.conv = nn.Conv1d(
+            in_channels=c_in,
+            out_channels=d_model,
+            kernel_size=window_size,
+            padding=self.padding,
+            padding_mode='circular'
+        )
+
+    def forward(self, x):
+        # x: [B, L, D]
+        x = x.permute(0, 2, 1)  # [B, D, L]
+        x = self.conv(x)        # [B, d_model, L]
+        x = x.transpose(1, 2)   # [B, L, d_model]
+        return x
+
+
 class FixedEmbedding(nn.Module):
     def __init__(self, c_in, d_model):
         super(FixedEmbedding, self).__init__()

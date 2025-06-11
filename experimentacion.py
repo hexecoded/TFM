@@ -27,6 +27,8 @@ parser = argparse.ArgumentParser(description='[Experimentación Informer] Long S
 
 parser.add_argument('--model', type=str, required=True, default='informer',
                     help='model of experiment, options: [informer, informerstack, informerlight(TBD)]')
+parser.add_argument('--encoding', type=str, default="LEGE",required=True, help='TYPE of Informer encoder')
+
 parser.add_argument('--folder', type=str, required=True, default='InformerPE', help='model folder for experiment')
 parser.add_argument('--data', type=str, required=True, default='ETTh1', help='data')
 parser.add_argument('--root_path', type=str, default='./Datasets/ETT-small', help='root path of the data file')
@@ -172,7 +174,7 @@ for label, value in metric_dict.items():
     print(f"{label} >> {value}")
 
 # Guardado en disco de las métricas
-with open(f"Experimentos/metricas_{args.folder}_{setting[:-2]}.csv", mode="w", newline="") as f:
+with open(f"Experimentos/metricas_{args.folder}_{args.encoding}_{setting[:-2]}.csv", mode="w", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(["Métrica", "Valor"])
     for label, value in metric_dict.items():
