@@ -39,16 +39,8 @@ class PositionalEmbedding(nn.Module):
         pe = pe.unsqueeze(0)
         self.register_buffer('pe', pe)
 
-        # Añadido
-        # Parámetro escalar entrenable
-        self.alpha = nn.Parameter(torch.ones(1))
-        self.layer_norm = nn.LayerNorm(d_model)  # Normalización
-
     def forward(self, x):
-        # return self.pe[:, :x.size(1)]
-        pos = self.pe[:, :x.size(1)].to(x.device)
-        scaled_pos = self.alpha * pos
-        return self.layer_norm(scaled_pos)
+        return self.pe[:, :x.size(1)]
 
 
 class FourierEncoding(nn.Module):
@@ -150,6 +142,11 @@ class TimeFeatureEmbedding(nn.Module):
 
 
 class RollingFeatureExtractor(nn.Module):
+    """
+    Clase para el cálculo de estadísticos básicos que funcionan como encoding
+    relativo usando una ventana deslizante alrededor de cada valor.
+    """
+
     def __init__(self, window_size: int, input_features: int):
         super(RollingFeatureExtractor, self).__init__()
         if window_size <= 0:
@@ -205,43 +202,34 @@ class RollingFeatureExtractor(nn.Module):
         return output_tensor
 
 
-class RelativePositionEncoding(nn.Module):
-    def __init__(self, max_relative_distance: int, d_model: int):
-        super().__init__()
-        self.max_relative_distance = max_relative_distance
-        self.embedding = nn.Embedding(2 * max_relative_distance + 1, d_model)
-
-    def forward(self, seq_len):
-        device = self.embedding.weight.device
-        range_vec = torch.arange(seq_len, device=device)
-        distance_matrix = range_vec[None, :] - range_vec[:, None]
-        distance_matrix = distance_matrix.clamp(
-            -self.max_relative_distance, self.max_relative_distance)
-        distance_matrix += self.max_relative_distance
-        rel_pos_embedding = self.embedding(
-            distance_matrix)  # (seq_len, seq_len, d_model)
-        summed_embedding = rel_pos_embedding.sum(dim=1)  # (seq_len, d_model)
-        return summed_embedding
-
-
 class DataEmbedding(nn.Module):
-    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1):
+    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1, window=24):
         super(DataEmbedding, self).__init__()
-        self.est_features = RollingFeatureExtractor(24, c_in)
+        self.est_features = RollingFeatureExtractor(window, c_in)
         c_in = c_in * 5
         self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
-
-
         self.position_embedding = PositionalEmbedding(d_model=d_model)
-        self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type, freq=freq) if embed_type != 'timeF' else TimeFeatureEmbedding(
-            d_model=d_model, embed_type=embed_type, freq=freq)
-
         self.dropout = nn.Dropout(p=dropout)
 
+        # Pesos aprendibles para ponderar embeddings (inicializados iguales)
+        self.weight_params = nn.Parameter(torch.ones(2))
+
+        self.cont = 0
+
     def forward(self, x, x_mark):
+        self.cont += 1
         x_proc = self.est_features(x)
 
-        x = self.value_embedding(x_proc) + self.position_embedding(x_proc)
+        value_emb = self.value_embedding(x_proc)
+        pos_emb = self.position_embedding(x_proc)
 
+        # Softmax para obtener pesos que sumen 1
+        # tensor [2] que suma 1
+        weights = torch.softmax(self.weight_params, dim=0)
+
+        if (self.cont % 100 == 0):
+            print(weights)
+
+        x = weights[0] * value_emb + weights[1] * pos_emb
 
         return self.dropout(x)
