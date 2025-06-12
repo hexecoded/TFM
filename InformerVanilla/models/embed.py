@@ -39,8 +39,16 @@ class PositionalEmbedding(nn.Module):
         pe = pe.unsqueeze(0)
         self.register_buffer('pe', pe)
 
+        # Añadido
+        # Parámetro escalar entrenable
+        self.alpha = nn.Parameter(torch.ones(1))
+        self.layer_norm = nn.LayerNorm(d_model)  # Normalización
+
     def forward(self, x):
-        return self.pe[:, :x.size(1)]
+        # return self.pe[:, :x.size(1)]
+        pos = self.pe[:, :x.size(1)].to(x.device)
+        scaled_pos = self.alpha * pos
+        return self.layer_norm(scaled_pos)
 
 
 class FourierEncoding(nn.Module):
@@ -223,22 +231,17 @@ class DataEmbedding(nn.Module):
         c_in = c_in * 5
         self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
 
-        # self.rpe = RelativePositionEncoding(24, d_model)
 
         self.position_embedding = PositionalEmbedding(d_model=d_model)
         self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type, freq=freq) if embed_type != 'timeF' else TimeFeatureEmbedding(
             d_model=d_model, embed_type=embed_type, freq=freq)
 
         self.dropout = nn.Dropout(p=dropout)
-        print("Embedding nope")
 
     def forward(self, x, x_mark):
         x_proc = self.est_features(x)
 
-        x = self.value_embedding(x_proc)  # + self.position_embedding(x) #
-        # + self.temporal_embedding(x_mark)
+        x = self.value_embedding(x_proc) + self.position_embedding(x_proc)
 
-        # rpe = self.rpe(x.size(1))  # (seq_len, d_model)
-        # x = x + rpe.unsqueeze(0)
 
         return self.dropout(x)
