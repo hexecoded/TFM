@@ -30,7 +30,8 @@ class PositionalEmbedding(nn.Module):
         pe.require_grad = False
 
         position = torch.arange(0, max_len).float().unsqueeze(1)
-        div_term = (torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model)).exp()
+        div_term = (torch.arange(0, d_model, 2).float()
+                    * -(math.log(10000.0) / d_model)).exp()
 
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
@@ -40,6 +41,7 @@ class PositionalEmbedding(nn.Module):
 
     def forward(self, x):
         return self.pe[:, :x.size(1)]
+
 
 class FourierEncoding(nn.Module):
     def __init__(self, d_model):
@@ -67,7 +69,7 @@ class SlidingWindowMean(nn.Module):
     def forward(self, x):
         x = F.pad(x, (self.padding, self.padding), mode='replicate')
         return F.avg_pool1d(x, kernel_size=self.window_size, stride=1)
-    
+
 
 class FixedEmbedding(nn.Module):
     def __init__(self, c_in, d_model):
@@ -89,6 +91,7 @@ class FixedEmbedding(nn.Module):
     def forward(self, x):
         return self.emb(x).detach()
 
+
 class RelativePositionEmbedding(nn.Module):
     def __init__(self, max_rel_dist, d_model):
         super().__init__()
@@ -97,11 +100,14 @@ class RelativePositionEmbedding(nn.Module):
 
     def forward(self, seq_len):
         # Crear matriz de distancias relativas (seq_len x seq_len)
-        range_vec = torch.arange(seq_len, device=next(self.parameters()).device)
+        range_vec = torch.arange(
+            seq_len, device=next(self.parameters()).device)
         dist_mat = range_vec[None, :] - range_vec[:, None]
-        dist_mat = dist_mat.clamp(-self.max_rel_dist, self.max_rel_dist) + self.max_rel_dist
+        dist_mat = dist_mat.clamp(-self.max_rel_dist,
+                                  self.max_rel_dist) + self.max_rel_dist
         # Retorna embedding (seq_len, seq_len, d_model)
         return self.embedding(dist_mat)
+
 
 class TemporalEmbedding(nn.Module):
     def __init__(self, d_model, embed_type='fixed', freq='h'):
@@ -134,33 +140,7 @@ class TimeFeatureEmbedding(nn.Module):
     def forward(self, x):
         return self.embed(x)
 
-# class DataEmbedding(nn.Module):
-#     def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1,  window_size=5):
-#         super(DataEmbedding, self).__init__()
 
-#         # window_size = max(5, d_model // 2)
-#         # if window_size % 2 == 0:
-#         #     window_size -= 1
-
-#         self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
-#         #self.mean_embedding = SlidingWindowMean(window_size=window_size)
-#         self.rel_pos_embedding = RelativePositionEmbedding(d_model//4, d_model)
-#         #self.position_embedding = PositionalEmbedding(d_model=d_model)
-#         #self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type, freq=freq) if embed_type!='timeF' else TimeFeatureEmbedding(d_model=d_model, embed_type=embed_type, freq=freq)
-
-#         self.dropout = nn.Dropout(p=dropout)
-
-#     def forward(self, x,x_mark):
-
-#         x_emb = self.value_embedding(x)  # (batch, seq_len, d_model)
-#         seq_len = x_emb.size(1)
-#         rel_pos_emb = self.rel_pos_embedding(seq_len)  # (seq_len, d_model)
-#         rel_pos_emb_reduced = rel_pos_emb.mean(dim=1)  # (96, 512)
-#         x_emb = x_emb + rel_pos_emb_reduced.unsqueeze(0)  
-#         return x_emb
-    
-
-    
 class RollingFeatureExtractor(nn.Module):
     def __init__(self, window_size: int, input_features: int):
         super(RollingFeatureExtractor, self).__init__()
@@ -169,60 +149,72 @@ class RollingFeatureExtractor(nn.Module):
         self.window_size = window_size
         self.input_features = input_features
         # El número de características de salida será el original + (media, max, min, std) * input_features
-        self.output_features = input_features * 5 # Original + media, max, min, std_dev
+        self.output_features = input_features * 5  # Original + media, max, min, std_dev
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Calcula la media, el máximo, el mínimo y la desviación estándar en una ventana deslizante.
 
         Args:
-            x (torch.Tensor): El tensor de entrada de PyTorch con forma (batch_size, sequence_length, num_features).
+            x (torch.Tensor): tensor de entrada (batch_size, sequence_length, num_features).
 
         Returns:
-            torch.Tensor: Un tensor con las características originales concatenadas con las estadísticas
-                          en ventana, con forma (batch_size, sequence_length, num_features * 5).
+            torch.Tensor: tensor con características añadidas, con forma (batch_size, sequence_length, num_features * 5).
         """
         batch_size, seq_len, num_features = x.shape
         if num_features != self.input_features:
-            raise ValueError(f"Input features mismatch. Expected {self.input_features}, got {num_features}.")
+            raise ValueError(
+                f"Input features mismatch. Expected {self.input_features}, got {num_features}.")
 
-        # Para manejar el inicio de la secuencia donde no hay suficientes puntos para la ventana,
-        # podemos rellenar (pad) el tensor. Aquí usamos padding con ceros o replicación del primer valor.
-        # Una forma común es padding con ceros o padding de borde (edge padding).
-        # Para el cálculo de estadísticas, el padding con ceros podría distorsionar la media/std.
-        # Una alternativa es calcular solo donde la ventana es completa y rellenar los valores iniciales.
-        # Para simplificar y obtener una salida del mismo tamaño:
-        padded_x = F.pad(x, (0, 0, self.window_size - 1, 0), mode='replicate') # Pad en la dimensión de secuencia
+        # Para manejar el inicio de la secuencia donde no hay suficientes valores, se aplica padding del mismo
+        # valor que dicho extremo, pues los 0 provocarían mayor distorsión de los resultados.
+        # Pad en la dimensión de secuencia
+        padded_x = F.pad(x, (0, 0, self.window_size - 1, 0), mode='replicate')
 
-        # Lista para almacenar las características calculadas
         rolling_features = []
 
         for i in range(seq_len):
-            # Obtener la ventana actual
             # La ventana se extiende desde (i) hasta (i + window_size - 1) en el tensor padded_x
             # Esto es equivalente a la ventana (i - window_size + 1) hasta (i) en el tensor original
-            window = padded_x[:, i : i + self.window_size, :]
+            window = padded_x[:, i: i + self.window_size, :]
 
-            # Calcular estadísticas por cada característica
+            # Calculamos los estadísticos
             window_mean = torch.mean(window, dim=1, keepdim=True)
-            window_max = torch.max(window, dim=1, keepdim=True).values # .values para obtener solo el tensor
+            window_max = torch.max(window, dim=1, keepdim=True).values
             window_min = torch.min(window, dim=1, keepdim=True).values
             window_std = torch.std(window, dim=1, keepdim=True)
 
-            # Concatenar las estadísticas para esta posición de tiempo
+            # Concatenamos las estadísticas para esta posición de tiempo
             # Forma: (batch_size, 1, num_features * 4)
-            current_rolling_stats = torch.cat([window_mean, window_max, window_min, window_std], dim=-1)
+            current_rolling_stats = torch.cat(
+                [window_mean, window_max, window_min, window_std], dim=-1)
             rolling_features.append(current_rolling_stats)
 
-        # Concatenar todas las estadísticas en la dimensión de secuencia
-        # Forma: (batch_size, seq_len, num_features * 4)
+        # Concatenamos todas las estadísticas. Forma: (batch_size, seq_len, num_features * 4)
         rolling_stats_tensor = torch.cat(rolling_features, dim=1)
-
-        # Concatenar las características originales con las nuevas estadísticas
-        # Forma: (batch_size, seq_len, num_features * 5)
         output_tensor = torch.cat([x, rolling_stats_tensor], dim=-1)
 
         return output_tensor
+
+
+class RelativePositionEncoding(nn.Module):
+    def __init__(self, max_relative_distance: int, d_model: int):
+        super().__init__()
+        self.max_relative_distance = max_relative_distance
+        self.embedding = nn.Embedding(2 * max_relative_distance + 1, d_model)
+
+    def forward(self, seq_len):
+        device = self.embedding.weight.device
+        range_vec = torch.arange(seq_len, device=device)
+        distance_matrix = range_vec[None, :] - range_vec[:, None]
+        distance_matrix = distance_matrix.clamp(
+            -self.max_relative_distance, self.max_relative_distance)
+        distance_matrix += self.max_relative_distance
+        rel_pos_embedding = self.embedding(
+            distance_matrix)  # (seq_len, seq_len, d_model)
+        summed_embedding = rel_pos_embedding.sum(dim=1)  # (seq_len, d_model)
+        return summed_embedding
+
 
 class DataEmbedding(nn.Module):
     def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1):
@@ -230,16 +222,23 @@ class DataEmbedding(nn.Module):
         self.est_features = RollingFeatureExtractor(24, c_in)
         c_in = c_in * 5
         self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
+
+        # self.rpe = RelativePositionEncoding(24, d_model)
+
         self.position_embedding = PositionalEmbedding(d_model=d_model)
-        self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type, freq=freq) if embed_type!='timeF' else TimeFeatureEmbedding(d_model=d_model, embed_type=embed_type, freq=freq)
+        self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type, freq=freq) if embed_type != 'timeF' else TimeFeatureEmbedding(
+            d_model=d_model, embed_type=embed_type, freq=freq)
 
         self.dropout = nn.Dropout(p=dropout)
-        print("Embedding con stats solo")
+        print("Embedding nope")
 
     def forward(self, x, x_mark):
         x_proc = self.est_features(x)
 
-        x = self.value_embedding(x_proc) #+ self.position_embedding(x) + self.temporal_embedding(x_mark)
-        
+        x = self.value_embedding(x_proc)  # + self.position_embedding(x) #
+        # + self.temporal_embedding(x_mark)
+
+        # rpe = self.rpe(x.size(1))  # (seq_len, d_model)
+        # x = x + rpe.unsqueeze(0)
+
         return self.dropout(x)
-    
