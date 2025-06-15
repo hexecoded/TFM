@@ -63,6 +63,7 @@ parser.add_argument('--attn', type=str, default='prob', help='attention used in 
 parser.add_argument('--embed', type=str, default='timeF',
                     help='time features encoding, options:[timeF, fixed, learned]')
 parser.add_argument('--activation', type=str, default='gelu', help='activation')
+parser.add_argument('--window', type=int, default=24, help='window size for stats computing')
 parser.add_argument('--output_attention', action='store_true', help='whether to output attention in encoder')
 parser.add_argument('--do_predict', action='store_true', help='whether to predict unseen future data')
 parser.add_argument('--mix', action='store_false', help='use mix attention in generative decoder', default=True)
@@ -124,12 +125,13 @@ Exp = Exp_Informer
 for ii in range(args.itr):
     print("========================= Ejecución {} =========================".format(ii))
     # setting record of experiments
-    setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}'.format(args.model,
+    setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_win{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}'.format(args.model,
                                                                                                          args.data,
                                                                                                          args.features,
                                                                                                          args.seq_len,
                                                                                                          args.label_len,
                                                                                                          args.pred_len,
+                                                                                                         args.window,
                                                                                                          args.d_model,
                                                                                                          args.n_heads,
                                                                                                          args.e_layers,
@@ -151,7 +153,7 @@ for ii in range(args.itr):
     print("Evaluación")
     exp.test(setting)
 
-    # Limpieza de cachés para nueva ejecición desde 0.
+    # Limpieza de cachés para nueva ejecución desde 0.
     torch.cuda.empty_cache()
 
 # Recopilamos los experimentos realizados

@@ -1,5 +1,5 @@
 from data.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_Pred
-from InformerPE.data.data_loader import Dataset_HPC_hour, Dataset_HPC_minute
+from InformerVanilla.data.data_loader import Dataset_HPC_hour, Dataset_HPC_minute
 
 from exp.exp_basic import Exp_Basic
 from models.model import Informer, InformerStack
@@ -50,7 +50,8 @@ class Exp_Informer(Exp_Basic):
                 self.args.output_attention,
                 self.args.distil,
                 self.args.mix,
-                self.device
+                self.device,
+                self.args.window
             ).float()
 
         if self.args.use_multi_gpu and self.args.use_gpu:
@@ -159,6 +160,7 @@ class Exp_Informer(Exp_Basic):
             train_loss = []
 
             self.model.train()
+            
             epoch_time = time.time()
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(train_loader):
                 iter_count += 1
@@ -185,7 +187,7 @@ class Exp_Informer(Exp_Basic):
                     loss.backward()
                     model_optim.step()
 
-            print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
+            print("Epoch: {} time: {} s".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
             vali_loss = self.vali(vali_data, vali_loader, criterion)
             test_loss = self.vali(test_data, test_loader, criterion)
