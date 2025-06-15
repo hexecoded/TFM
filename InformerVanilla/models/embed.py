@@ -61,6 +61,14 @@ class FourierEncoding(nn.Module):
 
 
 class SlidingWindowMean(nn.Module):
+    """
+    Clase que calcula una media deslizante a través de una
+    ventana especificable mediante parámetros de entrada
+
+    Args:
+        nn (_type_): valores en formato tensor
+    """
+
     def __init__(self, window_size=5):
         super(SlidingWindowMean, self).__init__()
         self.window_size = window_size
@@ -92,21 +100,21 @@ class FixedEmbedding(nn.Module):
         return self.emb(x).detach()
 
 
-class RelativePositionEmbedding(nn.Module):
-    def __init__(self, max_rel_dist, d_model):
-        super().__init__()
-        self.max_rel_dist = max_rel_dist
-        self.embedding = nn.Embedding(2 * max_rel_dist + 1, d_model)
+# class RelativePositionEmbedding(nn.Module):
+#     def __init__(self, max_rel_dist, d_model):
+#         super().__init__()
+#         self.max_rel_dist = max_rel_dist
+#         self.embedding = nn.Embedding(2 * max_rel_dist + 1, d_model)
 
-    def forward(self, seq_len):
-        # Crear matriz de distancias relativas (seq_len x seq_len)
-        range_vec = torch.arange(
-            seq_len, device=next(self.parameters()).device)
-        dist_mat = range_vec[None, :] - range_vec[:, None]
-        dist_mat = dist_mat.clamp(-self.max_rel_dist,
-                                  self.max_rel_dist) + self.max_rel_dist
-        # Retorna embedding (seq_len, seq_len, d_model)
-        return self.embedding(dist_mat)
+#     def forward(self, seq_len):
+#         # Crear matriz de distancias relativas (seq_len x seq_len)
+#         range_vec = torch.arange(
+#             seq_len, device=next(self.parameters()).device)
+#         dist_mat = range_vec[None, :] - range_vec[:, None]
+#         dist_mat = dist_mat.clamp(-self.max_rel_dist,
+#                                   self.max_rel_dist) + self.max_rel_dist
+#         # Retorna embedding (seq_len, seq_len, d_model)
+#         return self.embedding(dist_mat)
 
 
 class TemporalEmbedding(nn.Module):
@@ -213,19 +221,19 @@ class DataEmbedding(nn.Module):
     def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1, window=24, lags=[3, 5, 7]):
         super(DataEmbedding, self).__init__()
 
-        # Estadísticas + lags concatenados → una sola rama
+        # Estadísticas + lags concatenados en una sola rama
         self.est_features = RollingFeatureExtractor(window, c_in)
         self.lags = lags
         self.value_embedding_combined = TokenEmbedding(
             c_in=c_in * (5 + len(lags)), d_model=d_model
         )
 
-        # Positional embedding independiente
+        # Positional embedding
         self.position_embedding = PositionalEmbedding(d_model=d_model)
 
         # Pesos aprendibles
         self.weight_params = nn.Parameter(torch.tensor(
-            [0.5, 0.5], dtype=torch.float32))  # 2 pesos
+            [0.5, 0.5], dtype=torch.float32))
 
         self.dropout = nn.Dropout(p=dropout)
         self.cont = 0
@@ -240,10 +248,10 @@ class DataEmbedding(nn.Module):
         weights = F.softmax(self.weight_params, dim=0)
         if epoch is not None:
             print(
-                f"\t[Epoch {epoch}] Pesos => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}")
+                f"\t[Epoch {epoch}] Weights => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}")
         else:
             print(
-                f"\tPesos => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}")
+                f"t\Weights => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}")
 
     def compute_lags(self, x):
         """
