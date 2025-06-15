@@ -22,9 +22,9 @@ class Informer(nn.Module):
 
         # Encoding
         self.enc_embedding = DataEmbedding(
-            enc_in, d_model, embed, freq, dropout, window=window)
+            enc_in, d_model, embed, freq, dropout)
         self.dec_embedding = DataEmbedding(
-            dec_in, d_model, embed, freq, dropout, window=window)
+            dec_in, d_model, embed, freq, dropout)
         # Attention
         Attn = ProbAttention if attn == 'prob' else FullAttention
         # Encoder
@@ -93,9 +93,9 @@ class InformerStack(nn.Module):
 
         # Encoding
         self.enc_embedding = DataEmbedding(
-            enc_in, d_model, embed, freq, dropout, window=window)
+            enc_in, d_model, embed, freq, dropout)
         self.dec_embedding = DataEmbedding(
-            dec_in, d_model, embed, freq, dropout, window=window)
+            dec_in, d_model, embed, freq, dropout)
         # Attention
         Attn = ProbAttention if attn == 'prob' else FullAttention
         # Encoder
