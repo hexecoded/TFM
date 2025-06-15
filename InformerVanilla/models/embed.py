@@ -203,33 +203,106 @@ class RollingFeatureExtractor(nn.Module):
 
 
 class DataEmbedding(nn.Module):
-    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1, window=24):
+    """
+    Clase que permite la construcción de embeddings para el modelo de Informer 
+    usando información del valor de cada instancia, así como diferentes métodos
+    de PE ponderados para encontrar aquel que ofrece mejores rsultados
+
+    """
+
+    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1, window=24, lags=[3, 5, 7]):
         super(DataEmbedding, self).__init__()
+
+        # Estadísticas + lags concatenados → una sola rama
         self.est_features = RollingFeatureExtractor(window, c_in)
-        c_in = c_in * 5
-        self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
+        self.lags = lags
+        self.value_embedding_combined = TokenEmbedding(
+            c_in=c_in * (5 + len(lags)), d_model=d_model
+        )
+
+        # Positional embedding independiente
         self.position_embedding = PositionalEmbedding(d_model=d_model)
+
+        # Pesos aprendibles
+        self.weight_params = nn.Parameter(torch.tensor(
+            [0.5, 0.5], dtype=torch.float32))  # 2 pesos
+
         self.dropout = nn.Dropout(p=dropout)
-
-        # Pesos aprendibles para ponderar embeddings (inicializados iguales)
-        self.weight_params = nn.Parameter(torch.ones(2))
-
         self.cont = 0
 
+    def print_weights(self, epoch=None):
+        """
+        Imprime la evolución de los pesos entrenados para estadísticos y posicional
+
+        Args:
+            epoch: Época actual de entrenamiento, si está disponible. Defaults to None.
+        """
+        weights = F.softmax(self.weight_params, dim=0)
+        if epoch is not None:
+            print(
+                f"\t[Epoch {epoch}] Pesos => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}")
+        else:
+            print(
+                f"\tPesos => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}")
+
+    def compute_lags(self, x):
+        """
+        Dado un conjunto de instancias de entrada, calcula la diferencia entre lags, dando
+        como entrada una lista de elementos que indique en que t-n puntos evaluar la 
+        diferencia.
+
+        Args:
+            x: conjunto de datos de entrada
+
+        Returns:
+            lags especificados concatenados en un único tensor
+        """
+        B, L, C = x.size()
+        max_lag = max(self.lags)
+        x_padded = F.pad(x, (0, 0, max_lag, 0), mode='replicate')
+        lag_diffs = []
+        for lag in self.lags:
+            x_lagged = x_padded[:, max_lag - lag: max_lag - lag + L, :]
+            lag_diffs.append(x - x_lagged)  # Diferencias
+        return torch.cat(lag_diffs, dim=-1)  # [B, L, C * len(lags)]
+
     def forward(self, x, x_mark):
+        """
+        Función forward para la construcción del embedding. Evalúa los elementos
+        necesarios y ajusta los pesos asociados a cada elemento del embedding 
+        aditivo que se construye
+
+        Args:
+            x: conjunto de datos de entrada
+            x_mark: conjunto de datos con información temporal asociada. No utilizada
+                    cuando se elimina la codificación posicional global proporcionada
+                    en el modelo Informer original.
+
+        Returns:
+            Elementos ya procesados, sumados y con dropout aplicado para evitar sobreaprendizaje.
+        """
         self.cont += 1
-        x_proc = self.est_features(x)
 
-        value_emb = self.value_embedding(x_proc)
-        pos_emb = self.position_embedding(x_proc)
+        # Concatenación de features
+        x_stats = self.est_features(x)
+        x_lags = self.compute_lags(x)
+        x_combined = torch.cat([x_stats, x_lags], dim=-1)
+        combined_emb = self.value_embedding_combined(x_combined)
 
-        # Softmax para obtener pesos que sumen 1
-        # tensor [2] que suma 1
-        weights = torch.softmax(self.weight_params, dim=0)
+        # Positional
+        pos_emb = self.position_embedding(x)
 
-        if (self.cont % 100 == 0):
-            print(weights)
+        # Ponderación con softmax (normalizados, suman 1)
+        weights = F.softmax(self.weight_params, dim=0)
 
-        x = weights[0] * value_emb + weights[1] * pos_emb
+        # Combinación
+        out = (
+            weights[0] * combined_emb +
+            weights[1] * pos_emb
+        )
 
-        return self.dropout(x)
+        # Imprimir cada 100 pasos
+        if self.cont % 100 == 0:
+            self.print_weights()
+
+        return self.dropout(out)
