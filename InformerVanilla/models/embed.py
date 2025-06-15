@@ -251,7 +251,7 @@ class DataEmbedding(nn.Module):
                 f"\t[Epoch {epoch}] Weights => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}")
         else:
             print(
-                f"t\Weights => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}")
+                f"\tWeights => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}")
 
     def compute_lags(self, x):
         """

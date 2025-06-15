@@ -1,5 +1,5 @@
 from data.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_Pred
-from InformerPE.data.data_loader import Dataset_HPC_hour, Dataset_HPC_minute
+from InformerVanilla.data.data_loader import Dataset_HPC_hour, Dataset_HPC_minute
 
 from exp.exp_basic import Exp_Basic
 from models.model import Informer, InformerStack
