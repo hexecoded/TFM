@@ -220,6 +220,7 @@ class DataEmbedding(nn.Module):
 
     def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1, window=24, lags=[3, 5, 7]):
         super(DataEmbedding, self).__init__()
+        print("Window size: ", window)
 
         # Estadísticas + lags concatenados en una sola rama
         self.est_features = RollingFeatureExtractor(window, c_in)
@@ -235,7 +236,7 @@ class DataEmbedding(nn.Module):
         self.weight_params = nn.Parameter(torch.tensor(
             [0.5, 0.5], dtype=torch.float32))
 
-        self.dropout = nn.Dropout(p=dropout)
+        self.dropout = nn.Dropout(p=dropout * 0.25)
         self.cont = 0
 
     def print_weights(self, epoch=None):
