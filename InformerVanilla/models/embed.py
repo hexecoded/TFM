@@ -230,11 +230,11 @@ class DataEmbedding(nn.Module):
         )
 
         # Positional embedding
-        self.position_embedding = PositionalEmbedding(d_model=d_model)
+        # self.position_embedding = PositionalEmbedding(d_model=d_model)
 
         # Pesos aprendibles
-        self.weight_params = nn.Parameter(torch.tensor(
-            [0.5, 0.5], dtype=torch.float32))
+        # self.weight_params = nn.Parameter(torch.tensor(
+        #     [0.5, 0.5], dtype=torch.float32))
 
         self.dropout = nn.Dropout(p=dropout * 0.25)
         self.cont = 0
@@ -290,7 +290,7 @@ class DataEmbedding(nn.Module):
         Returns:
             Elementos ya procesados, sumados y con dropout aplicado para evitar sobreaprendizaje.
         """
-        self.cont += 1
+        # self.cont += 1
 
         # Concatenación de features
         x_stats = self.est_features(x)
@@ -299,19 +299,21 @@ class DataEmbedding(nn.Module):
         combined_emb = self.value_embedding_combined(x_combined)
 
         # Positional
-        pos_emb = self.position_embedding(x)
+        # pos_emb = self.position_embedding(x)
 
         # Ponderación con softmax (normalizados, suman 1)
-        weights = F.softmax(self.weight_params, dim=0)
+        # weights = F.softmax(self.weight_params, dim=0)
 
         # Combinación
-        out = (
-            weights[0] * combined_emb +
-            weights[1] * pos_emb
-        )
+        # out = (
+        #     weights[0] * combined_emb +
+        #     weights[1] * pos_emb
+        # )
+
+        out = combined_emb
 
         # Imprimir cada 100 pasos
-        if self.cont % 100 == 0:
-            self.print_weights()
+        # if self.cont % 100 == 0:
+        #     self.print_weights()
 
         return self.dropout(out)
