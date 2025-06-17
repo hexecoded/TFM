@@ -210,6 +210,29 @@ class RollingFeatureExtractor(nn.Module):
         return output_tensor
 
 
+class tAPE(nn.Module):
+    """
+    Clase que implementa la codificación posicional tAPE
+    (Time Absolute Position Encoding) que tiene como novedad
+    usar la longitud de secuencia para tenerla en cuenta en la
+    codificación sinusoidal
+    """
+
+    def __init__(self, d_model, max_len=5000):
+        super(tAPE, self).__init__()
+        self.pos_embedding = nn.Embedding(max_len, d_model)
+        self.token_proj = nn.Linear(d_model, d_model)
+        self.mixer = nn.Linear(2 * d_model, d_model)
+
+    def forward(self, token_embeds, position_ids):
+        # token_embeds: [B, L, d_model]
+        # position_ids: [B, L]
+        pos_embeds = self.pos_embedding(position_ids)
+        token_proj = self.token_proj(token_embeds)
+        mixed = torch.cat([token_proj, pos_embeds], dim=-1)
+        return self.mixer(mixed)
+
+
 class DataEmbedding(nn.Module):
     """
     Clase que permite la construcción de embeddings para el modelo de Informer 
@@ -229,19 +252,23 @@ class DataEmbedding(nn.Module):
             c_in=c_in * (5 + len(lags)), d_model=d_model
         )
 
+        self.tape = tAPE(d_model=d_model, max_len=5000)
+
         # Positional embedding
         self.position_embedding = PositionalEmbedding(d_model=d_model)
 
         # Pesos aprendibles
-        self.weight_params = nn.Parameter(torch.tensor(
-            [0.5, 0.5], dtype=torch.float32))
+        self.weight_params = nn.Parameter(torch.tensor([0.33, 0.33, 0.33], dtype=torch.float32))
 
         self.dropout = nn.Dropout(p=dropout * 0.25)
         self.cont = 0
 
     def print_weights(self, epoch=None):
         """
-        Imprime la evolución de los pesos entrenados para estadísticos y posicional
+        Imprime la evolución de los pesos entrenados para cada componente del embedding:
+        - Combinado de estadísticas y lags
+        - Posicional fijo (sinusoidal)
+        - tAPE (token-aware positional encoding)
 
         Args:
             epoch: Época actual de entrenamiento, si está disponible. Defaults to None.
@@ -249,10 +276,12 @@ class DataEmbedding(nn.Module):
         weights = F.softmax(self.weight_params, dim=0)
         if epoch is not None:
             print(
-                f"\t[Epoch {epoch}] Weights => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}")
+                f"\t[Epoch {epoch}] Weights => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}, tAPE: {weights[2]:.4f}"
+            )
         else:
             print(
-                f"\tWeights => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}")
+                f"\tWeights => Comb: {weights[0]:.4f}, Positional: {weights[1]:.4f}, tAPE: {weights[2]:.4f}"
+            )
 
     def compute_lags(self, x):
         """
@@ -299,19 +328,29 @@ class DataEmbedding(nn.Module):
         combined_emb = self.value_embedding_combined(x_combined)
 
         # Positional
+
         pos_emb = self.position_embedding(x)
 
-        # Ponderación con softmax (normalizados, suman 1)
+        # Crear position_ids para tAPE
+        device = x.device
+        seq_len = x.size(1)
+        position_ids = torch.arange(seq_len, device=device).unsqueeze(0).expand(x.size(0), -1)
+
+        # Obtener embedding tAPE
+        tape_emb = self.tape(combined_emb, position_ids)
+
+        # Ponderación
         weights = F.softmax(self.weight_params, dim=0)
 
-        # Combinación
+        # Combinación de las tres ramas
         out = (
-            weights[0] * combined_emb +
-            weights[1] * pos_emb
+                weights[0] * combined_emb +
+                weights[1] * pos_emb +
+                weights[2] * tape_emb
         )
 
-        # Imprimir cada 100 pasos
-        if self.cont % 100 == 0:
+        # Imprimir cada 200 pasos
+        if self.cont % 200 == 0:
             self.print_weights()
 
         return self.dropout(out)
