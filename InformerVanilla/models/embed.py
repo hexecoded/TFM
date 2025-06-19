@@ -347,61 +347,93 @@ class LearnablePositionalEncoding(nn.Module):
 #
 #         return self.dropout(out)
 
-# ## 2
+################## BIUENA##############33
+
 # class DataEmbedding(nn.Module):
-#     """
-#     Embedding para Informer que usa exclusivamente tAPE (token-aware Positional Encoding).
-#     Integra estadísticas y lags, pero la codificación posicional la gestiona solo tAPE.
-#     """
 #
-#     def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1, window=24, lags=[3, 5, 7]):
+#     def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1, window=24, lags=[3, 5, 7],
+#                  max_len=5000):
 #         super(DataEmbedding, self).__init__()
-#         print("Window size: ", window)
 #
-#         # Estadísticas + lags
 #         self.est_features = RollingFeatureExtractor(window, c_in)
 #         self.lags = lags
 #         self.value_embedding_combined = TokenEmbedding(
-#             c_in=c_in * (5 + len(lags)), d_model=d_model
+#             c_in=c_in * (5
+#                          #+ len(lags)
+#                          ), d_model=d_model
 #         )
 #
-#         # Solo se usa tAPE
-#         self.tape = tAPE(d_model=d_model, max_len=5000)
+#         # Se elimina self.fixed_pe
+#         # self.fixed_pe = FixedEmbedding(max_len, d_model)
+#         self.learned_pe = LearnablePositionalEncoding(d_model, max_len)
+#         self.tape = tAPE(d_model, max_len)
+#
+#         # Ajuste en weight_params: ahora 3 pesos en lugar de 4
+#         self.weight_params = nn.Parameter(torch.tensor(
+#             [0.34, 0.33, 0.33], dtype=torch.float32  # Ajuste de pesos para los 3 elementos restantes
+#         ))
+#
+#         self.norm_combined = nn.LayerNorm(d_model)
+#         # Se elimina self.norm_fixed
+#         # self.norm_fixed = nn.LayerNorm(d_model)
+#         self.norm_learned = nn.LayerNorm(d_model)
+#         self.norm_tape = nn.LayerNorm(d_model)
 #
 #         self.dropout = nn.Dropout(p=dropout * 0.25)
+#         self.cont = 0
 #
 #     def compute_lags(self, x):
-#         """
-#         Calcula diferencias entre valores actuales y retardos especificados.
-#         """
 #         B, L, C = x.size()
 #         max_lag = max(self.lags)
 #         x_padded = F.pad(x, (0, 0, max_lag, 0), mode='replicate')
-#         lag_diffs = []
-#         for lag in self.lags:
-#             x_lagged = x_padded[:, max_lag - lag: max_lag - lag + L, :]
-#             lag_diffs.append(x - x_lagged)
+#         lag_diffs = [x - x_padded[:, max_lag - lag:max_lag - lag + L, :] for lag in self.lags]
 #         return torch.cat(lag_diffs, dim=-1)
 #
 #     def forward(self, x, x_mark=None):
-#         """
-#         Forward que usa tAPE como única forma de codificación posicional.
-#         """
-#         # Concatenar estadísticas y lags
+#         self.cont += 1
 #         x_stats = self.est_features(x)
-#         x_lags = self.compute_lags(x)
-#         x_combined = torch.cat([x_stats, x_lags], dim=-1)
+#         # x_lags = self.compute_lags(x)
+#         x_combined = x_stats
+#         #x_combined = torch.cat([x_stats, x_lags], dim=-1)
 #         combined_emb = self.value_embedding_combined(x_combined)
 #
-#         # Crear position_ids
+#         B, L, _ = x.size()
 #         device = x.device
-#         seq_len = x.size(1)
-#         position_ids = torch.arange(seq_len, device=device).unsqueeze(0).expand(x.size(0), -1)
+#         position_ids = torch.arange(L, device=device).unsqueeze(0).expand(B, -1)
 #
-#         # Aplicar tAPE
-#         out = self.tape(combined_emb, position_ids)
+#         # Se eliminan las líneas relacionadas con fixed_pe
+#         # pe_fixed = self.fixed_pe(position_ids)
+#         # pe_learned = self.learned_pe(x)
+#         # pe_tape = self.tape(combined_emb, position_ids)
+#
+#         # Normalizacion
+#         combined_emb = self.norm_combined(combined_emb)
+#         # Se elimina la normalización de fixed_pe
+#         # pe_fixed = self.norm_fixed(self.fixed_pe(position_ids))
+#         pe_learned = self.norm_learned(self.learned_pe(x))
+#         pe_tape = self.norm_tape(self.tape(combined_emb, position_ids))
+#
+#         weights = F.softmax(self.weight_params, dim=0)
+#
+#         out = (
+#                 weights[0] * combined_emb +
+#                 # Se elimina weights[1] * pe_fixed +
+#                 weights[1] * pe_learned +  # Ahora este es el weights[1]
+#                 weights[2] * pe_tape  # Ahora este es el weights[2]
+#         )
+#
+#         if self.cont % 200 == 0:
+#             self.print_weights()
 #
 #         return self.dropout(out)
+#
+#     def print_weights(self, epoch=None):
+#         weights = F.softmax(self.weight_params, dim=0)
+#         msg = f"\t[Epoch {epoch}] " if epoch else ""
+#         print(
+#             # Se ajustan los índices y el mensaje al eliminar 'PE'
+#             f"\t{msg}Weights => Stats: {weights[0]:.4f}, LPE: {weights[1]:.4f}, tAPE: {weights[2]:.4f}")
+
 
 class DataEmbedding(nn.Module):
 
