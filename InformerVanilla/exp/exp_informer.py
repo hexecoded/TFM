@@ -160,7 +160,7 @@ class Exp_Informer(Exp_Basic):
             train_loss = []
 
             self.model.train()
-            
+
             epoch_time = time.time()
             for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(train_loader):
                 iter_count += 1
@@ -210,6 +210,7 @@ class Exp_Informer(Exp_Basic):
         test_data, test_loader = self._get_data(flag='test')
 
         self.model.eval()
+        self._in_test_mode = True
 
         preds = []
         trues = []
@@ -219,6 +220,8 @@ class Exp_Informer(Exp_Basic):
                 test_data, batch_x, batch_y, batch_x_mark, batch_y_mark)
             preds.append(pred.detach().cpu().numpy())
             trues.append(true.detach().cpu().numpy())
+
+        self._in_test_mode = False
 
         preds = np.array(preds)
         trues = np.array(trues)
@@ -277,12 +280,19 @@ class Exp_Informer(Exp_Basic):
         batch_x_mark = batch_x_mark.float().to(self.device)
         batch_y_mark = batch_y_mark.float().to(self.device)
 
+        # Tras crear input del decoder, permitimos usar shuffle en caso de que se especifique
         # decoder input
         if self.args.padding == 0:
             dec_inp = torch.zeros([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
         elif self.args.padding == 1:
             dec_inp = torch.ones([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
         dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
+
+        if getattr(self, "_in_test_mode", False) and self.args.shuffle_decoder_input:
+            B, T, C = dec_inp.shape
+            shuffle_idx = torch.randperm(T)
+            dec_inp = dec_inp[:, shuffle_idx, :]
+
         # encoder - decoder
         if self.args.use_amp:
             with torch.cuda.amp.autocast():
