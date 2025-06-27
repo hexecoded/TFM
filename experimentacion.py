@@ -16,6 +16,7 @@ import argparse
 import torch
 import numpy as np
 import csv
+import time
 
 METRIC_LABS = ["MAE", "MSE", "RMSE", "MAPE", "MSPE"]
 # Establecemos el nombre del modelo, ie, su nombre en carpeta
@@ -27,7 +28,7 @@ parser = argparse.ArgumentParser(description='[Experimentación Informer] Long S
 
 parser.add_argument('--model', type=str, required=True, default='informer',
                     help='model of experiment, options: [informer, informerstack, informerlight(TBD)]')
-parser.add_argument('--encoding', type=str, default="LEGE",required=True, help='TYPE of Informer encoder')
+parser.add_argument('--encoding', type=str, default="LEGE", required=True, help='TYPE of Informer encoder')
 
 parser.add_argument('--folder', type=str, required=True, default='InformerPE', help='model folder for experiment')
 parser.add_argument('--data', type=str, required=True, default='ETTh1', help='data')
@@ -122,38 +123,33 @@ if args.data in data_parser.keys():
 # Iniciamos el experimento
 Exp = Exp_Informer
 
+# Preparamos el vector de tiempos
+times = []
+
 for ii in range(args.itr):
     print("========================= Ejecución {} =========================".format(ii))
-    # setting record of experiments
-    setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_win{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}'.format(args.model,
-                                                                                                         args.data,
-                                                                                                         args.features,
-                                                                                                         args.seq_len,
-                                                                                                         args.label_len,
-                                                                                                         args.pred_len,
-                                                                                                         args.window,
-                                                                                                         args.d_model,
-                                                                                                         args.n_heads,
-                                                                                                         args.e_layers,
-                                                                                                         args.d_layers,
-                                                                                                         args.d_ff,
-                                                                                                         args.attn,
-                                                                                                         args.factor,
-                                                                                                         args.embed,
-                                                                                                         args.distil,
-                                                                                                         args.mix,
-                                                                                                         args.des, ii)
+    setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_win{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}'.format(
+        args.model, args.data, args.features, args.seq_len, args.label_len, args.pred_len,
+        args.window, args.d_model, args.n_heads, args.e_layers, args.d_layers, args.d_ff,
+        args.attn, args.factor, args.embed, args.distil, args.mix, args.des, ii
+    )
 
-    # Insertamos la información del experimento a realizar
     exp = Exp(args)
-    # Entrenamiento
+
+    # Tiempo de entrenamiento + test
+    start_time = time.time()
+
     print("Entrenamiento")
     exp.train(setting)
-    # Evaluación
+
     print("Evaluación")
     exp.test(setting)
 
-    # Limpieza de cachés para nueva ejecución desde 0.
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    times.append(elapsed_time)
+    print(f"Tiempo de ejecución {ii}: {elapsed_time:.2f} segundos")
+
     torch.cuda.empty_cache()
 
 # Recopilamos los experimentos realizados
@@ -167,13 +163,15 @@ for i in range(args.itr):
 # Mostramos la media de las métricas evaluadas
 print("========================= Resultados del experimento =========================")
 
-# Calculamosla media
 mean = metrics / args.itr
-metric_dict = {label: mean[i] for i, label in enumerate(METRIC_LABS)}
+mean_time = np.mean(times)
 
-# Mostramos las métricas
+metric_dict = {label: mean[i] for i, label in enumerate(METRIC_LABS)}
+metric_dict["Time(s)"] = mean_time
+
+# Mostramos
 for label, value in metric_dict.items():
-    print(f"{label} >> {value}")
+    print(f"{label} >> {value:.4f}")
 
 # Guardado en disco de las métricas
 with open(f"Experimentos/metricas_{args.folder}_{args.encoding}_{setting[:-2]}.csv", mode="w", newline="") as f:
