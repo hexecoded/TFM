@@ -17,6 +17,7 @@ import torch
 import numpy as np
 import csv
 import time
+import os, shutil, glob
 
 METRIC_LABS = ["MAE", "MSE", "RMSE", "MAPE", "MSPE"]
 # Establecemos el nombre del modelo, ie, su nombre en carpeta
@@ -123,58 +124,80 @@ if args.data in data_parser.keys():
 # Iniciamos el experimento
 Exp = Exp_Informer
 
-# Preparamos el vector de tiempos
-times = []
+metrics = np.zeros(len(METRIC_LABS))
+train_times = []
+test_times = []
 
+# Preparación del directorio de resultados
+
+results_folder = "results"
+setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_win{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}'.format(
+    args.model, args.data, args.features, args.seq_len, args.label_len, args.pred_len, args.window,
+    args.d_model, args.n_heads, args.e_layers, args.d_layers, args.d_ff, args.attn, args.factor,
+    args.embed, args.distil, args.mix, args.des, 0
+)
+
+for file_path in glob.glob(os.path.join(results_folder, f"{setting[:-2]}*")):
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    elif os.path.isdir(file_path):
+        shutil.rmtree(file_path)
+
+# === Ejecuciones ===
 for ii in range(args.itr):
     print("========================= Ejecución {} =========================".format(ii))
-    setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_win{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}'.format(
-        args.model, args.data, args.features, args.seq_len, args.label_len, args.pred_len,
-        args.window, args.d_model, args.n_heads, args.e_layers, args.d_layers, args.d_ff,
-        args.attn, args.factor, args.embed, args.distil, args.mix, args.des, ii
-    )
 
+    iter_setting = setting[:-2] + str(ii)
     exp = Exp(args)
 
-    # Tiempo de entrenamiento + test
-    start_time = time.time()
-
     print("Entrenamiento")
-    exp.train(setting)
+    start_train = time.time()
+    exp.train(iter_setting)
+    end_train = time.time()
+    train_duration = end_train - start_train
+    train_times.append(train_duration)
 
     print("Evaluación")
-    exp.test(setting)
+    start_test = time.time()
+    exp.test(iter_setting)
+    end_test = time.time()
+    test_duration = end_test - start_test
+    test_times.append(test_duration)
 
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    times.append(elapsed_time)
-    print(f"Tiempo de ejecución {ii}: {elapsed_time:.2f} segundos")
+    print(f"Tiempo de entrenamiento: {train_duration:.2f}s")
+    print(f"Tiempo de test: {test_duration:.2f}s")
+
+    # Cargar métricas de test
+    metric_path = f"./results/{iter_setting}/metrics.npy"
+    if os.path.exists(metric_path):
+        run_metrics = np.load(metric_path)
+        if run_metrics.shape[0] == len(METRIC_LABS):
+            metrics += run_metrics
+        else:
+            print("Error: métrica inesperada.")
+    else:
+        print(f"No se encontró el archivo: {metric_path}")
 
     torch.cuda.empty_cache()
 
-# Recopilamos los experimentos realizados
-
-metrics = np.zeros(5)
-
-for i in range(args.itr):
-    datos = np.load("results/" + setting[:-1] + str(i) + "/metrics.npy")
-    metrics += np.array(datos)
-
-# Mostramos la media de las métricas evaluadas
+# === Resultados Finales ===
 print("========================= Resultados del experimento =========================")
+mean_metrics = metrics / args.itr
+mean_train_time = np.mean(train_times)
+mean_test_time = np.mean(test_times)
 
-mean = metrics / args.itr
-mean_time = np.mean(times)
+metric_dict = {label: mean_metrics[i] for i, label in enumerate(METRIC_LABS)}
+metric_dict["TrainTime(s)"] = mean_train_time
+metric_dict["TestTime(s)"] = mean_test_time
 
-metric_dict = {label: mean[i] for i, label in enumerate(METRIC_LABS)}
-metric_dict["Time(s)"] = mean_time
-
-# Mostramos
 for label, value in metric_dict.items():
     print(f"{label} >> {value:.4f}")
 
-# Guardado en disco de las métricas
-with open(f"Experimentos/metricas_{args.folder}_{args.encoding}_{setting[:-2]}.csv", mode="w", newline="") as f:
+# === Guardar métricas ===
+os.makedirs("Experimentos", exist_ok=True)
+csv_path = f"Experimentos/metricas_{args.folder}_{args.encoding}_{setting[:-2]}.csv"
+
+with open(csv_path, mode="w", newline="") as f:
     writer = csv.writer(f)
     writer.writerow(["Métrica", "Valor"])
     for label, value in metric_dict.items():
