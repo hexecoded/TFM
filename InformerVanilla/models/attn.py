@@ -129,59 +129,29 @@ class ProbAttention(nn.Module):
 
 class AttentionLayer(nn.Module):
     def __init__(self, attention, d_model, n_heads,
-                 d_keys=None, d_values=None, mix=False, use_conv_spe=True, kernel_size=31):
+                 d_keys=None, d_values=None, mix=False):
         super(AttentionLayer, self).__init__()
 
         d_keys = d_keys or (d_model // n_heads)
         d_values = d_values or (d_model // n_heads)
 
         self.inner_attention = attention
+        self.query_projection = nn.Linear(d_model, d_keys * n_heads)
+        self.key_projection = nn.Linear(d_model, d_keys * n_heads)
+        self.value_projection = nn.Linear(d_model, d_values * n_heads)
+        self.out_projection = nn.Linear(d_values * n_heads, d_model)
         self.n_heads = n_heads
         self.mix = mix
-        self.use_conv_spe = use_conv_spe
-
-        if use_conv_spe:
-            # Para ConvSPE, usamos nn.Conv1d para las proyecciones de Query, Key y Value.
-            # El input para Conv1d debe ser (Batch, Channels, Length).
-            # Por lo tanto, necesitamos transponer las dimensiones (B, L, D_model) a (B, D_model, L)
-            # antes de la convolución, y luego volver a transponer el output a (B, L, D_out).
-
-            # Un kernel_size impar y padding = kernel_size // 2 asegura que la longitud de salida es igual a la de entrada.
-            padding = kernel_size // 2
-            self.query_projection = nn.Conv1d(d_model, d_keys * n_heads, kernel_size=kernel_size, padding=padding)
-            self.key_projection = nn.Conv1d(d_model, d_keys * n_heads, kernel_size=kernel_size, padding=padding)
-            self.value_projection = nn.Conv1d(d_model, d_values * n_heads, kernel_size=kernel_size, padding=padding)
-        else:
-            # Proyecciones lineales originales
-            self.query_projection = nn.Linear(d_model, d_keys * n_heads)
-            self.key_projection = nn.Linear(d_model, d_keys * n_heads)
-            self.value_projection = nn.Linear(d_model, d_values * n_heads)
-
-        self.out_projection = nn.Linear(d_values * n_heads, d_model)
 
     def forward(self, queries, keys, values, attn_mask):
         B, L, _ = queries.shape
         _, S, _ = keys.shape
         H = self.n_heads
 
-        if self.use_conv_spe:
-            # Aplicar convoluciones y transponer dimensiones
-            # (B, L, D_model) -> (B, D_model, L) -> Conv1d -> (B, D_out, L) -> (B, L, D_out)
-            queries = self.query_projection(queries.transpose(1, 2)).transpose(1, 2)
-            keys = self.key_projection(keys.transpose(1, 2)).transpose(1, 2)
-            values = self.value_projection(values.transpose(1, 2)).transpose(1, 2)
-        else:
-            # Aplicar proyecciones lineales
-            queries = self.query_projection(queries)
-            keys = self.key_projection(keys)
-            values = self.value_projection(values)
+        queries = self.query_projection(queries).view(B, L, H, -1)
+        keys = self.key_projection(keys).view(B, S, H, -1)
+        values = self.value_projection(values).view(B, S, H, -1)
 
-        # Reorganizar para múltiples cabezas de atención
-        queries = queries.view(B, L, H, -1)
-        keys = keys.view(B, S, H, -1)
-        values = values.view(B, S, H, -1)
-
-        # Pasar a la atención interna (FullAttention en tu caso)
         out, attn = self.inner_attention(
             queries,
             keys,
