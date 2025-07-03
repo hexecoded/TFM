@@ -280,14 +280,13 @@ class Exp_Informer(Exp_Basic):
         batch_x_mark = batch_x_mark.float().to(self.device)
         batch_y_mark = batch_y_mark.float().to(self.device)
 
-        # Tras crear input del decoder, permitimos usar shuffle en caso de que se especifique
-        # decoder input
         if self.args.padding == 0:
             dec_inp = torch.zeros([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
         elif self.args.padding == 1:
             dec_inp = torch.ones([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
         dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
 
+        # Si es especificado, realizamos el shuffle
         if getattr(self, "_in_test_mode", False) and self.args.shuffle_decoder_input:
             B, T, C = dec_inp.shape
             shuffle_idx = torch.randperm(T)

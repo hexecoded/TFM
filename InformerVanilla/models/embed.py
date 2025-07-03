@@ -44,11 +44,30 @@ class PositionalEmbedding(nn.Module):
 
 
 class FourierEncoding(nn.Module):
+    """
+    Clase para la codificación adicional de información posicional mediante el
+    uso de la transformada de Fourier.
+    Se presenta como alternativa al encoding sin/cos habitual en transformers,
+    descomponiendo la serie y tomando la frecuencia para extraer nuevas características.
+    """
+
     def __init__(self, d_model):
         super(FourierEncoding, self).__init__()
         self.d_model = d_model
 
     def forward(self, x):
+        """
+        Realiza la descomposición de Fourier y la selección  de la 
+        frecuencia, que es luego interpolada para ser de la misma longitud que
+        la serie original.
+
+        Args:
+            x: datos de entrada para ser procesados en cada iteración
+
+        Returns:
+            información extraída de la serie interpolada para poder ser
+            sumada a la original a modo de PE.
+        """
         # x: [B, L, d_model]
         # FFT sobre la dimensión temporal (L)
         x_fft = torch.fft.rfft(x, dim=1, norm='ortho')  # [B, L//2+1, d_model]
@@ -214,7 +233,8 @@ class LearnablePositionalEncoding(nn.Module):
         # Inicialización normal truncada con std ≈ 1/sqrt(d_model)
         std = 1.0 / math.sqrt(d_model)
         self.pe = nn.Parameter(torch.zeros(1, max_len, d_model))
-        nn.init.trunc_normal_(self.pe, mean=0.0, std=std, a=-2 * std, b=2 * std)
+        nn.init.trunc_normal_(self.pe, mean=0.0, std=std,
+                              a=-2 * std, b=2 * std)
 
     def forward(self, x):
         """
@@ -278,7 +298,8 @@ class DataEmbedding(nn.Module):
         B, L, C = x.size()
         max_lag = max(self.lags)
         x_padded = F.pad(x, (0, 0, max_lag, 0), mode='replicate')
-        lag_diffs = [x - x_padded[:, max_lag - lag:max_lag - lag + L, :] for lag in self.lags]
+        lag_diffs = [x - x_padded[:, max_lag - lag:max_lag - lag + L, :]
+                     for lag in self.lags]
         return torch.cat(lag_diffs, dim=-1)
 
     def forward(self, x, x_mark=None):
@@ -304,7 +325,8 @@ class DataEmbedding(nn.Module):
 
         B, L, _ = x.size()
         device = x.device
-        position_ids = torch.arange(L, device=device).unsqueeze(0).expand(B, -1)
+        position_ids = torch.arange(
+            L, device=device).unsqueeze(0).expand(B, -1)
 
         # Normalizacion
         combined_emb = self.norm_combined(combined_emb)
@@ -315,10 +337,10 @@ class DataEmbedding(nn.Module):
         weights = F.softmax(self.weight_params, dim=0)
 
         out = (
-                weights[0] * combined_emb +
-                weights[1] * pe_fixed +
-                weights[2] * pe_learned +
-                weights[3] * pe_tape
+            weights[0] * combined_emb +
+            weights[1] * pe_fixed +
+            weights[2] * pe_learned +
+            weights[3] * pe_tape
         )
 
         if self.cont % 200 == 0:
