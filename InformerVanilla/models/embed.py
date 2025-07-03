@@ -283,7 +283,7 @@ class DataEmbedding(nn.Module):
         self.dropout = nn.Dropout(p=dropout * 0.25)
         self.cont = 0
         
-        print("PE: ", pos_enc)
+        print("PE: ", embed_type)
 
     def compute_lags(self, x):
         """

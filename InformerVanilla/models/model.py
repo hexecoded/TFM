@@ -14,7 +14,7 @@ class Informer(nn.Module):
                  factor=5, d_model=512, n_heads=8, e_layers=3, d_layers=2, d_ff=512,
                  dropout=0.0, attn='prob', embed='fixed', freq='h', activation='gelu',
                  output_attention=False, distil=True, mix=True,
-                 device=torch.device('cuda:0'), window=24, pos_enc="window"):
+                 device=torch.device('cuda:0'), window=24):
         super(Informer, self).__init__()
         self.pred_len = out_len
         self.attn = attn
@@ -22,9 +22,9 @@ class Informer(nn.Module):
 
         # Encoding
         self.enc_embedding = DataEmbedding(
-            enc_in, d_model, embed, freq, dropout, window=window, pos_enc=pos_enc)
+            enc_in, d_model, embed, freq, dropout, window=window)
         self.dec_embedding = DataEmbedding(
-            dec_in, d_model, embed, freq, dropout, window=window, pos_enc=pos_enc)
+            dec_in, d_model, embed, freq, dropout, window=window)
         # Attention
         Attn = ProbAttention if attn == 'prob' else FullAttention
         # Encoder
@@ -85,7 +85,7 @@ class InformerStack(nn.Module):
                  factor=5, d_model=512, n_heads=8, e_layers=[3, 2, 1], d_layers=2, d_ff=512,
                  dropout=0.0, attn='prob', embed='fixed', freq='h', activation='gelu',
                  output_attention=False, distil=True, mix=True,
-                 device=torch.device('cuda:0'), window=24, pos_enc="window"):
+                 device=torch.device('cuda:0'), window=24):
         super(InformerStack, self).__init__()
         self.pred_len = out_len
         self.attn = attn
@@ -93,9 +93,9 @@ class InformerStack(nn.Module):
 
         # Encoding
         self.enc_embedding = DataEmbedding(
-            enc_in, d_model, embed, freq, dropout, window=window, pos_enc=pos_enc)
+            enc_in, d_model, embed, freq, dropout, window=window)
         self.dec_embedding = DataEmbedding(
-            dec_in, d_model, embed, freq, dropout, window=window, pos_enc=pos_enc)
+            dec_in, d_model, embed, freq, dropout, window=window)
         # Attention
         Attn = ProbAttention if attn == 'prob' else FullAttention
         # Encoder
