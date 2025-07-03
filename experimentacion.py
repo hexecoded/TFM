@@ -38,7 +38,7 @@ parser.add_argument('--ex_name', type=str, default="Informer_Original",
 parser.add_argument('--folder', type=str, required=True,
                     default='InformerVanilla', help='model folder for experiment')
 
-parser.add_argument('--enc_strategy', type=str, required=True,
+parser.add_argument('--pos_enc', type=str, required=True,
                     default='original', help='PE encoding type, options:[original, window, all_pe_window, spe, tpe_all_pe, tpe]')
 
 parser.add_argument('--data', type=str, required=True,

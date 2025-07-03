@@ -257,9 +257,9 @@ class DataEmbedding(nn.Module):
     """
 
     def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1, window=24, lags=[3, 5, 7],
-                 max_len=5000):
+                 max_len=5000, pos_enc="window"):
         super(DataEmbedding, self).__init__()
-
+        self.pos_enc = pos_enc
         self.est_features = RollingFeatureExtractor(window, c_in)
         self.lags = lags
         self.value_embedding_combined = TokenEmbedding(
@@ -282,6 +282,8 @@ class DataEmbedding(nn.Module):
 
         self.dropout = nn.Dropout(p=dropout * 0.25)
         self.cont = 0
+        
+        print("PE: ", pos_enc)
 
     def compute_lags(self, x):
         """
