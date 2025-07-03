@@ -247,8 +247,8 @@ metric_dict["TrainTime_std(s)"] = std_train_time
 metric_dict["TestTime_mean(s)"] = mean_test_time
 metric_dict["TestTime_std(s)"] = std_test_time
 
-# Imprimir métricas
-print("========================= Resultados del experimento =========================")
+# Imprimir resultados
+
 print(f"{'Métrica':<25}{'Mean':>12}{'Std':>12}")
 print("-" * 50)
 for label in METRIC_LABS:
