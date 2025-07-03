@@ -11,7 +11,6 @@ estructura de clases de Informer. Permite configurar los parámetros de entrada
 y la ubicación de los datos, así como sus propiedades.
 """
 
-from exp.exp_informer import Exp_Informer
 import sys
 import argparse
 import torch
@@ -133,6 +132,8 @@ args = parser.parse_args()
 
 # Cargamos el modelo seleccionado
 sys.path += [args.folder]
+print(sys.path)
+
 
 # Comprobación de uso de CUDA para el cómputo
 args.use_gpu = True if torch.cuda.is_available() and args.use_gpu else False
@@ -163,6 +164,7 @@ if args.data in data_parser.keys():
     args.enc_in, args.dec_in, args.c_out = data_info[args.features]
 
 # Iniciamos el experimento
+from exp.exp_informer import Exp_Informer
 Exp = Exp_Informer
 
 # === Inicialización de estructuras ===
@@ -170,6 +172,21 @@ metrics = np.zeros(len(METRIC_LABS))
 all_metrics = []  # Aquí guardaremos los vectores de métricas de cada iteración
 train_times = []
 test_times = []
+
+# Preparación del directorio de resultados
+
+results_folder = "results"
+setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_win{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}'.format(
+    args.model, args.data, args.features, args.seq_len, args.label_len, args.pred_len, args.window,
+    args.d_model, args.n_heads, args.e_layers, args.d_layers, args.d_ff, args.attn, args.factor,
+    args.embed, args.distil, args.mix, args.des, 0
+)
+
+for file_path in glob.glob(os.path.join(results_folder, f"{setting[:-2]}*")):
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    elif os.path.isdir(file_path):
+        shutil.rmtree(file_path)
 
 # === Ejecuciones ===
 for ii in range(args.itr):
