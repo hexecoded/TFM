@@ -17,7 +17,9 @@ import torch
 import numpy as np
 import csv
 import time
-import os, shutil, glob
+import os
+import shutil
+import glob
 
 METRIC_LABS = ["MAE", "MSE", "RMSE", "MAPE", "MSPE"]
 # Establecemos el nombre del modelo, ie, su nombre en carpeta
@@ -25,74 +27,109 @@ METRIC_LABS = ["MAE", "MSE", "RMSE", "MAPE", "MSPE"]
 
 # Inserción de parámetros. Se usa el formato argparse para obtener realimentación en caso de requerir ayuda para conocer
 # las opciones disponibles
-parser = argparse.ArgumentParser(description='[Experimentación Informer] Long Sequences Forecasting')
+parser = argparse.ArgumentParser(
+    description='[Experimentación Informer] Long Sequences Forecasting')
 
 parser.add_argument('--model', type=str, required=True, default='informer',
                     help='model of experiment, options: [informer, informerstack, informerlight(TBD)]')
-parser.add_argument('--encoding', type=str, default="LEGE", required=True, help='TYPE of Informer encoder')
+parser.add_argument('--ex_name', type=str, default="Informer_Original",
+                    required=True, help='Experiment name')
 
-parser.add_argument('--folder', type=str, required=True, default='InformerPE', help='model folder for experiment')
-parser.add_argument('--data', type=str, required=True, default='ETTh1', help='data')
-parser.add_argument('--root_path', type=str, default='./Datasets/ETT-small', help='root path of the data file')
-parser.add_argument('--data_path', type=str, default='ETTh1.csv', help='data file')
+parser.add_argument('--folder', type=str, required=True,
+                    default='InformerVanilla', help='model folder for experiment')
+parser.add_argument('--data', type=str, required=True,
+                    default='ETTh1', help='data')
+parser.add_argument('--root_path', type=str,
+                    default='./Datasets/ETT-small', help='root path of the data file')
+parser.add_argument('--data_path', type=str,
+                    default='ETTh1.csv', help='data file')
 parser.add_argument('--features', type=str, default='M',
                     help='forecasting task, options:[M, S, MS]; M:multivariate predict multivariate, S:univariate predict univariate, MS:multivariate predict univariate')
-parser.add_argument('--target', type=str, default='OT', help='target feature in S or MS task')
+parser.add_argument('--target', type=str, default='OT',
+                    help='target feature in S or MS task')
 parser.add_argument('--freq', type=str, default='h',
                     help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
-parser.add_argument('--checkpoints', type=str, default='./checkpoints/', help='location of model checkpoints')
+parser.add_argument('--checkpoints', type=str,
+                    default='./checkpoints/', help='location of model checkpoints')
 
-parser.add_argument('--seq_len', type=int, default=96, help='input sequence length of Informer encoder')
-parser.add_argument('--label_len', type=int, default=48, help='start token length of Informer decoder')
-parser.add_argument('--pred_len', type=int, default=24, help='prediction sequence length')
+parser.add_argument('--seq_len', type=int, default=96,
+                    help='input sequence length of Informer encoder')
+parser.add_argument('--label_len', type=int, default=48,
+                    help='start token length of Informer decoder')
+parser.add_argument('--pred_len', type=int, default=24,
+                    help='prediction sequence length')
 
 parser.add_argument('--enc_in', type=int, default=7, help='encoder input size')
 parser.add_argument('--dec_in', type=int, default=7, help='decoder input size')
 parser.add_argument('--c_out', type=int, default=7, help='output size')
-parser.add_argument('--d_model', type=int, default=512, help='dimension of model')
+parser.add_argument('--d_model', type=int, default=512,
+                    help='dimension of model')
 parser.add_argument('--n_heads', type=int, default=8, help='num of heads')
-parser.add_argument('--e_layers', type=int, default=2, help='num of encoder layers')
-parser.add_argument('--d_layers', type=int, default=1, help='num of decoder layers')
-parser.add_argument('--s_layers', type=str, default='3,2,1', help='num of stack encoder layers')
+parser.add_argument('--e_layers', type=int, default=2,
+                    help='num of encoder layers')
+parser.add_argument('--d_layers', type=int, default=1,
+                    help='num of decoder layers')
+parser.add_argument('--s_layers', type=str, default='3,2,1',
+                    help='num of stack encoder layers')
 parser.add_argument('--d_ff', type=int, default=2048, help='dimension of fcn')
-parser.add_argument('--factor', type=int, default=5, help='probsparse attn factor')
+parser.add_argument('--factor', type=int, default=5,
+                    help='probsparse attn factor')
 parser.add_argument('--padding', type=int, default=0, help='padding type')
 parser.add_argument('--distil', action='store_false',
                     help='whether to use distilling in encoder, using this argument means not using distilling',
                     default=True)
 parser.add_argument('--dropout', type=float, default=0.05, help='dropout')
-parser.add_argument('--attn', type=str, default='prob', help='attention used in encoder, options:[prob, full]')
+parser.add_argument('--attn', type=str, default='prob',
+                    help='attention used in encoder, options:[prob, full]')
 parser.add_argument('--embed', type=str, default='timeF',
-                    help='time features encoding, options:[timeF, fixed, learned]')
-parser.add_argument('--activation', type=str, default='gelu', help='activation')
-parser.add_argument('--window', type=int, default=24, help='window size for stats computing')
-parser.add_argument('--output_attention', action='store_true', help='whether to output attention in encoder')
-parser.add_argument('--do_predict', action='store_true', help='whether to predict unseen future data')
-parser.add_argument('--mix', action='store_false', help='use mix attention in generative decoder', default=True)
-parser.add_argument('--cols', type=str, nargs='+', help='certain cols from the data files as the input features')
-parser.add_argument('--num_workers', type=int, default=0, help='data loader num workers')
+                    help='time features encoding, options:[no_pe, informer, stats, stats_lags, all_pe_weighted, tpe]')
+parser.add_argument('--activation', type=str,
+                    default='gelu', help='activation')
+parser.add_argument('--window', type=int, default=24,
+                    help='window size for stats computing')
+parser.add_argument('--output_attention', action='store_true',
+                    help='whether to output attention in encoder')
+parser.add_argument('--do_predict', action='store_true',
+                    help='whether to predict unseen future data')
+parser.add_argument('--mix', action='store_false',
+                    help='use mix attention in generative decoder', default=True)
+parser.add_argument('--cols', type=str, nargs='+',
+                    help='certain cols from the data files as the input features')
+parser.add_argument('--num_workers', type=int, default=0,
+                    help='data loader num workers')
 parser.add_argument('--itr', type=int, default=1, help='experiments times')
-parser.add_argument('--train_epochs', type=int, default=100, help='train epochs')
-parser.add_argument('--batch_size', type=int, default=32, help='batch size of train input data')
-parser.add_argument('--patience', type=int, default=3, help='early stopping patience')
-parser.add_argument('--learning_rate', type=float, default=0.0005, help='optimizer learning rate')
+parser.add_argument('--train_epochs', type=int,
+                    default=100, help='train epochs')
+parser.add_argument('--batch_size', type=int, default=32,
+                    help='batch size of train input data')
+parser.add_argument('--patience', type=int, default=3,
+                    help='early stopping patience')
+parser.add_argument('--learning_rate', type=float,
+                    default=0.0005, help='optimizer learning rate')
 parser.add_argument('--des', type=str, default='test', help='exp description')
 parser.add_argument('--loss', type=str, default='mse', help='loss function')
-parser.add_argument('--lradj', type=str, default='type1', help='adjust learning rate')
-parser.add_argument('--use_amp', action='store_true', help='use automatic mixed precision training', default=False)
-parser.add_argument('--inverse', action='store_true', help='inverse output data', default=False)
+parser.add_argument('--lradj', type=str, default='type1',
+                    help='adjust learning rate')
+parser.add_argument('--use_amp', action='store_true',
+                    help='use automatic mixed precision training', default=False)
+parser.add_argument('--inverse', action='store_true',
+                    help='inverse output data', default=False)
 
 parser.add_argument('--use_gpu', type=bool, default=True, help='use gpu')
 parser.add_argument('--gpu', type=int, default=0, help='gpu')
-parser.add_argument('--use_multi_gpu', action='store_true', help='use multiple gpus', default=False)
-parser.add_argument('--devices', type=str, default='0,1,2,3', help='device ids of multile gpus')
-parser.add_argument('--shuffle_decoder_input', action='store_true', help='Shuffle decoder input during test')
+parser.add_argument('--use_multi_gpu', action='store_true',
+                    help='use multiple gpus', default=False)
+parser.add_argument('--devices', type=str, default='0,1,2,3',
+                    help='device ids of multile gpus')
+parser.add_argument('--shuffle_decoder_input', action='store_true',
+                    help='Shuffle decoder input during test')
 
 args = parser.parse_args()
 
 # Cargamos el modelo seleccionado
 sys.path += [args.folder]
-from exp.exp_informer import Exp_Informer
+print(sys.path)
+
 
 # Comprobación de uso de CUDA para el cómputo
 args.use_gpu = True if torch.cuda.is_available() and args.use_gpu else False
@@ -123,9 +160,12 @@ if args.data in data_parser.keys():
     args.enc_in, args.dec_in, args.c_out = data_info[args.features]
 
 # Iniciamos el experimento
+from exp.exp_informer import Exp_Informer
 Exp = Exp_Informer
 
+# === Inicialización de estructuras ===
 metrics = np.zeros(len(METRIC_LABS))
+all_metrics = []  # Aquí guardaremos los vectores de métricas de cada iteración
 train_times = []
 test_times = []
 
@@ -146,7 +186,7 @@ for file_path in glob.glob(os.path.join(results_folder, f"{setting[:-2]}*")):
 
 # === Ejecuciones ===
 for ii in range(args.itr):
-    print("========================= Ejecución {} =========================".format(ii))
+    print("-------------------------------------- Ejecución {} --------------------------------------".format(ii))
 
     iter_setting = setting[:-2] + str(ii)
     exp = Exp(args)
@@ -174,6 +214,7 @@ for ii in range(args.itr):
         run_metrics = np.load(metric_path)
         if run_metrics.shape[0] == len(METRIC_LABS):
             metrics += run_metrics
+            all_metrics.append(run_metrics)
         else:
             print("Error: métrica inesperada.")
     else:
@@ -182,24 +223,54 @@ for ii in range(args.itr):
     torch.cuda.empty_cache()
 
 # === Resultados Finales ===
-print("========================= Resultados del experimento =========================")
 mean_metrics = metrics / args.itr
+std_metrics = np.std(np.array(all_metrics), axis=0)
 mean_train_time = np.mean(train_times)
+std_train_time = np.std(train_times)
 mean_test_time = np.mean(test_times)
+std_test_time = np.std(test_times)
 
-metric_dict = {label: mean_metrics[i] for i, label in enumerate(METRIC_LABS)}
-metric_dict["TrainTime(s)"] = mean_train_time
-metric_dict["TestTime(s)"] = mean_test_time
+metric_dict = {}
 
-for label, value in metric_dict.items():
-    print(f"{label} >> {value:.4f}")
+# Agregar métricas con media y std
+for i, label in enumerate(METRIC_LABS):
+    metric_dict[f"{label}_mean"] = mean_metrics[i]
+    metric_dict[f"{label}_std"] = std_metrics[i]
+
+# Agregar tiempos con media y std
+metric_dict["TrainTime_mean(s)"] = mean_train_time
+metric_dict["TrainTime_std(s)"] = std_train_time
+metric_dict["TestTime_mean(s)"] = mean_test_time
+metric_dict["TestTime_std(s)"] = std_test_time
+
+# Imprimir resultados
+
+print(f"\n\n{'Metric':<25}{'Mean':>12}{'Std':>12}")
+print("-" * 50)
+for label in METRIC_LABS:
+    mean = metric_dict[f"{label}_mean"]
+    std = metric_dict[f"{label}_std"]
+    print(f"{label:<25}{mean:>12.4f}{std:>12.4f}")
+
+print(
+    f"{'TrainTime(s)':<25}{metric_dict['TrainTime_mean(s)']:>12.4f}{metric_dict['TrainTime_std(s)']:>12.4f}")
+print(
+    f"{'TestTime(s)':<25}{metric_dict['TestTime_mean(s)']:>12.4f}{metric_dict['TestTime_std(s)']:>12.4f}")
+
 
 # === Guardar métricas ===
 os.makedirs("Experimentos", exist_ok=True)
-csv_path = f"Experimentos/metricas_{args.folder}_{args.encoding}_{setting[:-2]}.csv"
+csv_path = f"Experimentos/metricas_{args.folder}_{args.ex_name}_{setting[:-2]}.csv"
 
 with open(csv_path, mode="w", newline="") as f:
     writer = csv.writer(f)
-    writer.writerow(["Métrica", "Valor"])
-    for label, value in metric_dict.items():
-        writer.writerow([label, value])
+    writer.writerow(["Metric", "Mean", "STD"])
+
+    for label in METRIC_LABS:
+        writer.writerow(
+            [label, metric_dict[f"{label}_mean"], metric_dict[f"{label}_std"]])
+
+    writer.writerow(["TrainTime(s)", metric_dict["TrainTime_mean(s)"],
+                    metric_dict["TrainTime_std(s)"]])
+    writer.writerow(
+        ["TestTime(s)", metric_dict["TestTime_mean(s)"], metric_dict["TestTime_std(s)"]])

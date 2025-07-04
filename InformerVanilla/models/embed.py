@@ -101,7 +101,7 @@ class FixedEmbedding(nn.Module):
 
 
 class TemporalEmbedding(nn.Module):
-    def __init__(self, d_model, embed_type='fixed', freq='h'):
+    def __init__(self, d_model,  freq='h'):
         super(TemporalEmbedding, self).__init__()
 
         minute_size = 4
@@ -249,17 +249,210 @@ class LearnablePositionalEncoding(nn.Module):
         return self.pe[:, :seq_len]
 
 
-class DataEmbedding(nn.Module):
+class TemporalPositionalEncoding(nn.Module):
+    def __init__(self, d_model, max_len=5000, sigma=1.0):
+        super(TemporalPositionalEncoding, self).__init__()
+        self.d_model = d_model
+        self.sigma = sigma
+
+        # Componente geométrico (sinusoidal)
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(
+            0, max_len, dtype=torch.float).unsqueeze(1)  # [max_len, 1]
+        div_term = torch.exp(torch.arange(
+            0, d_model, 2).float() * (-math.log(10000.0) / d_model))
+
+        pe[:, 0::2] = torch.sin(position * div_term)  # par
+        pe[:, 1::2] = torch.cos(position * div_term)  # impar
+        pe = pe.unsqueeze(0)  # [1, max_len, d_model]
+        self.register_buffer('pe', pe)
+
+    def forward(self, x):
+        """
+        x: [B, L, D]
+        returns: [B, L, D] with TPE applied
+        """
+        B, L, D = x.size()
+        device = x.device
+
+        # 1. Componente geométrica
+        pe = self.pe[:, :L, :]  # [1, L, D]
+
+        # 2. Componente semántica S(i,j) ≈ media por fila
+        # Calcular distancia entre cada punto de la secuencia: ||xi - xj||^2
+        x_exp1 = x.unsqueeze(2)  # [B, L, 1, D]
+        x_exp2 = x.unsqueeze(1)  # [B, 1, L, D]
+        dist_sq = ((x_exp1 - x_exp2) ** 2).sum(dim=-1)  # [B, L, L]
+
+        # Similaridad gaussiana
+        S = torch.exp(-dist_sq / (2 * self.sigma ** 2))  # [B, L, L]
+
+        # Sumar sobre posiciones j para obtener vector de enriquecimiento semántico por i
+        sem = S @ x / S.sum(dim=-1, keepdim=True)  # [B, L, D]
+
+        # Combinar
+        return x + pe + sem
+
+
+# ---------- Implementaciones de Embedings ------------
+
+class DataEmbeddingNoPE(nn.Module):
+    """
+    Clase que no incluye ningún tipo de PE en los datos más allá de sus
+    valores de cada instancia.
+    """
+
+    def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7],
+                 max_len=5000):
+        super(DataEmbeddingNoPE, self).__init__()
+
+        self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
+        self.dropout = nn.Dropout(p=dropout)
+
+    def forward(self, x, x_mark):
+        x = self.value_embedding(x)
+        return self.dropout(x)
+
+
+class DataEmbedding_Informer(nn.Module):
+    """
+        Clase que permite la construcción de embeddings para el modelo de Informer original
+    """
+
+    def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7],
+                 max_len=5000, embed_type="timeF"):
+        super(DataEmbedding_Informer, self).__init__()
+
+        self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
+        self.position_embedding = PositionalEmbedding(d_model=d_model)
+        self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type,
+                                                    freq=freq) if embed_type != 'timeF' else TimeFeatureEmbedding(
+            d_model=d_model, embed_type=embed_type, freq=freq)
+
+        self.dropout = nn.Dropout(p=dropout)
+
+    def forward(self, x, x_mark):
+        x = self.value_embedding(
+            x) + self.position_embedding(x) + self.temporal_embedding(x_mark)
+
+        return self.dropout(x)
+
+
+class DataEmbedding_Stats(nn.Module):
+    """
+    Clase que permite la construcción de embeddings para el modelo de Informer 
+    usando información del valor de cada instancia, así como diferentes métodos
+    de PE ponderados para encontrar aquel que ofrece mejores rsultados
+    """
+
+    def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7]):
+        super(DataEmbedding_Stats, self).__init__()
+        print("Window size: ", window)
+
+        # Cálculo de estadísticas
+        self.est_features = RollingFeatureExtractor(window, c_in)
+
+        self.value_embedding_combined = TokenEmbedding(
+            c_in=c_in * 5,
+            d_model=d_model
+        )
+
+        self.dropout = nn.Dropout(p=dropout * 0.25)
+        self.cont = 0
+
+    def forward(self, x, x_mark):
+        """
+        Función forward para la construcción del embedding.
+        """
+
+        # Extracción de estadísticas
+        x_stats = self.est_features(x)  # [B, L, C*5]
+
+        # Proyección a espacio de embedding
+        x_emb = self.value_embedding_combined(x_stats)  # [B, L, d_model]
+
+        return self.dropout(x_emb)
+
+
+class DataEmbedding_StatsLags(nn.Module):
+    """
+    Clase que permite la construcción de embeddings para el modelo de Informer 
+    usando información del valor de cada instancia, así como diferentes métodos
+    de PE ponderados para encontrar aquel que ofrece mejores rsultados
+
+    """
+
+    def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7]):
+        super(DataEmbedding_StatsLags, self).__init__()
+        print("Window size: ", window)
+
+        # Estadísticas + lags concatenados en una sola rama
+        self.est_features = RollingFeatureExtractor(window, c_in)
+        self.lags = lags
+        self.value_embedding_combined = TokenEmbedding(
+            c_in=c_in * (5 + len(lags)), d_model=d_model
+        )
+
+        self.dropout = nn.Dropout(p=dropout * 0.25)
+        self.cont = 0
+
+    def compute_lags(self, x):
+        """
+        Dado un conjunto de instancias de entrada, calcula la diferencia entre lags, dando
+        como entrada una lista de elementos que indique en que t-n puntos evaluar la 
+        diferencia.
+
+        Args:
+            x: conjunto de datos de entrada
+
+        Returns:
+            lags especificados concatenados en un único tensor
+        """
+        B, L, C = x.size()
+        max_lag = max(self.lags)
+        x_padded = F.pad(x, (0, 0, max_lag, 0), mode='replicate')
+        lag_diffs = []
+        for lag in self.lags:
+            x_lagged = x_padded[:, max_lag - lag: max_lag - lag + L, :]
+            lag_diffs.append(x - x_lagged)  # Diferencias
+        return torch.cat(lag_diffs, dim=-1)  # [B, L, C * len(lags)]
+
+    def forward(self, x, x_mark):
+        """
+        Función forward para la construcción del embedding. Evalúa los elementos
+        necesarios y ajusta los pesos asociados a cada elemento del embedding 
+        aditivo que se construye
+
+        Args:
+            x: conjunto de datos de entrada
+            x_mark: conjunto de datos con información temporal asociada. No utilizada
+                    cuando se elimina la codificación posicional global proporcionada
+                    en el modelo Informer original.
+
+        Returns:
+            Elementos ya procesados, sumados y con dropout aplicado para evitar sobreaprendizaje.
+        """
+
+        # Concatenación de features
+        x_stats = self.est_features(x)
+        x_lags = self.compute_lags(x)
+        x_combined = torch.cat([x_stats, x_lags], dim=-1)
+        combined_emb = self.value_embedding_combined(x_combined)
+
+        return self.dropout(combined_emb)
+
+
+class DataEmbedding_ALLPE_Weighted(nn.Module):
     """
         Clase que permite la construcción de embeddings para el modelo de Informer
         usando información del valor de cada instancia, así como diferentes métodos
         de PE ponderados para encontrar aquel que ofrece mejores rsultados
     """
 
-    def __init__(self, c_in, d_model, embed_type='fixed', freq='h', dropout=0.1, window=24, lags=[3, 5, 7],
-                 max_len=5000):
-        super(DataEmbedding, self).__init__()
-
+    def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7],
+                 max_len=5000, pos_enc="window", embed_type="timeF"):
+        super(DataEmbedding_ALLPE_Weighted, self).__init__()
+        self.pos_enc = pos_enc
         self.est_features = RollingFeatureExtractor(window, c_in)
         self.lags = lags
         self.value_embedding_combined = TokenEmbedding(
@@ -362,3 +555,94 @@ class DataEmbedding(nn.Module):
         msg = f"\t[Epoch {epoch}] " if epoch else ""
         print(
             f"\t{msg}Weights => Stats: {weights[0]:.4f}, PE: {weights[1]:.4f}, LPE: {weights[2]:.4f}, tAPE: {weights[3]:.4f}")
+
+
+class DataEmbedding_TPE(nn.Module):
+    """
+    Clase de embeding que implementa TPE (Temporal Positional Encoding) junto al resto de características extraídas
+    de estadísticos.
+    """
+
+    def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7],
+                 max_len=5000, embed_type="timeF"):
+        super(DataEmbedding_TPE, self).__init__()
+
+        self.est_features = RollingFeatureExtractor(window, c_in)
+        self.lags = lags
+        self.value_embedding_combined = TokenEmbedding(
+            c_in=c_in * (5 + len(lags)), d_model=d_model
+        )
+
+        self.fixed_pe = FixedEmbedding(max_len, d_model)
+        self.learned_pe = LearnablePositionalEncoding(d_model, max_len)
+        self.tpe = TemporalPositionalEncoding(d_model, max_len)
+
+        self.weight_params = nn.Parameter(torch.tensor(
+            [0.25, 0.25, 0.25, 0.25], dtype=torch.float32
+        ))
+
+        self.norm_combined = nn.LayerNorm(d_model)
+        self.norm_fixed = nn.LayerNorm(d_model)
+        self.norm_learned = nn.LayerNorm(d_model)
+        self.norm_tpe = nn.LayerNorm(d_model)
+
+        self.dropout = nn.Dropout(p=dropout * 0.25)
+        self.cont = 0
+
+    def compute_lags(self, x):
+        B, L, C = x.size()
+        max_lag = max(self.lags)
+        x_padded = F.pad(x, (0, 0, max_lag, 0), mode='replicate')
+        lag_diffs = [x - x_padded[:, max_lag - lag:max_lag - lag + L, :]
+                     for lag in self.lags]
+        return torch.cat(lag_diffs, dim=-1)
+
+    def forward(self, x, x_mark=None):
+        self.cont += 1
+        x_stats = self.est_features(x)
+        x_lags = self.compute_lags(x)
+        x_combined = torch.cat([x_stats, x_lags], dim=-1)
+        combined_emb = self.value_embedding_combined(x_combined)
+
+        B, L, _ = x.size()
+        device = x.device
+        position_ids = torch.arange(
+            L, device=device).unsqueeze(0).expand(B, -1)
+
+        combined_emb = self.norm_combined(combined_emb)
+        pe_fixed = self.norm_fixed(self.fixed_pe(position_ids))
+        pe_learned = self.norm_learned(self.learned_pe(x))
+        pe_tpe = self.norm_tpe(self.tpe(combined_emb))
+
+        weights = F.softmax(self.weight_params, dim=0)
+
+        out = (
+            weights[0] * combined_emb +
+            weights[1] * pe_fixed +
+            weights[2] * pe_learned +
+            weights[3] * pe_tpe
+        )
+
+        if self.cont % 100 == 0:
+            self.print_weights()
+
+        return self.dropout(out)
+
+    def print_weights(self, epoch=None):
+        """
+            Imprime la evolución de los pesos entrenados para cada componente del embedding:
+            - Combinado de estadísticas y lags
+            - Posicional fijo (sinusoidal)
+            - Posicional aprendible
+            - t-PE (temporal positional encoding)
+
+            Args:
+                epoch: Época actual de entrenamiento, si está disponible. Defaults to None.
+        """
+        weights = F.softmax(self.weight_params, dim=0)
+        msg = f"\t[Epoch {epoch}] " if epoch else ""
+        print(
+            f"\t{msg}Weights -> Combined: {weights[0]:.3f}, "
+            f"Fixed: {weights[1]:.3f}, "
+            f"Learned: {weights[2]:.3f}, "
+            f"TPE: {weights[3]:.3f}")
