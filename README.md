@@ -22,7 +22,7 @@ Estudio de propuestas originales de positional encoding o arquitecturas completa
 ## Ejecución de los experimentos
 
 Para realizar una comparativa de los diferentes métodos, se han creado un fichero .py que recibe multitud de parámetros de entrada para configurar el modelo como se considere oportuno, pudiendo especificar los diferentes tipos de PE y sus hiperparámetros asociados.
-Se trata del fichero `experimentacion.py`.
+Se trata del fichero `experimentacion.py`, el cual modifica el comportamiento de un modelo base Informer [5].
 
 
 ### Configuración general
@@ -140,6 +140,7 @@ Se trata del fichero `experimentacion.py`.
 | `all_pe_weighted` | Combinación de lo anterior, junto a PE fijos y PE aprendibles (LPE), ponderados con pesos normalizados mediante Softmax.   |
 | `tpe`             | Codificación temporal haciendo uso de temporal PE, t-PE, para aportar mayor información local. Contiene la información de lags, ventana y otros PE fijos, haciendo uso de pesos aprendidos y normalizados mediante Softmax. |
 
+Se han omitido algunas codificaciones de PE inferiores en rendimiento al baseline (no_pe), y aquellos métodos que alteraban el funcionamiento del mecanismo de atención debido a su bajo rendimiento con el dataset (SPE) [4].
 
 > Puede encontrar un ejemplo de ejecución dentro del fichero slurm_task.sh
 
@@ -158,3 +159,7 @@ Para la ejecución de este proyecto, es necesario disponer de un entorno actuali
 [2] Zeng, A., Chen, M., Zhang, L., & Xu, Q. (2023, June). Are transformers effective for time series forecasting?. In Proceedings of the AAAI conference on artificial intelligence (Vol. 37, No. 9, pp. 11121-11128).
 
 [3] Haoyi Zhou, Shanghang Zhang, Jieqi Peng, Shuai Zhang, Jianxin Li, Hui Xiong y Wancai Zhang. "Informer: Beyond Efficient Transformer for Long Sequence Time-Series Forecasting." The Thirty-Fifth {AAAI} Conference on Artificial Intelligence, {AAAI} 2021, Virtual Conference, pp. 11106–11115. AAAI Press, 2021.
+
+[4] Irani, H., & Metsis, V. (2025). Positional Encoding in Transformer-Based Time Series Models: A Survey. arXiv preprint arXiv:2502.12370. https://arxiv.org/abs/2502.12370
+
+[5] Zhou, H., Zhang, S., Peng, J., Zhang, S., Li, J., Xiong, H., & Zhang, W. (2021, May). Informer: Beyond efficient transformer for long sequence time-series forecasting. In Proceedings of the AAAI conference on artificial intelligence (Vol. 35, No. 12, pp. 11106-11115).
