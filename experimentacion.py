@@ -81,8 +81,14 @@ parser.add_argument('--distil', action='store_false',
 parser.add_argument('--dropout', type=float, default=0.05, help='dropout')
 parser.add_argument('--attn', type=str, default='prob',
                     help='attention used in encoder, options:[prob, full]')
-parser.add_argument('--embed', type=str, default='timeF',
+
+parser.add_argument('--time_encoding', type=str, default='timeF',
                     help='time features encoding, options:[no_pe, informer, stats, stats_lags, all_pe_weighted, tpe]')
+
+parser.add_argument('--embed', type=str, default='timeF',
+                    help='time features encoding, options:[timeF, fixed, learned]')
+
+
 parser.add_argument('--activation', type=str,
                     default='gelu', help='activation')
 parser.add_argument('--window', type=int, default=24,

@@ -12,14 +12,14 @@ from models.embed import DataEmbeddingNoPE, DataEmbedding_Informer, DataEmbeddin
 class Informer(nn.Module):
     def __init__(self, enc_in, dec_in, c_out, seq_len, label_len, out_len,
                  factor=5, d_model=512, n_heads=8, e_layers=3, d_layers=2, d_ff=512,
-                 dropout=0.0, attn='prob', embed='fixed', freq='h', activation='gelu',
+                 dropout=0.0, attn='prob', embed='timeF', freq='h', activation='gelu',
                  output_attention=False, distil=True, mix=True,
-                 device=torch.device('cuda:0'), window=24):
+                 device=torch.device('cuda:0'), window=24, time_encoding="all_pe_weighted"):
         super(Informer, self).__init__()
         self.pred_len = out_len
         self.attn = attn
         self.output_attention = output_attention
-        self.embed_type = embed
+        self.embed_type = time_encoding
 
         # Encoding
         # Embedding selector
