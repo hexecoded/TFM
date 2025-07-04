@@ -172,10 +172,10 @@ test_times = []
 # Preparación del directorio de resultados
 
 results_folder = "results"
-setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_win{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}'.format(
+setting = '{}_{}_ft{}_sl{}_ll{}_pl{}_win{}_dm{}_nh{}_el{}_dl{}_df{}_at{}_fc{}_eb{}_dt{}_mx{}_{}_{}_{}'.format(
     args.model, args.data, args.features, args.seq_len, args.label_len, args.pred_len, args.window,
     args.d_model, args.n_heads, args.e_layers, args.d_layers, args.d_ff, args.attn, args.factor,
-    args.embed, args.distil, args.mix, args.des, 0
+    args.embed, args.distil, args.mix, args.des, args.ex_name, 0
 )
 
 for file_path in glob.glob(os.path.join(results_folder, f"{setting[:-2]}*")):
