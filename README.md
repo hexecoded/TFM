@@ -134,10 +134,10 @@ Para realizar una comparativa de los diferentes métodos, se han creado un fiche
 |-------------------|------------------------------------------------------------------|
 | `no_pe`           | Sin codificación posicional, se usan solo los datos de entrada.      |
 | `informer`        | Codificación temporal original de Informer.|
-| `stats`           | Codificación basada en estadísticas por ventana temporal.        |
+| `stats`           | Codificación basada en estadísticas por ventana temporal deslizante, que calcula media, std y valores extremos.        |
 | `stats_lags`      | Igual que `stats`, pero incluye lags como contexto local.    |
-| `all_pe_weighted` | Combinación de lo anterior y PE fijos y aprendibles, ponderados con pesos aprendibles.   |
-| `tpe`             | Codificación temporal haciendo uso de temporal PE (información local).       |
+| `all_pe_weighted` | Combinación de lo anterior, junto a PE fijos y PE aprendibles (LPE), ponderados con pesos normalizados mediante Softmax.   |
+| `tpe`             | Codificación temporal haciendo uso de temporal PE, t-PE, para aportar mayor información local. Contiene la información de lags, ventana y otros PE fijos, haciendo uso de pesos aprendidos y normalizados mediante Softmax. |
 
 
 > Puede encontrar un ejemplo de ejecución dentro del fichero slurm_task.sh
@@ -145,7 +145,7 @@ Para realizar una comparativa de los diferentes métodos, se han creado un fiche
 
 ## Entorno
 
-Para la ejecución de este proyecto, es necesario disponer de un entorno actualizado con Pytorch (Python 3.12). Para ello, puede usarse el fichero de requisitos adjuntos en el repositorio como `requirements.txt`.
+Para la ejecución de este proyecto, es necesario disponer de un entorno actualizado con Pytorch (Python 3.12). Para ello, puede usarse el fichero `requirements.txt`.
 
 > conda create --name <env> --file requirements.txt
 
