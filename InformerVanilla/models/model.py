@@ -6,7 +6,7 @@ from utils.masking import TriangularCausalMask, ProbMask
 from models.encoder import Encoder, EncoderLayer, EncoderStack
 from models.decoder import Decoder, DecoderLayer
 from models.attn import FullAttention, ProbAttention, AttentionLayer
-from models.embed import DataEmbedding
+from models.embed import DataEmbeddingNoPE, DataEmbedding_Informer, DataEmbedding_Stats, DataEmbedding_StatsLags, DataEmbedding_ALLPE_Weighted, DataEmbedding_TPE
 
 
 class Informer(nn.Module):
@@ -19,12 +19,26 @@ class Informer(nn.Module):
         self.pred_len = out_len
         self.attn = attn
         self.output_attention = output_attention
+        self.embed_type = embed
 
         # Encoding
-        self.enc_embedding = DataEmbedding(
-            enc_in, d_model, embed, freq, dropout, window=window)
-        self.dec_embedding = DataEmbedding(
-            dec_in, d_model, embed, freq, dropout, window=window)
+        # Embedding selector
+        self.enc_embedding = self.select_embedding(
+            pe_type=self.embed_type,
+            c_in=enc_in,
+            d_model=d_model,
+            freq=freq,
+            dropout=dropout,
+            window=window
+        )
+        self.dec_embedding = self.select_embedding(
+            pe_type=self.embed_type,
+            c_in=dec_in,
+            d_model=d_model,
+            freq=freq,
+            dropout=dropout,
+            window=window
+        )
         # Attention
         Attn = ProbAttention if attn == 'prob' else FullAttention
         # Encoder
@@ -62,6 +76,24 @@ class Informer(nn.Module):
         # self.end_conv2 = nn.Conv1d(in_channels=d_model, out_channels=c_out, kernel_size=1, bias=True)
         self.projection = nn.Linear(d_model, c_out, bias=True)
 
+    def select_embedding(self, pe_type, c_in, d_model, freq, dropout, **kwargs):
+        print("Selected: ", pe_type)
+
+        if pe_type == "no_pe":
+            return DataEmbeddingNoPE(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        elif pe_type == "informer":
+            return DataEmbedding_Informer(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        elif pe_type == "stats":
+            return DataEmbedding_Stats(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        elif pe_type == "stats_lags":
+            return DataEmbedding_StatsLags(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        elif pe_type == "all_pe_weighted":
+            return DataEmbedding_ALLPE_Weighted(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        elif pe_type == "tpe":
+            return DataEmbedding_TPE(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        else:
+            raise ValueError(f"Tipo de embedding desconocido: {pe_type}")
+
     def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec,
                 enc_self_mask=None, dec_self_mask=None, dec_enc_mask=None):
         enc_out = self.enc_embedding(x_enc, x_mark_enc)
@@ -90,12 +122,26 @@ class InformerStack(nn.Module):
         self.pred_len = out_len
         self.attn = attn
         self.output_attention = output_attention
+        self.embed_type = embed
 
         # Encoding
-        self.enc_embedding = DataEmbedding(
-            enc_in, d_model, embed, freq, dropout, window=window)
-        self.dec_embedding = DataEmbedding(
-            dec_in, d_model, embed, freq, dropout, window=window)
+        # Embedding selector
+        self.enc_embedding = self.select_embedding(
+            pe_type=self.embed_type,
+            c_in=enc_in,
+            d_model=d_model,
+            freq=freq,
+            dropout=dropout,
+            window=window
+        )
+        self.dec_embedding = self.select_embedding(
+            pe_type=self.embed_type,
+            c_in=dec_in,
+            d_model=d_model,
+            freq=freq,
+            dropout=dropout,
+            window=window
+        )
         # Attention
         Attn = ProbAttention if attn == 'prob' else FullAttention
         # Encoder
@@ -142,6 +188,23 @@ class InformerStack(nn.Module):
         # self.end_conv1 = nn.Conv1d(in_channels=label_len+out_len, out_channels=out_len, kernel_size=1, bias=True)
         # self.end_conv2 = nn.Conv1d(in_channels=d_model, out_channels=c_out, kernel_size=1, bias=True)
         self.projection = nn.Linear(d_model, c_out, bias=True)
+
+    def select_embedding(self, pe_type, c_in, d_model, freq, dropout, **kwargs):
+        print("Selected: ", pe_type)
+        if pe_type == "no_pe":
+            return DataEmbeddingNoPE(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        elif pe_type == "informer":
+            return DataEmbedding_Informer(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        elif pe_type == "stats":
+            return DataEmbedding_Stats(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        elif pe_type == "stats_lags":
+            return DataEmbedding_StatsLags(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        elif pe_type == "all_pe_weighted":
+            return DataEmbedding_ALLPE_Weighted(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        elif pe_type == "tpe":
+            return DataEmbedding_TPE(c_in=c_in, d_model=d_model, freq=freq, dropout=dropout, **kwargs)
+        else:
+            raise ValueError(f"Tipo de embedding desconocido: {pe_type}")
 
     def forward(self, x_enc, x_mark_enc, x_dec, x_mark_dec,
                 enc_self_mask=None, dec_self_mask=None, dec_enc_mask=None):

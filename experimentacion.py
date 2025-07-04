@@ -245,7 +245,7 @@ metric_dict["TestTime_std(s)"] = std_test_time
 
 # Imprimir resultados
 
-print(f"{'Métrica':<25}{'Mean':>12}{'Std':>12}")
+print(f"{'Metric':<25}{'Mean':>12}{'Std':>12}")
 print("-" * 50)
 for label in METRIC_LABS:
     mean = metric_dict[f"{label}_mean"]
