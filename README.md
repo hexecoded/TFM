@@ -22,6 +22,7 @@ Estudio de propuestas originales de positional encoding o arquitecturas completa
 ## Ejecución de los experimentos
 
 Para realizar una comparativa de los diferentes métodos, se han creado un fichero .py que recibe multitud de parámetros de entrada para configurar el modelo como se considere oportuno, pudiendo especificar los diferentes tipos de PE y sus hiperparámetros asociados.
+Se trata del fichero `experimentacion.py`.
 
 
 ### Configuración general
