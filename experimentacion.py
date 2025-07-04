@@ -82,7 +82,7 @@ parser.add_argument('--dropout', type=float, default=0.05, help='dropout')
 parser.add_argument('--attn', type=str, default='prob',
                     help='attention used in encoder, options:[prob, full]')
 parser.add_argument('--embed', type=str, default='timeF',
-                    help='time features encoding, options:[timeF, fixed, learned]')
+                    help='time features encoding, options:[no_pe, informer, stats, stats_lags, all_pe_weighted, tpe]')
 parser.add_argument('--activation', type=str,
                     default='gelu', help='activation')
 parser.add_argument('--window', type=int, default=24,
@@ -186,7 +186,7 @@ for file_path in glob.glob(os.path.join(results_folder, f"{setting[:-2]}*")):
 
 # === Ejecuciones ===
 for ii in range(args.itr):
-    print("========================= Ejecución {} =========================".format(ii))
+    print("-------------------------------------- Ejecución {} --------------------------------------".format(ii))
 
     iter_setting = setting[:-2] + str(ii)
     exp = Exp(args)
@@ -245,7 +245,7 @@ metric_dict["TestTime_std(s)"] = std_test_time
 
 # Imprimir resultados
 
-print(f"{'Metric':<25}{'Mean':>12}{'Std':>12}")
+print(f"\n\n{'Metric':<25}{'Mean':>12}{'Std':>12}")
 print("-" * 50)
 for label in METRIC_LABS:
     mean = metric_dict[f"{label}_mean"]
