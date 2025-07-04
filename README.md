@@ -18,6 +18,140 @@ Evaluar sistemáticamente la efectividad de los positional encoding estándar en
 
 Estudio de propuestas originales de positional encoding o arquitecturas completas adaptadas a series temporales, explorando vías alternativas al estado del arte.
 
+
+## Ejecución de los experimentos
+
+Para realizar una comparativa de los diferentes métodos, se han creado un fichero .py que recibe multitud de parámetros de entrada para configurar el modelo como se considere oportuno, pudiendo especificar los diferentes tipos de PE y sus hiperparámetros asociados.
+
+
+### Configuración general
+--model: Tipo de modelo a usar (informer, informerstack).
+
+--ex_name: Nombre del experimento.
+
+--folder: Carpeta donde se guarda el modelo.
+
+--data: Nombre del dataset.
+
+--root_path: Ruta raíz donde se encuentra el dataset.
+
+--data_path: Nombre del archivo de datos.
+
+--features: Tipo de predicción: M (multi→multi), S (uni→uni), MS (multi→uni).
+
+--target: Variable objetivo para tareas S o MS.
+
+--freq: Frecuencia temporal para codificación (horas: h; minutos: t; segundos: s).
+
+--checkpoints: Ruta para guardar checkpoints del modelo.
+
+### Longitudes de entrada y salida
+--seq_len: Longitud de secuencia de entrada del encoder.
+
+--label_len: Longitud del token de inicio del decoder.
+
+--pred_len: Longitud de la secuencia a predecir.
+
+### Configuración del modelo
+--enc_in: Número de variables de entrada al encoder.
+
+--dec_in: Número de variables de entrada al decoder.
+
+--c_out: Número de salidas del modelo.
+
+--d_model: Dimensión del modelo.
+
+--n_heads: Número de cabezas en el multi-head attention.
+
+--e_layers: Número de capas en el encoder.
+
+--d_layers: Número de capas en el decoder.
+
+--s_layers: Capas apiladas en encoder (solo stack mode).
+
+--d_ff: Tamaño del feed-forward interno.
+
+--factor: Factor de reducción en atención probabilística.
+
+--padding: Tipo de padding (0: none, 1: same).
+
+--distil: Desactiva el distilling si se incluye.
+
+--dropout: Tasa de dropout.
+
+--attn: Tipo de atención en encoder (full para evitar pérdida de información).
+
+### Codificación temporal
+--time_encoding: Tipo de codificación posicional/temporal (ver abajo).
+
+--embed: Tipo de embedding temporal (**timeF**, fixed, learned).
+
+--activation: Función de activación (e.g., gelu, relu).
+
+--window: Tamaño de ventana para estadísticas.
+
+--output_attention: Muestra la atención generada por el encoder..
+
+--cols: Columnas específicas del dataset a usar.
+
+### Entrenamiento y ejecución
+--num_workers: Núm. de workers para DataLoader.
+
+--itr: Número de repeticiones del experimento.
+
+--train_epochs: Número de épocas de entrenamiento.
+
+--batch_size: Tamaño de batch para entrenamiento (32).
+
+--patience: Paciencia para early stopping (3).
+
+--learning_rate: Tasa de aprendizaje.
+
+--des: Descripción del experimento.
+
+--loss: Función de pérdida (mse, mae, etc.).
+
+--lradj: Estrategia de ajuste de learning rate.
+
+--use_amp: Usa entrenamiento con precisión mixta (AMP).
+
+--inverse: Invierte la transformación de salida.
+
+--shuffle_decoder_input: Mezcla entradas del decoder durante test.
+
+### GPU
+--use_gpu: Usa GPU si está disponible.
+
+--gpu: Índice de GPU a usar.
+
+--use_multi_gpu: Activa uso de múltiples GPUs.
+
+--devices: IDs de las GPUs a usar.
+
+### Tipos de PE: --time_encoding
+
+| Valor             | Descripción                                                       |
+|-------------------|------------------------------------------------------------------|
+| `no_pe`           | Sin codificación posicional, se usan solo los datos de entrada.      |
+| `informer`        | Codificación temporal original de Informer.|
+| `stats`           | Codificación basada en estadísticas por ventana temporal.        |
+| `stats_lags`      | Igual que `stats`, pero incluye lags como contexto local.    |
+| `all_pe_weighted` | Combinación de lo anterior y PE fijos y aprendibles, ponderados con pesos aprendibles.   |
+| `tpe`             | Codificación temporal haciendo uso de temporal PE (información local).       |
+
+
+> Puede encontrar un ejemplo de ejecución dentro del fichero slurm_task.sh
+
+
+## Entorno
+
+Para la ejecución de este proyecto, es necesario disponer de un entorno actualizado con Pytorch (Python 3.12). Para ello, puede usarse el fichero de requisitos adjuntos en el repositorio como `requirements.txt`.
+
+> conda create --name <env> --file requirements.txt
+
+
+## Referencias
+
 [1] Wen, Q., Zhou, T., Zhang, C., Chen, W., Ma, Z., Yan, J., & Sun, L. (2022). Transformers in time series: A survey. arXiv preprint arXiv:2202.07125.
 
 [2] Zeng, A., Chen, M., Zhang, L., & Xu, Q. (2023, June). Are transformers effective for time series forecasting?. In Proceedings of the AAAI conference on artificial intelligence (Vol. 37, No. 9, pp. 11121-11128).
