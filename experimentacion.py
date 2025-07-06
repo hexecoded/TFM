@@ -152,6 +152,8 @@ if args.use_gpu and args.use_multi_gpu:
 data_parser = {
     'HPC': {'data': 'household_power_consumption.txt', 'T': 'Global_active_power', 'M': [7, 7, 7], 'S': [1, 1, 1],
             'MS': [7, 7, 1]},
+    'Taxi': {'data': 'yellow_tripdata_clean_grouped.parquet', 'T': 'total_amount', 'M': [6, 6, 6], 'S': [1, 1, 1],
+            'MS': [6, 6, 1]},
     'ETTh1': {'data': 'ETTh1.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
     'ETTh2': {'data': 'ETTh2.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
     'ETTm1': {'data': 'ETTm1.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},

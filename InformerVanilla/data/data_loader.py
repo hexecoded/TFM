@@ -113,7 +113,7 @@ class Dataset_ETT_hour(Dataset):
 
 class Dataset_ETT_minute(Dataset):
     """
-    Clase para el preprocesado del dataset de ETT, haciendo uso de intervalos minuto 
+    Clase para el preprocesado del dataset de ETT, haciendo uso de intervalos minuto
     a minuto para mayor granularidad.
     """
 
@@ -211,7 +211,7 @@ class Dataset_ETT_minute(Dataset):
 
 class Dataset_Custom(Dataset):
     """
-    Plantilla para datasets de tipo personalizado que quieran ser introducidos al modelo de 
+    Plantilla para datasets de tipo personalizado que quieran ser introducidos al modelo de
     Informer original. Permite establecer la frecuencia de muestreo, el path del fichero, y
     parámetros adicionales como la estandarización o la columna objetivo.
     """
@@ -233,7 +233,7 @@ class Dataset_Custom(Dataset):
             data_path: Nombre del fichero de datos que se encuentra dentro de root_path. Defaults to 'ETTh1.csv'.
             target: Columna que ha de tomarse como atributo objetivo. Defaults to 'OT'.
             scale: Booleano que especifica si se desean o no estandarizar los datos. Defaults to True.
-            inverse: Flag que especifica si se desea conservar una copia estandarizada de los valores 
+            inverse: Flag que especifica si se desea conservar una copia estandarizada de los valores
                         para posterior representación. Defaults to False.
             timeenc: Permite especificar si se desea hacer encoding de los timestamps. Defaults to 0.
             freq: Frecuencia de muestreo del dataset. Habitualmente, expresable en horas (h) o minutos (m). Defaults to 'h'.
@@ -326,7 +326,7 @@ class Dataset_Custom(Dataset):
         Args:
             index: índice que quiere ser escogido. Este no tiene porqué
             coincider con los índices del dataset original, ya que si este
-            fue tomado por minutos,  pero el dataset es procesado por horas, 
+            fue tomado por minutos,  pero el dataset es procesado por horas,
             habrá menos tuplas, y no hay correspondencia directa de índice.
             Se trata un valor de índice especifico para los datos ya procesados
 
@@ -379,7 +379,7 @@ class Dataset_Pred(Dataset):
     Permite realizar la predicción para cualquier conjunto de datos de entrada
     Dispone de una estructura bastante similar a la clase de DatasetCustom, pero
     haciendo uso de los valores y patrones de estandarización aplicados en entreamiento
-    para evitar DataSnooping. 
+    para evitar DataSnooping.
 
     Args:
         Dataset: _description_
@@ -473,7 +473,7 @@ class Dataset_Pred(Dataset):
         Args:
             index: índice que quiere ser escogido. Este no tiene porqué
             coincider con los índices del dataset original, ya que si este
-            fue tomado por minutos,  pero el dataset es procesado por horas, 
+            fue tomado por minutos,  pero el dataset es procesado por horas,
             habrá menos tuplas, y no hay correspondencia directa de índice.
             Se trata un valor de índice especifico para los datos ya procesados
 
@@ -625,11 +625,13 @@ class Dataset_HPC_hour(Dataset):
             data_values = df_data.values
         # Time features
         df_stamp = df_data.index[b1:b2].to_frame(index=False, name='date')
-        data_stamp = time_features(df_stamp, timeenc=self.timeenc, freq=self.freq)
+        data_stamp = time_features(
+            df_stamp, timeenc=self.timeenc, freq=self.freq)
 
         # Asignamos los atributos
         self.data_x = data_values[b1:b2]
-        self.data_y = (df_data.values[b1:b2] if self.inverse else data_values[b1:b2])
+        self.data_y = (df_data.values[b1:b2]
+                       if self.inverse else data_values[b1:b2])
         self.data_stamp = data_stamp
 
     def __getitem__(self, index):
@@ -790,11 +792,13 @@ class Dataset_HPC_minute(Dataset):
             data_values = df_data.values
         # Time features
         df_stamp = df_data.index[b1:b2].to_frame(index=False, name='date')
-        data_stamp = time_features(df_stamp, timeenc=self.timeenc, freq=self.freq)
+        data_stamp = time_features(
+            df_stamp, timeenc=self.timeenc, freq=self.freq)
 
         # Asignamos los atributos
         self.data_x = data_values[b1:b2]
-        self.data_y = (df_data.values[b1:b2] if self.inverse else data_values[b1:b2])
+        self.data_y = (df_data.values[b1:b2]
+                       if self.inverse else data_values[b1:b2])
         self.data_stamp = data_stamp
 
     def __getitem__(self, index):
@@ -823,6 +827,133 @@ class Dataset_HPC_minute(Dataset):
                 [self.data_x[r_begin:r_begin + self.label_len], self.data_y[r_begin + self.label_len:r_end]], 0)
         else:
             seq_y = self.data_y[r_begin:r_end]
+        seq_x_mark = self.data_stamp[s_begin:s_end]
+        seq_y_mark = self.data_stamp[r_begin:r_end]
+
+        return seq_x, seq_y, seq_x_mark, seq_y_mark
+
+    def __len__(self):
+        """
+        Devuelve la longitud del dataset procesado
+
+        Returns:
+            Longitud una vez procesado
+        """
+        return len(self.data_x) - self.seq_len - self.pred_len + 1
+
+    def inverse_transform(self, data):
+        """
+        Permite obtener una copia de los datos originales antes de ser
+        procesado, para fines de visualización principalmente.
+
+        Args:
+            data: Datos de entrada preprocesados
+
+        Returns:
+            Copia de los datos originales sin estandarización
+        """
+        return self.scaler.inverse_transform(data)
+
+#########################
+
+
+class Dataset_Taxi(Dataset):
+    def __init__(self, root_path, flag='train', size=None,
+                 features='S', data_path='yellow_tripdata_clean_grouped.parquet',
+                 target='total_amount', scale=True, inverse=False,
+                 timeenc=0, freq='h', cols=None):
+        print("yellow_tripdata_clean_grouped (per hour)")
+        if size is None:
+            self.seq_len = 24 * 7
+            self.label_len = 24
+            self.pred_len = 24
+        else:
+            self.seq_len, self.label_len, self.pred_len = size
+
+        assert flag in ['train', 'val', 'test']
+        self.set_type = {'train': 0, 'val': 1, 'test': 2}[flag]
+
+        self.features = features
+        self.target = target
+        self.scale = scale
+        self.inverse = inverse
+        self.timeenc = timeenc
+        self.freq = freq
+        self.cols = cols
+
+        self.root_path = root_path
+        self.data_path = data_path
+
+        self.__read_data__()
+
+    def __read_data__(self):
+        """
+        Realiza la lectura del fichero que contiene las entradas de datos, teniendo en cuenta la
+        frecuencia de muestreo elegida, el tamaño de las particiones, y el número de columnas.
+        """
+        self.scaler = StandardScaler()
+
+        # Lectura del .parquet y ajuste del formato de hora
+        df_raw = pd.read_parquet(os.path.join(self.root_path, self.data_path))
+        df_raw.index = pd.to_datetime(df_raw.index)
+
+        if self.features in ['M', 'MS']:
+            df_data = df_raw.copy()
+        elif self.features == 'S':
+            df_data = df_raw[[self.target]]
+            print("Target: ", self.target)
+
+        n = len(df_data)
+        n_train = int(n * 0.7)
+        n_val = int(n * 0.2)
+        borders1 = [0, n_train - self.seq_len, n_train + n_val - self.seq_len]
+        borders2 = [n_train, n_train + n_val, n]
+        b1 = borders1[self.set_type]
+        b2 = borders2[self.set_type]
+
+        if self.scale:
+            self.scaler.fit(df_data.iloc[0:n_train].values)
+            data_values = self.scaler.transform(df_data.values)
+        else:
+            data_values = df_data.values
+
+        df_stamp = df_data.index.to_frame(index=False, name='date')[b1:b2]
+        data_stamp = time_features(
+            df_stamp, timeenc=self.timeenc, freq=self.freq)
+
+        self.data_x = data_values[b1:b2]
+        self.data_y = df_data.values[b1:b2] if self.inverse else data_values[b1:b2]
+        self.data_stamp = data_stamp
+
+    def __getitem__(self, index):
+        """
+        Permite seleccionar una posición concreta del dataset una vez
+        leído y preprocesado
+
+        Args:
+            index: índice que quiere ser escogido. Este no tiene porqué
+            coincider con los índices del dataset original, ya que si este
+            fue tomado por minutos, pero el dataset es procesado por horas,
+            habrá menos tuplas, y no hay correspondencia directa de índice.
+            Se trata un valor de índice especifico para los datos ya procesados
+
+        Returns:
+            La posición escogida del dataset.
+        """
+        s_begin = index
+        s_end = s_begin + self.seq_len
+        r_begin = s_end - self.label_len
+        r_end = r_begin + self.label_len + self.pred_len
+
+        seq_x = self.data_x[s_begin:s_end]
+        if self.inverse:
+            seq_y = np.concatenate([
+                self.data_x[r_begin:r_begin + self.label_len],
+                self.data_y[r_begin + self.label_len:r_end]
+            ], axis=0)
+        else:
+            seq_y = self.data_y[r_begin:r_end]
+
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
 
