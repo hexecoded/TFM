@@ -901,6 +901,7 @@ class Dataset_Taxi(Dataset):
             df_data = df_raw.copy()
         elif self.features == 'S':
             df_data = df_raw[[self.target]]
+            print("Target: ", self.target)
 
         n = len(df_data)
         n_train = int(n * 0.7)
