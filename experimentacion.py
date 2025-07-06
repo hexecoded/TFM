@@ -82,7 +82,7 @@ parser.add_argument('--dropout', type=float, default=0.05, help='dropout')
 parser.add_argument('--attn', type=str, default='prob',
                     help='attention used in encoder, options:[prob, full]')
 
-parser.add_argument('--time_encoding', type=str, default='timeF',
+parser.add_argument('--time_encoding', type=str, default='',
                     help='time features encoding, options:[no_pe, informer, stats, stats_lags, all_pe_weighted, tpe]')
 
 parser.add_argument('--embed', type=str, default='timeF',
@@ -173,7 +173,7 @@ Exp = Exp_Informer
 
 # === Inicialización de estructuras ===
 metrics = np.zeros(len(METRIC_LABS))
-all_metrics = []  # Aquí guardaremos los vectores de métricas de cada iteración
+all_metrics = []  
 train_times = []
 test_times = []
 

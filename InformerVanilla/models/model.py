@@ -14,11 +14,12 @@ class Informer(nn.Module):
                  factor=5, d_model=512, n_heads=8, e_layers=3, d_layers=2, d_ff=512,
                  dropout=0.0, attn='prob', embed='timeF', freq='h', activation='gelu',
                  output_attention=False, distil=True, mix=True,
-                 device=torch.device('cuda:0'), window=24, time_encoding="all_pe_weighted"):
+                 device=torch.device('cuda:0'), window=24, time_encoding=""):
         super(Informer, self).__init__()
         self.pred_len = out_len
         self.attn = attn
         self.output_attention = output_attention
+        print(time_encoding)
         self.embed_type = time_encoding
 
         # Encoding

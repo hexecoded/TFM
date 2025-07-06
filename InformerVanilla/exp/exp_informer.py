@@ -51,7 +51,8 @@ class Exp_Informer(Exp_Basic):
                 self.args.distil,
                 self.args.mix,
                 self.device,
-                self.args.window
+                self.args.window,
+                self.args.time_encoding
             ).float()
 
         if self.args.use_multi_gpu and self.args.use_gpu:
@@ -78,20 +79,20 @@ class Exp_Informer(Exp_Basic):
         timeenc = 0 if args.embed != 'timeF' else 1
 
         if flag == 'test':
-            shuffle_flag = False;
-            drop_last = True;
-            batch_size = args.batch_size;
+            shuffle_flag = False
+            drop_last = True
+            batch_size = args.batch_size
             freq = args.freq
         elif flag == 'pred':
-            shuffle_flag = False;
-            drop_last = False;
-            batch_size = 1;
+            shuffle_flag = False
+            drop_last = False
+            batch_size = 1
             freq = args.detail_freq
             Data = Dataset_Pred
         else:
-            shuffle_flag = True;
-            drop_last = True;
-            batch_size = args.batch_size;
+            shuffle_flag = True
+            drop_last = True
+            batch_size = args.batch_size
             freq = args.freq
 
         data_set = Data(
@@ -117,7 +118,8 @@ class Exp_Informer(Exp_Basic):
         return data_set, data_loader
 
     def _select_optimizer(self):
-        model_optim = optim.Adam(self.model.parameters(), lr=self.args.learning_rate)
+        model_optim = optim.Adam(
+            self.model.parameters(), lr=self.args.learning_rate)
         return model_optim
 
     def _select_criterion(self):
@@ -148,7 +150,8 @@ class Exp_Informer(Exp_Basic):
         time_now = time.time()
 
         train_steps = len(train_loader)
-        early_stopping = EarlyStopping(patience=self.args.patience, verbose=True)
+        early_stopping = EarlyStopping(
+            patience=self.args.patience, verbose=True)
 
         model_optim = self._select_optimizer()
         criterion = self._select_criterion()
@@ -173,10 +176,13 @@ class Exp_Informer(Exp_Basic):
                 train_loss.append(loss.item())
 
                 if (i + 1) % 100 == 0:
-                    print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
+                    print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(
+                        i + 1, epoch + 1, loss.item()))
                     speed = (time.time() - time_now) / iter_count
-                    left_time = speed * ((self.args.train_epochs - epoch) * train_steps - i)
-                    print('\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
+                    left_time = speed * \
+                        ((self.args.train_epochs - epoch) * train_steps - i)
+                    print(
+                        '\tspeed: {:.4f}s/iter; left time: {:.4f}s'.format(speed, left_time))
                     iter_count = 0
                     time_now = time.time()
 
@@ -188,7 +194,8 @@ class Exp_Informer(Exp_Basic):
                     loss.backward()
                     model_optim.step()
 
-            print("Epoch: {} time: {} s".format(epoch + 1, time.time() - epoch_time))
+            print("Epoch: {} time: {} s".format(
+                epoch + 1, time.time() - epoch_time))
             train_loss = np.average(train_loss)
             vali_loss = self.vali(vali_data, vali_loader, criterion)
             test_loss = self.vali(test_data, test_loader, criterion)
@@ -239,7 +246,8 @@ class Exp_Informer(Exp_Basic):
         mae, mse, rmse, mape, mspe = metric(preds, trues)
         print('mse:{}, mae:{}'.format(mse, mae))
 
-        np.save(folder_path + 'metrics.npy', np.array([mae, mse, rmse, mape, mspe]))
+        np.save(folder_path + 'metrics.npy',
+                np.array([mae, mse, rmse, mape, mspe]))
         np.save(folder_path + 'pred.npy', preds)
         np.save(folder_path + 'true.npy', trues)
 
@@ -282,10 +290,13 @@ class Exp_Informer(Exp_Basic):
         batch_y_mark = batch_y_mark.float().to(self.device)
 
         if self.args.padding == 0:
-            dec_inp = torch.zeros([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
+            dec_inp = torch.zeros(
+                [batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
         elif self.args.padding == 1:
-            dec_inp = torch.ones([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
-        dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
+            dec_inp = torch.ones(
+                [batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
+        dec_inp = torch.cat(
+            [batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
 
         # Si es especificado, realizamos el shuffle
         if getattr(self, "_in_test_mode", False) and self.args.shuffle_decoder_input:
@@ -297,14 +308,18 @@ class Exp_Informer(Exp_Basic):
         if self.args.use_amp:
             with torch.cuda.amp.autocast():
                 if self.args.output_attention:
-                    outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
+                    outputs = self.model(
+                        batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
                 else:
-                    outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+                    outputs = self.model(
+                        batch_x, batch_x_mark, dec_inp, batch_y_mark)
         else:
             if self.args.output_attention:
-                outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)[0]
+                outputs = self.model(batch_x, batch_x_mark,
+                                     dec_inp, batch_y_mark)[0]
             else:
-                outputs = self.model(batch_x, batch_x_mark, dec_inp, batch_y_mark)
+                outputs = self.model(batch_x, batch_x_mark,
+                                     dec_inp, batch_y_mark)
         if self.args.inverse:
             outputs = dataset_object.inverse_transform(outputs)
         f_dim = -1 if self.args.features == 'MS' else 0
