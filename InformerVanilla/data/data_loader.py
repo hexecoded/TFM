@@ -1170,7 +1170,7 @@ class Dataset_PLP(Dataset):
             df_data = df_raw[[self.target]]
 
         n = len(df_data)
-        n_train = int(n * 0.7) 
+        n_train = int(n * 0.7)
         n_val = int(n * 0.2)
         borders1 = [0, n_train - self.seq_len, n_train + n_val - self.seq_len]
         borders2 = [n_train, n_train + n_val, n]
