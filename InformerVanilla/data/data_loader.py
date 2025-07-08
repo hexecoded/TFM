@@ -990,7 +990,141 @@ class Dataset_tina(Dataset):
                  features='S', data_path='tina_30s.csv',
                  target='', scale=True, inverse=False,
                  timeenc=0, freq='30s', cols=None):
-        print("tina_30s (30 seg)")
+        #print(f"tina_30s, freq ({freq})")
+        if size is None:
+            self.seq_len = 1440
+            self.label_len = 240
+            self.pred_len = 120
+        else:
+            self.seq_len, self.label_len, self.pred_len = size
+
+        assert flag in ['train', 'val', 'test']
+        self.set_type = {'train': 0, 'val': 1, 'test': 2}[flag]
+
+        self.features = features
+        self.target = target
+        self.scale = scale
+        self.inverse = inverse
+        self.timeenc = timeenc
+        self.freq = freq
+        self.cols = cols
+
+        self.root_path = root_path
+        self.data_path = data_path
+
+        self.__read_data__()
+
+    def __read_data__(self):
+        """
+        Realiza la lectura del fichero que contiene las entradas de datos, teniendo en cuenta la
+        frecuencia de muestreo elegida, el tamaño de las particiones, y el número de columnas.
+        """
+        self.scaler = StandardScaler()
+
+        # Leer CSV
+        df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
+        #print(f"tina_30s, freq ({self.freq})")
+
+        # Convertir columna de fecha y poner como índice
+        # Ajusta nombre si es diferente
+        df_raw['unix'] = pd.to_datetime(df_raw['unix'])
+        df_raw.set_index('unix', inplace=True)
+
+        # Selección de columnas
+        if self.features in ['M', 'MS']:
+            # Evita columnas no numéricas
+            df_data = df_raw.select_dtypes(include=[np.number])
+        elif self.features == 'S':
+            df_data = df_raw[[self.target]]
+
+        n = len(df_data)
+        n_train = int(n * 0.7)
+        n_val = int(n * 0.2)
+        borders1 = [0, n_train - self.seq_len, n_train + n_val - self.seq_len]
+        borders2 = [n_train, n_train + n_val, n]
+        b1 = borders1[self.set_type]
+        b2 = borders2[self.set_type]
+
+        if self.scale:
+            self.scaler.fit(df_data.iloc[0:n_train].values)
+            data_values = self.scaler.transform(df_data.values)
+        else:
+            data_values = df_data.values
+
+        df_stamp = df_data.index.to_frame(index=False, name='date')[b1:b2]
+        data_stamp = time_features(
+            df_stamp, timeenc=self.timeenc, freq=self.freq)
+
+        self.data_x = data_values[b1:b2]
+        self.data_y = df_data.values[b1:b2] if self.inverse else data_values[b1:b2]
+        self.data_stamp = data_stamp
+
+    def __getitem__(self, index):
+        """
+        Permite seleccionar una posición concreta del dataset una vez
+        leído y preprocesado
+
+        Args:
+            index: índice que quiere ser escogido. Este no tiene porqué
+            coincider con los índices del dataset original, ya que si este
+            fue tomado por minutos, pero el dataset es procesado por horas,
+            habrá menos tuplas, y no hay correspondencia directa de índice.
+            Se trata un valor de índice especifico para los datos ya procesados
+
+        Returns:
+            La posición escogida del dataset.
+        """
+        s_begin = index
+        s_end = s_begin + self.seq_len
+        r_begin = s_end - self.label_len
+        r_end = r_begin + self.label_len + self.pred_len
+
+        seq_x = self.data_x[s_begin:s_end]
+        if self.inverse:
+            seq_y = np.concatenate([
+                self.data_x[r_begin:r_begin + self.label_len],
+                self.data_y[r_begin + self.label_len:r_end]
+            ], axis=0)
+        else:
+            seq_y = self.data_y[r_begin:r_end]
+
+        seq_x_mark = self.data_stamp[s_begin:s_end]
+        seq_y_mark = self.data_stamp[r_begin:r_end]
+
+        return seq_x, seq_y, seq_x_mark, seq_y_mark
+
+    def __len__(self):
+        """
+        Devuelve la longitud del dataset procesado
+
+        Returns:
+            Longitud una vez procesado
+        """
+        return len(self.data_x) - self.seq_len - self.pred_len + 1
+
+    def inverse_transform(self, data):
+        """
+        Permite obtener una copia de los datos originales antes de ser
+        procesado, para fines de visualización principalmente.
+
+        Args:
+            data: Datos de entrada preprocesados
+
+        Returns:
+            Copia de los datos originales sin estandarización
+        """
+        return self.scaler.inverse_transform(data)
+
+
+####
+
+
+class Dataset_PLP(Dataset):
+    def __init__(self, root_path, flag='train', size=None,
+                 features='S', data_path='anonymous_public_load_power_data.csv.csv',
+                 target='', scale=True, inverse=False,
+                 timeenc=0, freq='t', cols=None):
+        print("PLP (1 min)")
         if size is None:
             self.seq_len = 1440
             self.label_len = 240
@@ -1026,8 +1160,8 @@ class Dataset_tina(Dataset):
 
         # Convertir columna de fecha y poner como índice
         # Ajusta nombre si es diferente
-        df_raw['unix'] = pd.to_datetime(df_raw['unix'])
-        df_raw.set_index('unix', inplace=True)
+        df_raw['utc'] = pd.to_datetime(df_raw['utc'], format="mixed")
+        df_raw.set_index('utc', inplace=True)
 
         # Selección de columnas
         if self.features in ['M', 'MS']:
