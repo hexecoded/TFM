@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import pandas as pd
-# import modin.pandas as pd
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -1121,7 +1120,7 @@ class Dataset_tina(Dataset):
 
 class Dataset_PLP(Dataset):
     def __init__(self, root_path, flag='train', size=None,
-                 features='S', data_path='anonymous_public_load_power_data.csv.csv',
+                 features='S', data_path='anonymous_public_load_power_data.csv',
                  target='', scale=True, inverse=False,
                  timeenc=0, freq='t', cols=None):
         print("PLP (1 min)")
@@ -1159,8 +1158,11 @@ class Dataset_PLP(Dataset):
 
         # Convertir columna de fecha y poner como índice
         # Ajusta nombre si es diferente
-        df_raw['utc'] = pd.to_datetime(df_raw['utc'])
+        df_raw['utc'] = pd.to_datetime(df_raw['utc'], format="mixed")
         df_raw.set_index('utc', inplace=True)
+
+        print(df_raw.head(5))
+        df_raw.drop(columns=["metric"], inplace=True)
 
         # Selección de columnas
         if self.features in ['M', 'MS']:
