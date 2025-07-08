@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
-#import modin.pandas as pd
+# import modin.pandas as pd
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -990,7 +990,7 @@ class Dataset_tina(Dataset):
                  features='S', data_path='tina_30s.csv',
                  target='', scale=True, inverse=False,
                  timeenc=0, freq='30s', cols=None):
-        #print(f"tina_30s, freq ({freq})")
+        # print(f"tina_30s, freq ({freq})")
         if size is None:
             self.seq_len = 1440
             self.label_len = 240
@@ -1023,7 +1023,7 @@ class Dataset_tina(Dataset):
 
         # Leer CSV
         df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
-        #print(f"tina_30s, freq ({self.freq})")
+        # print(f"tina_30s, freq ({self.freq})")
 
         # Convertir columna de fecha y poner como índice
         # Ajusta nombre si es diferente
@@ -1155,12 +1155,11 @@ class Dataset_PLP(Dataset):
         """
         self.scaler = StandardScaler()
 
-        # Leer CSV
         df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
 
         # Convertir columna de fecha y poner como índice
         # Ajusta nombre si es diferente
-        df_raw['utc'] = pd.to_datetime(df_raw['utc'], format="mixed")
+        df_raw['utc'] = pd.to_datetime(df_raw['utc'])
         df_raw.set_index('utc', inplace=True)
 
         # Selección de columnas
