@@ -1,6 +1,7 @@
 import os
 import numpy as np
-import pandas as pd
+#import pandas as pd
+import modin.pandas as pd
 
 import torch
 from torch.utils.data import Dataset, DataLoader
@@ -987,7 +988,7 @@ class Dataset_Taxi(Dataset):
 class Dataset_tina(Dataset):
     def __init__(self, root_path, flag='train', size=None,
                  features='S', data_path='tina_30s.csv',
-                 target='total_amount', scale=True, inverse=False,
+                 target='', scale=True, inverse=False,
                  timeenc=0, freq='30s', cols=None):
         print("tina_30s (30 seg)")
         if size is None:
@@ -1020,15 +1021,20 @@ class Dataset_tina(Dataset):
         """
         self.scaler = StandardScaler()
 
-        # Lectura del .parquet y ajuste del formato de hora
-        df_raw = pd.read_parquet(os.path.join(self.root_path, self.data_path))
-        df_raw.index = pd.to_datetime(df_raw.index)
+        # Leer CSV
+        df_raw = pd.read_csv(os.path.join(self.root_path, self.data_path))
 
+        # Convertir columna de fecha y poner como índice
+        # Ajusta nombre si es diferente
+        df_raw['unix'] = pd.to_datetime(df_raw['unix'])
+        df_raw.set_index('unix', inplace=True)
+
+        # Selección de columnas
         if self.features in ['M', 'MS']:
-            df_data = df_raw.copy()
+            # Evita columnas no numéricas
+            df_data = df_raw.select_dtypes(include=[np.number])
         elif self.features == 'S':
             df_data = df_raw[[self.target]]
-            print("Target: ", self.target)
 
         n = len(df_data)
         n_train = int(n * 0.7)

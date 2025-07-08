@@ -154,6 +154,7 @@ data_parser = {
             'MS': [7, 7, 1]},
     'Taxi': {'data': 'yellow_tripdata_clean_grouped.parquet', 'T': 'total_amount', 'M': [6, 6, 6], 'S': [1, 1, 1],
             'MS': [6, 6, 1]},
+    'TINA': {'data': 'tina_30s.csv', 'T': '', 'M': [103, 103, 103], 'S': [1, 1, 1], 'MS': [103, 103, 1]},
     'ETTh1': {'data': 'ETTh1.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
     'ETTh2': {'data': 'ETTh2.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
     'ETTm1': {'data': 'ETTm1.csv', 'T': 'OT', 'M': [7, 7, 7], 'S': [1, 1, 1], 'MS': [7, 7, 1]},
