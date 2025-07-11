@@ -146,8 +146,8 @@ class TimeFeatureEmbedding(nn.Module):
         freq_map = {
             'h': 4,
             't': 5,
-            's': 6,
-            '30s': 6,
+            's': 7,
+            '30s': 7,
             'm': 1,
             'a': 1,
             'w': 2,
