@@ -101,10 +101,11 @@ class FixedEmbedding(nn.Module):
 
 
 class TemporalEmbedding(nn.Module):
-    def __init__(self, d_model,  freq='h'):
+    def __init__(self, d_model, freq='h'):
         super(TemporalEmbedding, self).__init__()
 
         minute_size = 4
+        half_minute_size = 2
         hour_size = 24
         weekday_size = 7
         day_size = 32
@@ -113,22 +114,60 @@ class TemporalEmbedding(nn.Module):
         Embed = FixedEmbedding if embed_type == 'fixed' else nn.Embedding
         if freq == 't':
             self.minute_embed = Embed(minute_size, d_model)
+        elif freq == '30s':
+            self.half_minute_embed = Embed(half_minute_size, d_model)
+
         self.hour_embed = Embed(hour_size, d_model)
         self.weekday_embed = Embed(weekday_size, d_model)
         self.day_embed = Embed(day_size, d_model)
         self.month_embed = Embed(month_size, d_model)
 
 
+def forward(self, x):
+    x = x.long()
+
+    minute_x = self.minute_embed(x[:, :, 4]) if hasattr(
+        self, 'minute_embed') else 0.
+    half_minute_x = self.half_minute_embed(
+        x[:, :, 5]) if hasattr(self, 'half_minute_embed') else 0.
+    hour_x = self.hour_embed(x[:, :, 3])
+    weekday_x = self.weekday_embed(x[:, :, 2])
+    day_x = self.day_embed(x[:, :, 1])
+    month_x = self.month_embed(x[:, :, 0])
+
+    return hour_x + weekday_x + day_x + month_x + minute_x + half_minute_x
+
+
 class TimeFeatureEmbedding(nn.Module):
     def __init__(self, d_model, embed_type='timeF', freq='h'):
         super(TimeFeatureEmbedding, self).__init__()
 
-        freq_map = {'h': 4, 't': 5, 's': 6,
-                    'm': 1, 'a': 1, 'w': 2, 'd': 3, 'b': 3}
+        # Agregamos soporte para '30s'
+        freq_map = {
+            'h': 4,
+            't': 5,
+            's': 6,
+            '30s': 6,
+            'm': 1,
+            'a': 1,
+            'w': 2,
+            'd': 3,
+            'b': 3
+        }
+
+        if freq not in freq_map:
+            raise ValueError(
+                f"[TimeFeatureEmbedding] Frecuencia no soportada: {freq}")
+
         d_inp = freq_map[freq]
+        self.freq = freq
         self.embed = nn.Linear(d_inp, d_model)
 
     def forward(self, x):
+        """
+        Espera que `x` tenga las características temporales concatenadas como:
+        [minute, half_minute, hour, day, weekday, month] para freq='30s'
+        """
         return self.embed(x)
 
 

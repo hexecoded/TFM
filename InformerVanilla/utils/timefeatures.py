@@ -17,6 +17,13 @@ class TimeFeature:
         return self.__class__.__name__ + "()"
 
 
+class HalfMinuteOfMinute(TimeFeature):
+    """0 si el segundo < 30, 1 si >= 30. Normalizado a [-0.5, 0.5]"""
+
+    def __call__(self, index: pd.DatetimeIndex) -> np.ndarray:
+        return (index.second // 30) * 1.0 - 0.5
+
+
 class SecondOfMinute(TimeFeature):
     """Minute of hour encoded as value between [-0.5, 0.5]"""
 
@@ -99,12 +106,14 @@ def time_features_from_frequency_str(freq_str: str) -> List[TimeFeature]:
         ],
         offsets.Second: [
             SecondOfMinute,
+            HalfMinuteOfMinute,
             MinuteOfHour,
             HourOfDay,
             DayOfWeek,
             DayOfMonth,
             DayOfYear,
         ],
+
     }
 
     offset = to_offset(freq_str)
