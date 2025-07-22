@@ -13,11 +13,13 @@ y la ubicación de los datos, así como sus propiedades.
 
 import sys
 import argparse
+import os
+
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 import torch
 import numpy as np
 import csv
 import time
-import os
 import shutil
 import glob
 
@@ -196,6 +198,7 @@ for file_path in glob.glob(os.path.join(results_folder, f"{setting[:-2]}*")):
 
 # === Ejecuciones ===
 for ii in range(args.itr):
+    torch.cuda.empty_cache()
     print("-------------------------------------- Ejecución {} --------------------------------------".format(ii))
 
     iter_setting = setting[:-2] + str(ii)
