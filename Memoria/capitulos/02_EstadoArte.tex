@@ -1,29 +1,25 @@
 \chapter{Tendencias y Estado del arte}
 
-Antes de adentrarnos de lleno en el análisis del problema y la realización de nuevas metodologías, es necesario estudiar y comprender el estado actual de esta temática en el estado del arte. Debido a que no se ha visto tan explotada como otros ámbitos de la IA, como es el caso de los modelos convolucionales o el aprendizaje automático supervisado tabular, podemos encontrar continuos cambios y nuevas vertientes que pueden inspirarnos a la hora de abordar el problema. Además, de manera adicional, podremos ver si algunas de nuestras ideas ya han sido implementadas y dado resultado, ya que en caso negativo, podríamos evitar comenter los mismos errores y centrarnos en una vertiente mucho más prometedora.\\
+Antes de adentrarnos de lleno en el análisis del problema y la realización de nuevas metodologías, es necesario estudiar y comprender el estado actual de esta temática en el estado del arte. Debido a que no se ha visto tan explotada como otros ámbitos de la IA, como es el caso de los modelos convolucionales o el aprendizaje automático supervisado tabular, podemos encontrar continuos cambios y nuevas vertientes que pueden inspirarnos a la hora de abordar el problema.
 
-Hasta el momento, buena parte de las técnicas diseñadas especialmente para series temporales y predicción a largo plazo, se basan principalmente en la descomposición las mismas en subcomponentes mucho más sencillas de procesar, las cuales pueden seguir un enfoque similar a divide y vencerás: descomponer la red en diferentes elementos, y mediante un mecanismo de agregación (aditivo, multiplicativo, o estadístico), recomponer la solución a la tarea. Sin embargo, se han producido solo avances menores en los últimos años en dicha dirección. \\
+Hasta hace una década, buena parte de las técnicas diseñadas especialmente para series temporales y predicción a largo plazo, se basan principalmente en la descomposición las mismas en subcomponentes mucho más sencillas de procesar, las cuales pueden seguir un enfoque similar a divide y vencerás: descomponer la red en diferentes elementos, y mediante un mecanismo de agregación (aditivo, multiplicativo, o estadístico), recomponer la solución a la tarea. Sin embargo, se trata de una estrategia últimamente menos utilizada, en decadencia a favor de nuevas técnicas \\
 
-Actualmente, la principal tendencia en el modelado de series temporales se basa en la adaptación de modelos desarrollados para otras modalidades. Por ejemplo, se han incorporado convoluciones, propias de visión, con el objetivo de capturar patrones locales. Pero, lo más frecuente es encontrar adapataciones propias de mecanismos de procesamiento de lenguaje natural, como los ya mencionados Transformers, debido a su capacidad para modelar dependencias de largo alcance de forma eficiente. Previamente, también se han explorado arquitecturas recurrentes, como las Recurrent Neural Networks (RNN) y sus variantes más avanzadas, como las Long Short-Term Memory (LSTM) \cite{6795963}, aunque estas presentaban ciertas limitaciones en cuanto a capacidad de paralelización y manejo de relaciones temporales de largo plazo.\\
+Actualmente, una de las principales tendencias consiste en adaptar modelos originalmente desarrollados para otras modalidades. Un ejemplo de ello es el uso de convoluciones, ampliamente utilizadas en visión por computador, con el objetivo de capturar patrones locales en las secuencias y reducir la dimensionalidad del modelo. Previamente, también se han explorado arquitecturas recurrentes, como las Recurrent Neural Networks (RNN) y sus variantes más avanzadas, como las Long Short-Term Memory (LSTM) \cite{6795963}, aunque estas presentaban ciertas limitaciones en cuanto a capacidad de paralelización y en la modelización de relaciones temporales de mayor alcance, ya que para lograrlo aumentaba en exceso el tamaño de la red para incorporar más conexiones.
+Más recientemente, ha ganado protagonismo la adaptación de mecanismos provenientes del procesamiento de lenguaje natural, en particular los Transformers, debido a su capacidad para modelar dependencias a largo plazo de forma eficiente. Además, comparten una motivación estructural con las series temporales: la necesidad de preservar una secuencia ordenada y coherente en la entrada, lo que permite aprovechar su arquitectura atencional para tareas de predicción o modelado secuencial.\\
 
 A continuación, nos adentraremos de lleno en dichas propuestas, con el fin de aclarar, en primer, los conceptos clave acerca de las series temporales, y además, entender las problemáticas que surgen durante su procesado.
 
-\section{Procecsamiento básico de Series Temporales}
+\section{Procesamiento básico de Series Temporales}
 
 En la introducción, se han presentado brevemente las características fundamentales de las series temporales: su estructura temporal, caracterizada por muestreo, la importancia del orden de medición, y la necesidad de mantener las relaciones temporales para lograr aprender de forma efectiva.\\
 
 Pero, en esta sección, profundizaremos en los aspectos clave del preprocesamiento necesario para su análisis de manera más formal, ya que a diferencia de otros tipos de datos, las series temporales requieren una atención especial a la dimensión temporal, y cualquier alteración en su estructura puede afectar directamente la capacidad del modelo para aprender los patrones subyacentes en ella. Por ello, es fundamental centrarnos en cuestiones como la frecuencia de muestreo, la consistencia temporal, el tratamiento de valores faltantes, y la normalización de las variables.
 
-\subsection{Temporalidad: estructura y frecuencia de muestreo}
+\subsection{Modelos basados en descomposición}
+\subsubsection{RNN}
+\subsubsection{LTSM}
+\subsection{Transformers}
 
-\subsection{Valores faltantes}
-
-\subsection{Normalización de los datos}
-
-\subsection{Métodos para partición y evaluación del rendimiento}
-
-\section{Modelos basados en descomposición}
-
-\section{Transformers y Positional Encoding}
+\section{Positional Encoding en Transformers}
 
 \section{Conjuntos de datos disponibles}
