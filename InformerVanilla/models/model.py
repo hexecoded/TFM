@@ -20,6 +20,7 @@ class Informer(nn.Module):
         self.attn = attn
         self.output_attention = output_attention
         print(time_encoding)
+
         self.embed_type = time_encoding
 
         # Encoding
@@ -30,7 +31,8 @@ class Informer(nn.Module):
             d_model=d_model,
             freq=freq,
             dropout=dropout,
-            window=window
+            window=window,
+            embed_type=embed
         )
         self.dec_embedding = self.select_embedding(
             pe_type=self.embed_type,
@@ -38,7 +40,8 @@ class Informer(nn.Module):
             d_model=d_model,
             freq=freq,
             dropout=dropout,
-            window=window
+            window=window,
+            embed_type=embed
         )
         # Attention
         Attn = ProbAttention if attn == 'prob' else FullAttention

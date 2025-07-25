@@ -101,7 +101,7 @@ class FixedEmbedding(nn.Module):
 
 
 class TemporalEmbedding(nn.Module):
-    def __init__(self, d_model, freq='h'):
+    def __init__(self, d_model, freq='h', embed_type=""):
         super(TemporalEmbedding, self).__init__()
 
         minute_size = 4
@@ -110,7 +110,7 @@ class TemporalEmbedding(nn.Module):
         weekday_size = 7
         day_size = 32
         month_size = 13
-
+        print("T", embed_type)
         Embed = FixedEmbedding if embed_type == 'fixed' else nn.Embedding
         if freq == 't':
             self.minute_embed = Embed(minute_size, d_model)
@@ -122,20 +122,19 @@ class TemporalEmbedding(nn.Module):
         self.day_embed = Embed(day_size, d_model)
         self.month_embed = Embed(month_size, d_model)
 
+    def forward(self, x):
+        x = x.long()
 
-def forward(self, x):
-    x = x.long()
+        minute_x = self.minute_embed(x[:, :, 4]) if hasattr(
+            self, 'minute_embed') else 0.
+        half_minute_x = self.half_minute_embed(
+            x[:, :, 5]) if hasattr(self, 'half_minute_embed') else 0.
+        hour_x = self.hour_embed(x[:, :, 3])
+        weekday_x = self.weekday_embed(x[:, :, 2])
+        day_x = self.day_embed(x[:, :, 1])
+        month_x = self.month_embed(x[:, :, 0])
 
-    minute_x = self.minute_embed(x[:, :, 4]) if hasattr(
-        self, 'minute_embed') else 0.
-    half_minute_x = self.half_minute_embed(
-        x[:, :, 5]) if hasattr(self, 'half_minute_embed') else 0.
-    hour_x = self.hour_embed(x[:, :, 3])
-    weekday_x = self.weekday_embed(x[:, :, 2])
-    day_x = self.day_embed(x[:, :, 1])
-    month_x = self.month_embed(x[:, :, 0])
-
-    return hour_x + weekday_x + day_x + month_x + minute_x + half_minute_x
+        return hour_x + weekday_x + day_x + month_x + minute_x + half_minute_x
 
 
 class TimeFeatureEmbedding(nn.Module):
@@ -361,12 +360,14 @@ class DataEmbedding_Informer(nn.Module):
     def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7],
                  max_len=5000, embed_type="timeF"):
         super(DataEmbedding_Informer, self).__init__()
-
+        #, embed_type=embed_type
         self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
         self.position_embedding = PositionalEmbedding(d_model=d_model)
-        self.temporal_embedding = TemporalEmbedding(d_model=d_model, embed_type=embed_type,
-                                                    freq=freq) if embed_type != 'timeF' else TimeFeatureEmbedding(
+        self.temporal_embedding = TemporalEmbedding(d_model=d_model,
+                                                    freq=freq, embed_type=embed_type) if embed_type != 'timeF' else TimeFeatureEmbedding(
             d_model=d_model, embed_type=embed_type, freq=freq)
+                                                    
+        print("Type embedding: ", embed_type)
 
         self.dropout = nn.Dropout(p=dropout)
 
