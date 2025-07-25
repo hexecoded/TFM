@@ -791,7 +791,8 @@ class Dataset_HPC_minute(Dataset):
         else:
             data_values = df_data.values
         # Time features
-        df_stamp = df_data.index[b1:b2].to_frame(index=False, name='date')
+        df_stamp = df_raw[['date']].iloc[b1:b2].copy()
+        df_stamp['date'] = pd.to_datetime(df_stamp['date'])
         data_stamp = time_features(
             df_stamp, timeenc=self.timeenc, freq=self.freq)
 
