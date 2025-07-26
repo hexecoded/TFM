@@ -95,9 +95,56 @@ Donde, en ambos casos:
 
 La elección de cada método depende, por tanto, de los datos, y nos beneficiaremos, como ya hemos visto a lo largo de la definición, de una adecuada visualización de los mismos cuando sea posible.
 
-A continuación, definiremos en mayor detalle 3 de los algoritmos basados en descomposición más usados: LST, ARIMA y Prophet.
+A continuación, definiremos en mayor detalle 3 de los algoritmos basados en descomposición más usados: STL \cite{cleveland1990stl}, ARIMA \cite{box1970time} y Prophet \cite{taylor2018prophet}.
 
-\subsubsection{LST}
+\subsubsection{STL}
+
+Esta técnica, llamada \textit{Seasonal Time-Series Decomposition}, nos permite decomponer la serie en partes más sencillas de modelar, separando la serie en tres componentes básicas: tendencia, estacionalidad y resto, siguiendo así el esquema visto anteriormente. Para obtener un modelo para cada una de ellas,  normalmente se sigue un proceso de 3 pasos que nos permite aislar la información.
+
+\begin{enumerate}
+	\item \textbf{Extracción de la tendencia}. Se comienza extrayendo la tendencia de la serie para así obtener el comportamiento subyacente de la misma, y saber si es creciente, decreciente o se mantiene constante. En este algoritmo, se consigue mediante un proceso de suavizado, llamado \textit{Locally Estimated Scatterplot Smoothing} (Loess) de manera iterativa. Para ello, primero se comienza aplicando Loess, de manera que se suavizan los valores realizando una regresión no parámetrica, donde se observan los valores cercanos a cada timestamp de manera que se realiza un promedio que reduce las diferencias en el entorno. Si la serie es muy compleja o ruidosa, es posible que sea necesario repetir este proceso varias veces, por lo que se convierte en un proceso iterativo, utilizando tamaños mayores de ventana entorno a cada valor.
+	
+	Dicha ventana se estima a través de pesos, los cuales se ven reducidos cuanto más alejados al valor están. Estos se rigen por el valor de amplitud h, que recogen las ecociones clásicas de la regresión de Loess. Dado un conjunto de datos \((t_i, y_i)\), el valor suavizado en \( t_0 \) se calcula como:
+	
+	\[
+	\hat{y}(t_0) = \mathbf{x}_0^\top \hat{\boldsymbol{\beta}}(t_0)
+	\]
+	
+	donde \(\hat{\boldsymbol{\beta}}(t_0)\) se obtiene minimizando la suma ponderada de errores:
+	
+	\[
+	\hat{\boldsymbol{\beta}}(t_0) = \arg\min_{\boldsymbol{\beta}} \sum_{i=1}^n w_i(t_0) \left(y_i - \mathbf{x}_i^\top \boldsymbol{\beta}\right)^2
+	\]
+	
+	Los pesos \( w_i(t_0) \) dependen de la distancia temporal y se definen, habitualmente, con el kernel tricúbico:
+	
+	\[
+	w_i(t_0) = \left(1 - \left|\frac{t_i - t_0}{h}\right|^3\right)^3, \quad \text{para} \quad |t_i - t_0| < h
+	\]
+	
+	El valor arrojado será 0 fuera del intervalo, y un valor entre 0 y 1 dentro de él, seleccionando así la relevancia de cada punto respecto a sus valores del entorno.
+	
+	\item  \textbf{Extracción de la estacionalidad}. Para extraer la estacionalidad, debemos aislarla de la tedencia que modelamos en el paso anterior. Para ello, basta con restar dicha componente a la serie original, y así disponer ahora únicamente del los patrones estacionales y el ruido. 
+	$$y'(t) = y(t) - trend(t)$$
+	
+	A partir de aquí, debemos dividir la serie sin tendencia en subseries estacionales, agrupando los datos según la posición que ocupan dentro del ciclo; por ejemplo, si identificamos patrones con frecuencia mensual, se agruparían todos los valores correspondientes al mismo mes en años distintos, y sobre cada una de estas subseries se aplica un suavizado Loess de forma individual. Así, podremos capturar con precisión el patrón que se repite en cada estación, de manera similar a un promedio. Gracias a este proceso, podremos reconstruir una componente estacional coherente con las variaciones periódicas observadas en nuestro conjunto de datos, al que denominaremos \textit{s(t)}.
+	
+	\item \textbf{Obtención del resto}. Una vez extraídas tanto la tendencia como la estacionalidad, la componente residual se obtiene simplemente como la diferencia entre la serie original y la suma de las dos componentes anteriores:
+	$$r(t) = y(t) - trend(t) - s(t)$$
+	 Esta parte representa la variabilidad no explicada por los patrones sistemáticos de largo plazo ni por los ciclos periódicos, e incluye tanto el ruido aleatorio como cualquier información no capturada por el modelo. Si bien no es modelable, es muy útil para identificar si la serie es correctamente modelable por este método, ya que si observamos demasiada información en esta componente, nos está indicando que una parte importante de la información no está siendo recogida. Lo deseable es la que la varianza descrita sea la mínima posible. Sin embargo, hay algunos casos en los que encontrar puntos extremos es de utilidad, y se trata de la búsqueda de valores anómalos. Si la serie restante permanece estable y con poca varianza, a excepción de ciertos puntos, puede ser de interés estudiar qué ocurrió en dichos instantes, ya que su comportamiento se sale del comportamiento habitual modelado.
+\end{enumerate}
+
+En su publicación original, podemos encontrar un ejemplo de ejecución sobre el conjunto de datos Daily Carbon Dioxide Data (ver figura \ref{stl}), que recoge información sobre las emisiones de $CO_2$ desde el 17 de abril de 1974 hasta el 31 de diciembre de 1986, y permite observar la información recogida por cada una de las componentes.
+
+\begin{figure}[!htp] %con el [H] le obligamos a situar aquí la figura
+	\centering
+	\includegraphics[scale=0.35]{img/stl}
+	\caption{Ejemplo de caso de estudio empleando STL: Daily Carbon Dioxide Data \cite{cleveland1990stl}}
+	\label{stl}
+\end{figure}  	
+
+En este caso, podemos apreciar visualmente una serie fácilmente modelable por este enfoque, ya que la curva describe una tendencia creciente bastante clara, y los periodos estacionales están bastante bien delimitados y no se ven influenciados por el crecimiento recogido en la tendencia. Es un ejemplo perfecto para el uso de los modelos basados en descomposición aditiva.
+
 \subsubsection{ARIMA}
 \subsubsection{Prophet}
 
