@@ -1,17 +1,62 @@
 #!/bin/bash
 
-#SBATCH --job-name PE_all_weights  # Nombre del proceso
-
-#SBATCH --partition dgx            # Cola para ejecutar
-
-#SBATCH --gres=gpu:1               # Numero de gpus a usar
+#SBATCH --job-name=ETTh1_WinSize               # Nombre del proceso
+#SBATCH --partition=dgx2                        # Cola para ejecutar
+#SBATCH --gres=gpu:1                            # Número de GPUs a usar
+#SBATCH --ntasks=1                              # Número de tareas (procesos)
+#SBATCH --cpus-per-task=32                      # Número de CPUs por tarea
 
 export PATH="/opt/anaconda/anaconda3/bin:$PATH"
-
 export PATH="/opt/anaconda/bin:$PATH"
+export TFHUB_CACHE_DIR="/mnt/homeGPU/hexecode/cache"
 
 eval "$(conda shell.bash hook)"
-
 conda activate /mnt/homeGPU/hexecode/pt23_env
 
-python -u experimentacion.py --model informer --data HPCm --ex_name all_pe_weighted --data_path household_power_consumption.txt --freq t --folder InformerVanilla --root_path ./Datasets/HPC --batch_size 32 --dropout 0.3 --itr 3 --attn full --window 60 --seq_len 180 --label_len 60 --pred_len 60 --time_encoding all_pe_weighted
+# Parámetros configurables
+start=12
+end=96
+dataset="ETTh1"
+data_path="${dataset}.csv"
+root_path="./Datasets/ETT"
+
+# Bucle de barrido de tamaños de ventana
+for window in $(seq $start $end); do
+    echo ">>> Ejecutando con ventana: $window (all_pe_weighted)"
+    python -u experimentacion.py \
+    --model informer \
+    --data $dataset \
+    --ex_name ${dataset}_all_pe_weighted_win$window \
+    --data_path $data_path \
+    --freq t \
+    --folder InformerVanilla \
+    --root_path $root_path \
+    --batch_size 32 \
+    --dropout 0.2 \
+    --itr 10 \
+    --attn full \
+    --window $window \
+    --seq_len 96 \
+    --label_len 48 \
+    --pred_len 24 \
+    --time_encoding all_pe_weighted
+    
+    echo ">>> Ejecutando con ventana: $window (tpe)"
+    python -u experimentacion.py \
+    --model informer \
+    --data $dataset \
+    --ex_name ${dataset}_tpe_win$window \
+    --data_path $data_path \
+    --freq t \
+    --folder InformerVanilla \
+    --root_path $root_path \
+    --batch_size 32 \
+    --dropout 0.2 \
+    --itr 10 \
+    --attn full \
+    --window $window \
+    --seq_len 96 \
+    --label_len 48 \
+    --pred_len 24 \
+    --time_encoding tpe
+done

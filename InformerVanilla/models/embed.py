@@ -360,13 +360,13 @@ class DataEmbedding_Informer(nn.Module):
     def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7],
                  max_len=5000, embed_type="timeF"):
         super(DataEmbedding_Informer, self).__init__()
-        #, embed_type=embed_type
+        # , embed_type=embed_type
         self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
         self.position_embedding = PositionalEmbedding(d_model=d_model)
         self.temporal_embedding = TemporalEmbedding(d_model=d_model,
                                                     freq=freq, embed_type=embed_type) if embed_type != 'timeF' else TimeFeatureEmbedding(
             d_model=d_model, embed_type=embed_type, freq=freq)
-                                                    
+
         print("Type embedding: ", embed_type)
 
         self.dropout = nn.Dropout(p=dropout)
@@ -516,6 +516,8 @@ class DataEmbedding_ALLPE_Weighted(nn.Module):
         self.dropout = nn.Dropout(p=dropout * 0.25)
         self.cont = 0
 
+        print("Win size: ", window)
+
     def compute_lags(self, x):
         """
             Dado un conjunto de instancias de entrada, calcula la diferencia entre lags, dando
@@ -628,6 +630,8 @@ class DataEmbedding_TPE(nn.Module):
 
         self.dropout = nn.Dropout(p=dropout * 0.25)
         self.cont = 0
+
+        print("Win size: ", window)
 
     def compute_lags(self, x):
         B, L, C = x.size()
