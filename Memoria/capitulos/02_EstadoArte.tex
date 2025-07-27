@@ -99,12 +99,12 @@ A continuación, definiremos en mayor detalle 3 de los algoritmos basados en des
 
 \subsubsection{STL}
 
-Esta técnica, llamada \textit{Seasonal Time-Series Decomposition}, nos permite decomponer la serie en partes más sencillas de modelar, separando la serie en tres componentes básicas: tendencia, estacionalidad y resto, siguiendo así el esquema visto anteriormente. Para obtener un modelo para cada una de ellas,  normalmente se sigue un proceso de 3 pasos que nos permite aislar la información.
+Esta técnica, llamada \textit{Seasonal Time-Series Decomposition}, nos permite descomponer la serie en partes más sencillas de modelar, separando la serie en tres componentes básicas: tendencia, estacionalidad y resto, siguiendo así el esquema visto anteriormente. Para obtener un modelo para cada una de ellas,  normalmente se sigue un proceso de 3 pasos que nos permite aislar la información.
 
 \begin{enumerate}
 	\item \textbf{Extracción de la tendencia}. Se comienza extrayendo la tendencia de la serie para así obtener el comportamiento subyacente de la misma, y saber si es creciente, decreciente o se mantiene constante. En este algoritmo, se consigue mediante un proceso de suavizado, llamado \textit{Locally Estimated Scatterplot Smoothing} (Loess) de manera iterativa. Para ello, primero se comienza aplicando Loess, de manera que se suavizan los valores realizando una regresión no parámetrica, donde se observan los valores cercanos a cada timestamp de manera que se realiza un promedio que reduce las diferencias en el entorno. Si la serie es muy compleja o ruidosa, es posible que sea necesario repetir este proceso varias veces, por lo que se convierte en un proceso iterativo, utilizando tamaños mayores de ventana entorno a cada valor.
 	
-	Dicha ventana se estima a través de pesos, los cuales se ven reducidos cuanto más alejados al valor están. Estos se rigen por el valor de amplitud h, que recogen las ecociones clásicas de la regresión de Loess. Dado un conjunto de datos \((t_i, y_i)\), el valor suavizado en \( t_0 \) se calcula como:
+	Dicha ventana se estima a través de pesos, los cuales se ven reducidos cuanto más alejados al valor están. Estos se rigen por el valor de amplitud \textit{h}, que recogen las ecuaciones clásicas de la regresión de Loess. Dado un conjunto de datos \((t_i, y_i)\), el valor suavizado en \( t_0 \) se calcula como:
 	
 	\[
 	\hat{y}(t_0) = \mathbf{x}_0^\top \hat{\boldsymbol{\beta}}(t_0)
@@ -134,7 +134,7 @@ Esta técnica, llamada \textit{Seasonal Time-Series Decomposition}, nos permite 
 	 Esta parte representa la variabilidad no explicada por los patrones sistemáticos de largo plazo ni por los ciclos periódicos, e incluye tanto el ruido aleatorio como cualquier información no capturada por el modelo. Si bien no es modelable, es muy útil para identificar si la serie es correctamente modelable por este método, ya que si observamos demasiada información en esta componente, nos está indicando que una parte importante de la información no está siendo recogida. Lo deseable es la que la varianza descrita sea la mínima posible. Sin embargo, hay algunos casos en los que encontrar puntos extremos es de utilidad, y se trata de la búsqueda de valores anómalos. Si la serie restante permanece estable y con poca varianza, a excepción de ciertos puntos, puede ser de interés estudiar qué ocurrió en dichos instantes, ya que su comportamiento se sale del comportamiento habitual modelado.
 \end{enumerate}
 
-En su publicación original, podemos encontrar un ejemplo de ejecución sobre el conjunto de datos Daily Carbon Dioxide Data (ver figura \ref{stl}), que recoge información sobre las emisiones de $CO_2$ desde el 17 de abril de 1974 hasta el 31 de diciembre de 1986, y permite observar la información recogida por cada una de las componentes.
+En su publicación original, podemos encontrar un ejemplo de ejecución sobre el conjunto de datos \textit{Daily Carbon Dioxide Data} (ver figura \ref{stl}), que recoge información sobre las emisiones de $CO_2$ desde el 17 de abril de 1974 hasta el 31 de diciembre de 1986, y permite observar la información recogida por cada una de las componentes.
 
 \begin{figure}[!htp] %con el [H] le obligamos a situar aquí la figura
 	\centering
@@ -143,7 +143,23 @@ En su publicación original, podemos encontrar un ejemplo de ejecución sobre el
 	\label{stl}
 \end{figure}  	
 
-En este caso, podemos apreciar visualmente una serie fácilmente modelable por este enfoque, ya que la curva describe una tendencia creciente bastante clara, y los periodos estacionales están bastante bien delimitados y no se ven influenciados por el crecimiento recogido en la tendencia. Es un ejemplo perfecto para el uso de los modelos basados en descomposición aditiva.
+En este caso, podemos apreciar visualmente una serie fácilmente modelable por este enfoque, ya que la curva describe una tendencia creciente bastante clara, y los periodos estacionales están bastante bien delimitados y no se ven influenciados por el crecimiento recogido en la tendencia. Es un ejemplo perfecto para el uso de los modelos basados en descomposición aditiva.\\
+
+Sin embargo, esta forma de modelado presenta varias limitaciones, que acotan su funcionamiento a problemas simples:
+
+\begin{itemize}
+	\item Sólo se limita a descomponer series de naturaleza aditiva, por lo que aquellas en las que las diferentes componentes se vean influenciados entre sí requerirán técnicas propias de modelos multiplicativos.
+	\item Pueden perderse gran cantidad de detalles explicados por los datos, debido a la configuración del parámetro de suavizado. Si alisamos de más la serie, podemos estar perdiendo información clave acerca de nuestro problema, dejando completamente de lado ciertos comportamientos sutiles, lo cual aumenta la tasa de error. Debemos escoger adecuadamente los valores al aplicar Loess.
+	\item Es costoso computacionalmente en caso de series de larga duración, ya que el cálculo de aplicar el kernel se hace para cada punto en cada iteración sobre el conjunto de datos, tanto para encontrar la tendencia como para luego generalizar la estacionalidad.
+\end{itemize}
+
+Pero, sin lugar a dudas, la principal desventaja de este método es que no consigue por sí solo lo que deseamos resolver en este trabajo: predecir, sobre todo, a largo plazo. STL es un procedimiento muy útil que nos permite entender el comportamiento de los datos, y descomponerlo para comprender el funcionamiento de cada componente, pero no es posible por sí solo realizar predicciones. Dependemos del apoyo de otros procedimientos que nos permitan estimar , basándonos en este historial, la progresión de las componentes extraídas como la tendencia (modelable por regresión), y la estacional, la cual podría ser evaluada de manera simplificada por su valor medio histórico por intervalo.\\
+
+Esto lo hace en un método interesante desde el punto de vista de análisis, y que permite dar lugar a modelos que sí son capaces de estimar predicciones futuras, pero no es una herramienta por sí sola que nos permita resolver la tarea que nos concierne en este trabajo.
+
+
+
+
 
 \subsubsection{ARIMA}
 \subsubsection{Prophet}
