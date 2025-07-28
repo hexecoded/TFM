@@ -165,6 +165,50 @@ Esto lo hace en un método interesante desde el punto de vista de análisis, y q
 
 Basándonos de nuevo en el método de descomposición de series, podemos encontrar el modelo \textbf{ARIMA} (\textit{AutoRegressive Integrated Moving Average}) una técnica estadística ampliamente utilizada para el modelado de series temporales univariantes. Como ya adelantamos en la introducción del proyecto, su estructura se basa en la combinación de tres componentes principales: una parte autoregresiva (AR), una parte integrada (I) y una parte de media móvil (MA). Cada una de estas partes permite capturar diferentes aspectos del comportamiento temporal de los datos.
 
+\paragraph{Componente de Integración}
+\mbox{}
+
+Por integración, entendemos el número de veces que es necesario integrar la serie temporal original para que esta se vuelva estacionaria.  De manera resumida, una serie estacionaria es aquella cuyas propiedades estadísticas, como la media, la varianza y la autocorrelación entre valores, se mantienen constantes a lo largo del tiempo,  como ya vimos en la definición de los modelos aditivos.\\
+
+La diferenciación nos permite eliminar tendencias o patrones sistemáticos de crecimiento o decrecimiento, facilitando el modelado de las componentes autoregresivas (AR) y de media móvil (MA). A pesar de que su nombre nos pueda insinuar un proceso complejo de integración analítica, al realizarse sobre valores numéricos, no es más que una diferencia de valores:
+
+\[
+y'_t = y_t - y_{t-1}
+\]
+
+Este proceso puede aplicarse tantas veces como sea necesario para lograr estacionariedad. Dicho número de repeticiones viene controlado por el valor de orden \( d \), que indica el número de veces que se ha diferenciado la serie. En general, el modelo ARIMA supone que tras aplicar \( d \) diferencias, la serie resultante \( y^{(d)} \) puede ser modelada por un proceso estacionario ARMA(\(p,q\)). Por tanto, el componente \textit{I} de ARIMA es un procesamiento indispensable de la serie cuando no se cumpla el requisito de estacionariedad, y permitirá calcular sobre la serie resultante las componentes AR y MA con mayor facilidad. \\
+
+Para saber cuando deja de ser nececesario aplicar el proceso iterativo de integración, podemos hacer uso de dos posibles mecanismos: uno gráfico, basado en el gráfico de autocorrelación de valores, y otro estadístico, basado en el test de Dickey-Fuller aumentado (ADF).
+
+\begin{itemize}
+	\item El análisis gráfico consiste en observar el comportamiento de la función de autocorrelación (ACF) tras aplicar una o varias diferenciaciones. Si la serie es no estacionaria, las valores siguientes de autocorrelación decaen lentamente, indicando que queda información relevante en dichas componentes. Por el contrario, si la serie es estacionaria, la ACF suele caer rápidamente a cero, estableciendo que no es necesario continuar diferenciando. La autocorrelación en un retardo \( k \) equivale a:
+		
+		\[
+		\rho_k = \frac{\mathrm{Cov}(y_t, y_{t-k})}{\sigma^2}
+		\]
+		
+		donde \( \sigma^2 \) es la varianza de la serie y \( \mathrm{Cov}(y_t, y_{t-k}) \) es la covarianza entre los valores actuales y los desplazados \( k \) periodos atrás.
+	
+	\item El test ADF, por su parte, nos proporciona la misma conclusión de manera numérica, para lograr un mayor rigor estadístico en la solución. Su funcionamiento radica en la búsqueda de una raíz unitaria en la serie, en cuyo caso significa que la serie presenta comportamiento no estacionario.
+	
+	De forma general, el test se basa en ajustar una regresión del tipo:
+	
+	\[
+	\Delta y_t = \alpha + \beta t + \gamma y_{t-1} + \sum_{i=1}^{p} \delta_i \Delta y_{t-i} + \epsilon_t
+	\]
+	
+	donde \( \Delta y_t = y_t - y_{t-1} \) representa la primera diferencia de la serie, \( \gamma \) es el parámetro clave para detectar la raíz unitaria, y \( \epsilon_t \) es el error.
+	
+	Sin embargo, lo más relevante para su uso es comprender cómo funciona el test de hipótesis. Como hipótesis nula (\( H_0 \)), define que la serie no es estacionaria, es decir, que presenta una raíz unitaria, y como (\( H_1 \)) podremos aceptar que la serie sea estacionaria. Para ello, basta con observar el valor de p:
+	
+	\begin{itemize}
+		\item Si el \textbf{p-valor} del test es significativo se puede rechazar la hipótesis nula. En ese caso, la serie puede considerarse estacionaria, y podemos parar el proceso iterativo de diferenciación.
+		\item Si el \textbf{p-valor} es mayor al valor de significación, no podemos rechazar la hipótesis nula, lo que indica que la serie sigue siendo no estacionaria, y debemos continuar el proceso de integración.
+	\end{itemize}
+	
+\end{itemize}
+
+
 \paragraph{Componente autoregresiva (AR)}
 \mbox{}
 
@@ -183,22 +227,6 @@ Esta parte del modelo representa la relación entre el valor actual de la serie 
 	\end{itemize}
 	
 	Gracias a la componente AR, podemos capturar relaciones de corto plazo y patrones de dependencia temporal, siempre que la serie sea estacionaria. Es habitual que muchas series temporales muestren este tipo de estructura, donde los valores pasados son predictivos del comportamiento futuro inmediato, como ya vimos con el caso de las temperaturas y el consumo eléctrico. Por tanto, la elección del parámetro \( p \) es clave:  un valor pequeño implica que sólo los valores más recientes tengan influencia, mientras que un valor mayor permite capturar relaciones más amplias en el tiempo, pero puede aumentar el riesgo de sobreajuste y se pierda localidad. En definitiva, se trata de un elemento esencial del rendimiento de ARIMA, por lo que es clave elegir adecuadamente su valor.
-
-	\paragraph{Componente integrada (I)}
-	\mbox{}
-	
-	
-	La componente integrada del modelo ARIMA hace referencia al número de veces que es necesario integrar la serie temporal original para que esta se vuelva estacionaria, que es uno de los requisitos de este modelo.  De manera resumida, una serie estacionaria es aquella cuyas propiedades estadísticas, como la media, la varianza y la autocorrelación entre valores, se mantienen constantes a lo largo del tiempo,  como ya vimos en la definición de los modelos aditivos.\\
-	
-	La diferenciación nos permite eliminar tendencias o patrones sistemáticos de crecimiento o decrecimiento, facilitando el modelado de las componentes autoregresivas (AR) y de media móvil (MA). A pesar de que su nombre nos pueda insinuar un proceso complejo de integración analítica, al realizarse sobre valores numéricos, no es más que una diferencia de valores:
-	
-	\[
-	y'_t = y_t - y_{t-1}
-	\]
-	
-	Este proceso puede aplicarse tantas veces como sea necesario para lograr estacionariedad. Dicho número de repeticiones viene controlado por el valor de orden \( d \), que indica el número de veces que se ha diferenciado la serie. En general, el modelo ARIMA supone que tras aplicar \( d \) diferencias, la serie resultante \( y^{(d)} \) puede ser modelada por un proceso estacionario ARMA(\(p,q\)). Por tanto, el componente "I" de ARIMA es un procesamiento indispensable de la serie cuando no se cumpla el requisito de estacionariedad, y permitirá calcular sobre la serie resultante las componentes AR y MA con mayor facilidad. \\
-	
-\textbf{	AÑADIR FORMAS DE DETECTAR ESTACIONARIEDAD}
 	
 	\paragraph{Componente de media móvil (MA)}
 	\mbox{}
