@@ -231,6 +231,29 @@ Esta parte del modelo representa la relación entre el valor actual de la serie 
 	\paragraph{Componente de media móvil (MA)}
 	\mbox{}
 	
+	Por último, nos queda describir el funcionamiento de la media móvil. Esta tiene como objetivo modelar la parte estocástica de la serie temporal, es decir, los errores de predicción cometidos en instantes anteriores. Anteriormente,  vimos que la parte autoregresiva se basaba en realizar la media sobre sus mismos valores, mientras que aquí tratamos de extraer información de los residuos.
+	
+	Formalmente, un modelo MA de orden \( q \) se define como:
+	
+	\[
+	y_t = \mu + \varepsilon_t + \theta_1 \varepsilon_{t-1} + \theta_2 \varepsilon_{t-2} + \cdots + \theta_q \varepsilon_{t-q}
+	\]
+	
+	donde:
+	\begin{itemize}
+		\item \( y_t \) es el valor observado de la serie en el instante \( t \),
+		\item \( \mu \) es la media de la serie (si está centrada, puede ser cero),
+		\item \( \varepsilon_t \) es el término de error en el instante \( t \),
+		\item \( \theta_1, \ldots, \theta_q \) son los coeficientes del modelo MA.
+	\end{itemize}
+	
+	Esto nos permitirá capturar patrones aleatorios que no pueden explicarse mediante una simple tendencia o correlación temporal, y por tanto, mejorando los resultados y el rendimiento del modelo, al suavizarse los errores pasados para acercanos más a la serie real. Por tanto, el número de errores a considerar \textit{q} debe escoger de manera adecuada. Para facilitar esta decisión, podemos basarnos de nuevo en dos enfoques: en emplear la información del gráfico ACF, o bien, de manera experimental:
+	
+	\begin{itemize}
+		\item El análisis gráfico mediante ACF consiste en observar el gráfico de la función de autocorrelación (ACF) de la serie diferenciada, y ver cómo se comportan los lags. En un modelo MA puro, los primeros \( q \) retardos (\textit{lags}) suelen mostrar autocorrelación significativa, pero luego suelen decrecer de manera repentina a cero. Una buena estimación puede ser tomar como valor de \( q \)  el último lag con autocorrelación significativa antes del corte. Es decir, si a partir del punto q+1 se produce un descenso abrupto, tomamos \textit{q}.
+		
+		\item Si la gráfica no nos proporciona una respuesta clara, y la serie es modelable en un tiempo razonable, se puede realizar una búsqueda hiperparámetros, probando diferentes valores de \( q \), y entrenando un modelo ARIMA para cada combinación posible (junto a valores de \( p \) y \( d \)), y evaluar su rendimiento utilizando métricas como el \textit{Mean Squared Error} (MSE). Para facilitar el proceso, podemos usar técnicas clásicas como grid search, que no es más que realizar todas las combinaciones posibles de parámetros p,q y d. Pero, de manera más avanzada, existen adaptaciones de ARIMA en frameworks como auto\_arima,  que usan una estimación automática de los hiperparámetros.
+	\end{itemize}
 
 
 \subsubsection{Prophet}
