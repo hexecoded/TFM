@@ -139,7 +139,7 @@ En su publicación original, podemos encontrar un ejemplo de ejecución sobre el
 \begin{figure}[!htp] %con el [H] le obligamos a situar aquí la figura
 	\centering
 	\includegraphics[scale=0.35]{img/stl}
-	\caption{Ejemplo de caso de estudio empleando STL: Daily Carbon Dioxide Data \cite{cleveland1990stl}}
+	\caption{STL: Ejemplo de caso de estudio, Daily Carbon Dioxide Data \cite{cleveland1990stl}}
 	\label{stl}
 \end{figure}  	
 
@@ -156,10 +156,6 @@ Sin embargo, esta forma de modelado presenta varias limitaciones, que acotan su 
 Pero, sin lugar a dudas, la principal desventaja de este método es que no consigue por sí solo lo que deseamos resolver en este trabajo: predecir, sobre todo, a largo plazo. STL es un procedimiento muy útil que nos permite entender el comportamiento de los datos, y descomponerlo para comprender el funcionamiento de cada componente, pero no es posible por sí solo realizar predicciones. Dependemos del apoyo de otros procedimientos que nos permitan estimar , basándonos en este historial, la progresión de las componentes extraídas como la tendencia (modelable por regresión), y la estacional, la cual podría ser evaluada de manera simplificada por su valor medio histórico por intervalo.\\
 
 Esto lo hace en un método interesante desde el punto de vista de análisis, y que permite dar lugar a modelos que sí son capaces de estimar predicciones futuras, pero no es una herramienta por sí sola que nos permita resolver la tarea que nos concierne en este trabajo.
-
-
-
-
 
 \subsubsection{ARIMA}
 
@@ -272,7 +268,7 @@ Como alternativa más reciente de los modelos aditivos, disponemos de Prophet \c
 \paragraph{Funcionamiento}
 \mbox{}
 
-A diferencia de los modelos anteriores, que tendían a series restringidas a cumplir ciertas restricciones, como la estacionariedad, Prophet nos permite trabajar con entornos más cambiantes, al estar diseñado para recibir datos de al menos varios meses de duración, donde si bien existen patrones estacionales claros por la estructura de tipo calendario, es capaz de adaptarse a cambios e imprevistos. Es decir, es capaz de modelar días festivos o de caracter especial sobre el impacto del desarrollo de la serie (como el lanzamiento de un nuevo servicio o producto de una empresa) y es más robusto frente a outliers que los modelos que vimos anteriormente.\\
+A diferencia de los modelos anteriores, que tendían a series restringidas a cumplir ciertas restricciones, como la estacionariedad, Prophet nos permite trabajar con entornos más cambiantes, al estar diseñado para recibir datos de al menos varios meses de duración, donde si bien existen patrones estacionales claros por la estructura de tipo calendario, es capaz de adaptarse a cambios e imprevistos. Es decir, es capaz de modelar días festivos o de caracter especial sobre el impacto del desarrollo de la serie (como el lanzamiento de un nuevo servicio o producto de una empresa) y es más robusto frente a outliers que los modelos que vimos anteriormente. (ver figura \ref{prophetex}).\\
 
 La descomposición se basa en una suma de tres componentes, de manera similar a los modelos anteriores:
 
@@ -289,7 +285,15 @@ Donde:
 	\item \( \varepsilon_t \) representa el error asociado a la predicción realizada, que se asume con distribución normal.
 \end{itemize}
 
-Entrando en mayores detalles de implementación, una de las principales novedades reside en algo tan sencillo de visualizar como la tendencia. Hasta ahora, normalmente disponíamos de un modelado de única ecuación, comúnmente lineal, que era común a toda la serie. Pero Prophet es más flexible gracias a la detección automática de cambios de pendiente, los cuales denomina \textit{changepoints}. Además, para reflejar comportamientos y cambios de tendencia de manera más suave y progresiva, permite ajustar la suavidad en torno a los changepoints mediante un parámetro de escala.\\
+Entrando en mayores detalles de implementación, una de las principales novedades reside en algo tan sencillo de visualizar como la tendencia. Hasta ahora, normalmente disponíamos de un modelado de única ecuación, comúnmente lineal, que era común a toda la serie. Pero Prophet es más flexible gracias a la detección automática de cambios de pendiente, los cuales denomina \textit{changepoints}. Además, para reflejar comportamientos y cambios de tendencia de manera más suave y progresiva, permite ajustar la suavidad en torno a los changepoints mediante un parámetro de escala.
+
+\begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
+	\centering
+	\includegraphics[scale=0.35]{img/prophetex}
+	\caption{Prophet: Ejemplo de predicción en entorno ruidoso  \cite{prophet2017}}
+	\label{prophetex}
+\end{figure}  	
+
 
 Adicionalmente, la modelización de la estacionalidad también recibe un formulación más sofisticada. Usando Fourier, podemos introducir la duración del período de cada ciclo (\textit{P}) e ir ajustando su precisión mediante el parámetro \textit{n} (ver ecuación \ref{fftprophet}). Pero lo más intersante es que se facilita la inclusión explícita de festividades o eventos que pueden afectar significativamente la serie. Para ello, el modelo permite especificar ventanas alrededor de esos puntos para así aprender también su comportamiento.
 
