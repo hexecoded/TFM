@@ -329,6 +329,49 @@ Sin embargo, aunque supone un gran salto con lo disponible anteriormente, aún s
 
  Finalmente, Prophet no incluye de manera nativa mecanismos autoregresivos ni permite modelar series multivariantes, lo cual representa una limitación cuando trabajamos con series que miden varios factores al mismo tiempo, y que incluso pueden estar correlacionados entre sí.
 
+\subsubsection{Comparativa final y limitaciones}
+
+A lo largo de este apartado, hemos analizado tres de los enfoques más relevantes para la descomposición de series temporales: {STL}, {ARIMA} y {Prophet}. Aunque todos comparten el mismo objetivo, que es separar la serie en componentes interpretables como tendencia, estacionalidad y ruido, cada uno lo aborda desde una perspectiva distinta, lo que se traduce en ventajas e inconvenientes específicos (ver tabla \ref{tab:modelsadit}).
+
+\begin{itemize}
+
+
+\item El método \textbf{STL} nos ha resultado especialmente útil en las fases de análisis exploratorio. Su uso de suavizado local mediante Loess le permite adaptarse a estacionalidades no necesariamente fijas y proporciona una descomposición visualmente clara e interpretable. Sin embargo, al tratarse de un enfoque puramente descriptivo, su utilidad para la predicción es limitada, y se requieren herramientas adicionales.
+
+\item Por su parte, \textbf{ARIMA} representa una aproximación estadística clásica basada en la modelización de las diferentes componentes temporales de la serie. Hemos establecido que resulta eficaz en series estacionarias con comportamientos lineales, gracias a su capacidad para capturar tanto relaciones autoregresivas como de medias móviles.  Pero la necesidad de afinar los hiperparámetros, la precondición de estacionareidad y su naturaleza lineal limita su rendimiento ante patrones no lineales o estacionalidades más complejas.
+
+\item Por último, \textbf{Prophet} es una solución más moderna y accesible, especialmente diseñada para aplicaciones empresariales. A diferencia de ARIMA, no exige estacionariedad y su estructura facilita su uso por usuarios sin conocimientos especiales sobre series temporales. Sin embargo, carece de componentes autoregresivos y no modela relaciones multivariantes de forma nativa, lo que puede comprometer su versatilidad.
+
+\end{itemize}
+
+\begin{table}[H]
+	\centering
+	\begingroup
+	\renewcommand{\arraystretch}{1.055}
+	\begin{tabular}{P{3.3cm} | P{2.5cm} P{2.5cm} P{2.5cm}}
+		\toprule
+		\textbf{Característica} & \textbf{STL} & \textbf{ARIMA} & \textbf{Prophet} \\
+		\midrule
+		Enfoque & Suavizado Loess & Modelo estadístico autoregresivo & Modelo aditivo estructurado \\
+		Requiere estacionariedad & No & Sí & No \\
+		Componente de tendencia & Suavizado local & Parte del modelo (AR/I) & Curva lineal o logística con puntos de cambio \\
+		Modelado de estacionalidad & Suavizado periódico & Diferenciación estacional o SARIMA & Series de Fourier \\
+		Eventos especiales & No contemplado & No los contempla & Incluidos explícitamente \\
+		Capacidad predictiva & Limitada & Buena si la serie es estacionaria y lineal & Alta en escenarios empresariales comunes \\
+		Robustez ante valores atípicos & Alta & Baja & Alta \\
+		Facilidad de uso & Media & Baja & Alta \\
+		Interpretabilidad & Muy alta & Media & Muy alta \\
+		\bottomrule
+	\end{tabular}
+	\caption{Comparativa entre métodos de descomposición de series temporales}
+	\label{tab:modelsadit}
+	\endgroup
+\end{table}
+
+
+
+En resumen, podemos afirmar que estos modelos constituyen una base sólida para el análisis inicial de series temporales, pero enfrentamos varias dificultades con datos dinámicos, dependencias de largo plazo, series multivariantes o patrones no lineales. Es en estos contextos donde se vuelve necesaria la incorporación de modelos más avanzados, como las {redes neuronales recurrentes (RNN)}, las {LSTM} o incluso los {Transformers}, que permiten modelar dependencias temporales profundas de manera eficiente y escalar a volúmenes de datos mayores. En los apartados siguientes, analizaremos estos nuevos modelos.
+
 \subsection{RNN y LTSM}
 \subsection{Transformers}
 
