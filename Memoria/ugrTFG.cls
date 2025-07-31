@@ -144,6 +144,12 @@
   % Carpeta donde buscar los archivos de imagen por defecto
   \graphicspath{{img/}}
 
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[table]{xcolor}
+
+% Define una nueva columna sin corte de palabras
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
 
 % -------------------------------------------------------------------
 % Código

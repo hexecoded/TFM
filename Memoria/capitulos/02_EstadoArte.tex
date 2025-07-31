@@ -99,7 +99,12 @@ A continuación, definiremos en mayor detalle 3 de los algoritmos basados en des
 
 \subsubsection{STL}
 
-Esta técnica, llamada \textit{Seasonal Time-Series Decomposition}, nos permite descomponer la serie en partes más sencillas de modelar, separando la serie en tres componentes básicas: tendencia, estacionalidad y resto, siguiendo así el esquema visto anteriormente. De esta forma, podemos comprender en mayor detalle cómo evolucionan los valores a lo largo del tiempo, y comprender mejor cómo modelar su comportamiento. Para obtener un modelo para cada una de ellas,  normalmente se sigue un proceso de 3 pasos que nos permite aislar la información.
+Esta técnica, llamada \textit{Seasonal Time-Series Decomposition}, nos permite descomponer la serie en partes más sencillas de modelar, separando la serie en tres componentes básicas: tendencia, estacionalidad y resto, siguiendo así el esquema visto anteriormente. De esta forma, podemos comprender en mayor detalle cómo evolucionan los valores a lo largo del tiempo, y comprender mejor cómo modelar su comportamiento. 
+
+\paragraph{Funcionamiento}
+\mbox{}
+
+Para obtener un modelo para cada una de ellas,  normalmente se sigue un proceso de 3 pasos que nos permite aislar la información.
 
 \begin{enumerate}
 	\item \textbf{Extracción de la tendencia}. Se comienza extrayendo la tendencia de la serie para así obtener el comportamiento subyacente de la misma, y saber si es creciente, decreciente o se mantiene constante. En este algoritmo, se consigue mediante un proceso de suavizado, llamado \textit{Locally Estimated Scatterplot Smoothing} (Loess) de manera iterativa. Para ello, primero se comienza aplicando Loess, de manera que se suavizan los valores realizando una regresión no parámetrica, donde se observan los valores cercanos a cada timestamp de manera que se realiza un promedio que reduce las diferencias en el entorno. Si la serie es muy compleja o ruidosa, es posible que sea necesario repetir este proceso varias veces, por lo que se convierte en un proceso iterativo, utilizando tamaños mayores de ventana entorno a cada valor.
@@ -139,13 +144,16 @@ En su publicación original, podemos encontrar un ejemplo de ejecución sobre el
 \begin{figure}[!htp] %con el [H] le obligamos a situar aquí la figura
 	\centering
 	\includegraphics[scale=0.35]{img/stl}
-	\caption{Ejemplo de caso de estudio empleando STL: Daily Carbon Dioxide Data \cite{cleveland1990stl}}
+	\caption{STL: Ejemplo de caso de estudio, Daily Carbon Dioxide Data \cite{cleveland1990stl}}
 	\label{stl}
 \end{figure}  	
 
-En este caso, podemos apreciar visualmente una serie fácilmente modelable por este enfoque, ya que la curva describe una tendencia creciente bastante clara, y los periodos estacionales están bastante bien delimitados y no se ven influenciados por el crecimiento recogido en la tendencia. Es un ejemplo perfecto para el uso de los modelos basados en descomposición aditiva.\\
+En este caso, podemos apreciar visualmente una serie fácilmente modelable por este enfoque, ya que la curva describe una tendencia creciente bastante clara, y los periodos estacionales están bastante bien delimitados y no se ven influenciados por el crecimiento recogido en la tendencia. Es un ejemplo perfecto para el uso de los modelos basados en descomposición aditiva.
 
-Sin embargo, esta forma de modelado presenta varias limitaciones, que acotan su funcionamiento a problemas simples:
+\paragraph{Conclusiones}
+\mbox{}
+
+STL supuso una buena base para modelos posteriores, pero esta forma de modelado presenta varias limitaciones, que acotan su funcionamiento a problemas simples:
 
 \begin{itemize}
 	\item Sólo se limita a descomponer series de naturaleza aditiva, por lo que aquellas en las que las diferentes componentes se vean influenciados entre sí requerirán técnicas propias de modelos multiplicativos.
@@ -156,10 +164,6 @@ Sin embargo, esta forma de modelado presenta varias limitaciones, que acotan su 
 Pero, sin lugar a dudas, la principal desventaja de este método es que no consigue por sí solo lo que deseamos resolver en este trabajo: predecir, sobre todo, a largo plazo. STL es un procedimiento muy útil que nos permite entender el comportamiento de los datos, y descomponerlo para comprender el funcionamiento de cada componente, pero no es posible por sí solo realizar predicciones. Dependemos del apoyo de otros procedimientos que nos permitan estimar , basándonos en este historial, la progresión de las componentes extraídas como la tendencia (modelable por regresión), y la estacional, la cual podría ser evaluada de manera simplificada por su valor medio histórico por intervalo.\\
 
 Esto lo hace en un método interesante desde el punto de vista de análisis, y que permite dar lugar a modelos que sí son capaces de estimar predicciones futuras, pero no es una herramienta por sí sola que nos permita resolver la tarea que nos concierne en este trabajo.
-
-
-
-
 
 \subsubsection{ARIMA}
 
@@ -181,13 +185,23 @@ Este proceso puede aplicarse tantas veces como sea necesario para lograr estacio
 Para saber cuando deja de ser nececesario aplicar el proceso iterativo de integración, podemos hacer uso de dos posibles mecanismos: uno gráfico, basado en el gráfico de autocorrelación de valores, y otro estadístico, basado en el test de Dickey-Fuller aumentado (ADF).
 
 \begin{itemize}
-	\item El análisis gráfico consiste en observar el comportamiento de la función de autocorrelación (ACF) tras aplicar una o varias diferenciaciones. Si la serie es no estacionaria, las valores siguientes de autocorrelación decaen lentamente, indicando que queda información relevante en dichas componentes. Por el contrario, si la serie es estacionaria, la ACF suele caer rápidamente a cero, estableciendo que no es necesario continuar diferenciando. La autocorrelación en un retardo \( k \) equivale a:
-		
-		\[
-		\rho_k = \frac{\mathrm{Cov}(y_t, y_{t-k})}{\sigma^2}
-		\]
-		
-		donde \( \sigma^2 \) es la varianza de la serie y \( \mathrm{Cov}(y_t, y_{t-k}) \) es la covarianza entre los valores actuales y los desplazados \( k \) periodos atrás.
+	\item El análisis gráfico consiste en observar el comportamiento de la función de autocorrelación (ACF) tras aplicar una o varias diferenciaciones. Si la serie es no estacionaria, las valores siguientes de autocorrelación decaen lentamente, indicando que queda información relevante en dichas componentes. Por el contrario, si la serie es estacionaria, la ACF suele caer rápidamente a cero, estableciendo que no es necesario continuar diferenciando (ver figura \ref{acf}).  
+
+	\begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
+		\centering
+		\includegraphics[scale=0.25]{img/acf}
+		\caption{Gráfico ACF: no estacionario (izquierda) vs estacionario (derecha) \cite{hyndman2021stationarity}}
+		\label{acf}
+	\end{figure}  	
+	
+	Numéricamente, la autocorrelación en un retardo \( k \) equivale a:
+	
+	\[
+	\rho_k = \frac{\mathrm{Cov}(y_t, y_{t-k})}{\sigma^2}
+	\]
+	
+	donde \( \sigma^2 \) es la varianza de la serie y \( \mathrm{Cov}(y_t, y_{t-k}) \) es la covarianza entre los valores actuales y los desplazados \( k \) periodos atrás.
+	
 	
 	\item El test ADF, por su parte, nos proporciona la misma conclusión de manera numérica, para lograr un mayor rigor estadístico en la solución. Su funcionamiento radica en la búsqueda de una raíz unitaria en la serie, en cuyo caso significa que la serie presenta comportamiento no estacionario.
 	
@@ -250,13 +264,113 @@ Esta parte del modelo representa la relación entre el valor actual de la serie 
 	Esto nos permitirá capturar patrones aleatorios que no pueden explicarse mediante una simple tendencia o correlación temporal, y por tanto, mejorando los resultados y el rendimiento del modelo, al suavizarse los errores pasados para acercanos más a la serie real. Por tanto, el número de errores a considerar \textit{q} debe escoger de manera adecuada. Para facilitar esta decisión, podemos basarnos de nuevo en dos enfoques: en emplear la información del gráfico ACF, o bien, de manera experimental:
 	
 	\begin{itemize}
-		\item El análisis gráfico mediante ACF consiste en observar el gráfico de la función de autocorrelación (ACF) de la serie diferenciada, y ver cómo se comportan los lags. En un modelo MA puro, los primeros \( q \) retardos (\textit{lags}) suelen mostrar autocorrelación significativa, pero luego suelen decrecer de manera repentina a cero. Una buena estimación puede ser tomar como valor de \( q \)  el último lag con autocorrelación significativa antes del corte. Es decir, si a partir del punto q+1 se produce un descenso abrupto, tomamos \textit{q}.
+		\item El análisis gráfico mediante ACF nos permite analizar el comportamiento de los lags; en un modelo MA puro, los primeros \( q \) retardos (\textit{lags}) suelen mostrar autocorrelación significativa, pero luego suelen decrecer de manera repentina a cero. Una buena estimación puede ser tomar como valor de \( q \)  el último lag con autocorrelación significativa antes del corte. Es decir, si a partir del punto q+1 se produce un descenso abrupto, tomamos \textit{q}.
 		
 		\item Si la gráfica no nos proporciona una respuesta clara, y la serie es modelable en un tiempo razonable, se puede realizar una búsqueda hiperparámetros, probando diferentes valores de \( q \), y entrenando un modelo ARIMA para cada combinación posible (junto a valores de \( p \) y \( d \)), y evaluar su rendimiento utilizando métricas como el \textit{Mean Squared Error} (MSE). Para facilitar el proceso, podemos usar técnicas clásicas como grid search, que no es más que realizar todas las combinaciones posibles de parámetros p,q y d. Pero, de manera más avanzada, existen adaptaciones de ARIMA en frameworks como auto\_arima,  que usan una estimación automática de los hiperparámetros.
 	\end{itemize}
+	
 
+\paragraph{Conclusiones}
+\mbox{}
+
+En resumen, ARIMA nos permite modelar gran cantidad de problemas de manera simple, cumplendo como única restricción la estacionariedad. Pero principalmente esta característica, si bien facilita enormemente el proceso, también impacta sobre la calidad del resultado; si la serie tiene una estructura muy compleja y no estacionaria, convertirla para que lo sea puede provocar una pérdida masiva de información, ya que al diferenciar estamos suprimiendo información que podría ser potencialmente relevante. En casos extremos, la pérdida de expresividad podría ser tal hasta lograr una serie muy plana, sin comportamientos aparentes. Por tanto, es necesario emplear técnicas más sofisticadas que no requieran dicha condición para extraer modelos más generalizables.\\
+
+Por otro lado, las predicciones a largo plazo también son problemáticas: como se buscan relaciones lineales entre variables, con estaciones definidas, y variables sencillas de representar, cuando se usa ante series complejas puede tenderse a formular una predicción bastante plana y poco informativa que tienda a la media, ante la imposibilidad del modelo a adaptarse a los cambios. De manera directa, esto influencia también ante la capacidad de adaptación de los outliers: ante su presencia, se podría ver alterada la predicción real, y se deben estudiar y analizar en fases previas de preprocesado.\\
+
+Por último, en caso de que se disponga de información adicional, como intervalos de tiempo, localización en calendario, habitualmente usada cuando se dispone de datos de larga extensión para facilitar su estructuración y la detección de períodos, no es posible incorporarlo de forma directa. Habría que realizar modificaciones sobre este, como por ejemplo, las integradas en ARIMAX, que se basa en la implementación original \cite{box1970time}, pero añadiendo de manera aditiva operaciones adicionales aprovechando la información externa.
 
 \subsubsection{Prophet}
+
+Como alternativa más reciente de los modelos aditivos, disponemos de Prophet \cite{taylor2018prophet}. Desarrollado por Meta, apareció teniendo como objetivo facilitar la generación de predicciones de calidad, incluso si es empleado por analistas sin experiencia en series temporales. Según su blog oficial \cite{prophet2017}, Prophet fue creado para responder a la necesidad de escalar la producción de pronósticos precisos en entornos empresariales sin necesidad de altos conocimientos para poder extraer buenas conclusiones. 
+
+\paragraph{Funcionamiento}
+\mbox{}
+
+A diferencia de los modelos anteriores, que definían la necesidad de cumplir ciertas restricciones, como la estacionariedad, Prophet nos permite trabajar con entornos más cambiantes, al estar diseñado para recibir datos de al menos varios meses de duración, donde si bien existen patrones estacionales claros por la estructura de tipo calendario, es capaz de adaptarse a cambios e imprevistos. Es decir, es capaz de modelar días festivos o de caracter especial sobre el impacto del desarrollo de la serie (como el lanzamiento de un nuevo servicio o producto de una empresa) y es más robusto frente a outliers que los modelos que vimos anteriormente. (ver figura \ref{prophetex}).\\
+
+La descomposición se basa en una suma de tres componentes, de manera similar a los modelos anteriores:
+
+\begin{equation}
+	y(t) = g(t) + s(t) + h(t) + \varepsilon_t
+\end{equation}
+
+Donde:
+
+\begin{itemize}
+	\item \( g(t) \) representa la {tendencia a largo plazo}, que puede ser lineal o logística, y puede contener cambios de tendencia que se ajustan de manera automática.
+	\item \( s(t) \) modela la {estacionalidad} periódica mediante funciones basadas en series de Fourier. Permite capturar estacionalidades diarias, semanales o anuales, aunque las implementaciones disponibles permiten también especificar intervalos definidos por el usuario.
+	\item \( h(t) \) representa efectos de festividades o eventos especiales, introducidos manualmente por el usuario.
+	\item \( \varepsilon_t \) representa el error asociado a la predicción realizada, que se asume con distribución normal.
+\end{itemize}
+
+Entrando en mayores detalles de implementación, una de las principales novedades reside en algo tan sencillo de visualizar como la tendencia. Hasta ahora, normalmente disponíamos de un modelado de única ecuación, comúnmente lineal, que era común a toda la serie. Pero Prophet es más flexible gracias a la detección automática de cambios de pendiente, los cuales denomina \textit{changepoints}. Además, para reflejar comportamientos y cambios de tendencia de manera más suave y progresiva, permite ajustar la suavidad en torno a los changepoints mediante un parámetro de escala.
+
+\begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
+	\centering
+	\includegraphics[scale=0.375]{img/prophetex}
+	\caption{Prophet: Ejemplo de predicción en entorno ruidoso  \cite{prophet2017}}
+	\label{prophetex}
+\end{figure}  	
+
+
+Adicionalmente, la modelización de la estacionalidad también recibe un formulación más sofisticada. Usando Fourier, podemos introducir la duración del período de cada ciclo (\textit{P}) e ir ajustando su precisión mediante el parámetro \textit{n} (ver ecuación \ref{fftprophet}). Pero lo más intersante es que se facilita la inclusión explícita de festividades o eventos que pueden afectar significativamente la serie. Para ello, el modelo permite especificar ventanas alrededor de esos puntos para así aprender también su comportamiento.
+
+\begin{equation}
+	s(t) = \sum_{n=1}^{N} \left[ a_n \cos\left( \frac{2\pi n t}{P} \right) + b_n \sin\left( \frac{2\pi n t}{P} \right) \right]
+	\label{fftprophet}
+\end{equation}
+
+\paragraph{Conclusiones}
+\mbox{}
+
+En resumen, Prophet supone un salto considerable en cuanto a adaptación y cercanía a los datos extraídos de casos reales. Nos permite insertar la información explícita que mencionabamos en ARIMA, ya que nos permite añadir de manera muy intuitiva información adicional del problema. Además, en su publicación original se destaca la eficacia incluso cuando los datos presentan imperfecciones, como valores atípicos, datos faltantes o cambios abruptos en la tendencia, lo cual facilita enormemente el proceso de preprocesado, el cual puede reducirse al mínimo. Esto aporta considerablemente a su faceta relacionada con la facilidad de uso.\\
+
+Sin embargo, aunque supone un gran salto con lo disponible anteriormente, aún se siguen manteniendo varias de las limitaciones que venimos analizando a lo largo de los modelos. En primer lugar, podemos observar que su enfoque podría verse más implicado en el ajuste de curvas que en una modelación como tal de las dependencias temporales, que nos permitan realizar forecasting a largo plazo. Si bien el modelo destaca por su sencillez al usuario, la elección de parámetros sigue siendo un aspecto delicado, ya que el modelo puede incurrir en sobreajuste si no se calibran adecuadamente. Debemos asegurarnos de sus valores estudiando previamente el conjunto de datos.\\
+
+ Finalmente, Prophet no incluye de manera nativa mecanismos autoregresivos ni permite modelar series multivariantes, lo cual representa una limitación cuando trabajamos con series que miden varios factores al mismo tiempo, y que incluso pueden estar correlacionados entre sí.
+
+\subsubsection{Comparativa final y limitaciones}
+
+A lo largo de este apartado, hemos analizado tres de los enfoques más relevantes para la descomposición de series temporales: {STL}, {ARIMA} y {Prophet}. Aunque todos comparten el mismo objetivo, que es separar la serie en componentes interpretables como tendencia, estacionalidad y ruido, cada uno lo aborda desde una perspectiva distinta, lo que se traduce en ventajas e inconvenientes específicos (ver tabla \ref{tab:modelsadit}).
+
+\begin{itemize}
+
+
+\item El método \textbf{STL} nos ha resultado especialmente útil en las fases de análisis exploratorio. Su uso de suavizado local mediante Loess le permite adaptarse a estacionalidades no necesariamente fijas y proporciona una descomposición visualmente clara e interpretable. Sin embargo, al tratarse de un enfoque puramente descriptivo, su utilidad para la predicción es limitada, y se requieren herramientas adicionales.
+
+\item Por su parte, \textbf{ARIMA} representa una aproximación estadística clásica basada en la modelización de las diferentes componentes temporales de la serie. Hemos establecido que resulta eficaz en series estacionarias con comportamientos lineales, gracias a su capacidad para capturar tanto relaciones autoregresivas como de medias móviles.  Pero la necesidad de afinar los hiperparámetros, la precondición de estacionareidad y su naturaleza lineal limita su rendimiento ante patrones no lineales o estacionalidades más complejas.
+
+\item Por último, \textbf{Prophet} es una solución más moderna y accesible, especialmente diseñada para aplicaciones empresariales. A diferencia de ARIMA, no exige estacionariedad y su estructura facilita su uso por usuarios sin conocimientos especiales sobre series temporales. Sin embargo, carece de componentes autoregresivos y no modela relaciones multivariantes de forma nativa, lo que puede comprometer su versatilidad.
+
+\end{itemize}
+
+\begin{table}[H]
+	\centering
+	\begingroup
+	\renewcommand{\arraystretch}{1.055}
+	\begin{tabular}{P{3.3cm} | P{2.5cm} P{2.5cm} P{2.5cm}}
+		\toprule
+		\textbf{Característica} & \textbf{STL} & \textbf{ARIMA} & \textbf{Prophet} \\
+		\midrule
+		Enfoque & Suavizado Loess & Modelo estadístico autoregresivo & Modelo aditivo estructurado \\
+		Requiere estacionariedad & No & Sí & No \\
+		Componente de tendencia & Suavizado local & Parte del modelo (AR/I) & Curva lineal o logística con puntos de cambio \\
+		Modelado de estacionalidad & Suavizado periódico & Diferenciación estacional o SARIMA & Series de Fourier \\
+		Eventos especiales & No contemplado & No los contempla & Incluidos explícitamente \\
+		Capacidad predictiva & Limitada & Buena si la serie es estacionaria y lineal & Alta en escenarios empresariales comunes \\
+		Robustez ante valores atípicos & Alta & Baja & Alta \\
+		Facilidad de uso & Media & Baja & Alta \\
+		Interpretabilidad & Muy alta & Media & Muy alta \\
+		\bottomrule
+	\end{tabular}
+	\caption{Comparativa entre métodos de descomposición de series temporales}
+	\label{tab:modelsadit}
+	\endgroup
+\end{table}
+
+
+
+En resumen, podemos afirmar que estos modelos constituyen una base sólida para el análisis inicial de series temporales, pero enfrentamos varias dificultades con datos dinámicos, dependencias de largo plazo, series multivariantes o patrones no lineales. Es en estos contextos donde se vuelve necesaria la incorporación de modelos más avanzados, como las {redes neuronales recurrentes (RNN)}, las {LSTM} o incluso los {Transformers}, que permiten modelar dependencias temporales profundas de manera eficiente y escalar a volúmenes de datos mayores. En los apartados siguientes, analizaremos estos nuevos modelos.
 
 \subsection{RNN y LTSM}
 \subsection{Transformers}
