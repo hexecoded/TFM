@@ -177,13 +177,23 @@ Este proceso puede aplicarse tantas veces como sea necesario para lograr estacio
 Para saber cuando deja de ser nececesario aplicar el proceso iterativo de integración, podemos hacer uso de dos posibles mecanismos: uno gráfico, basado en el gráfico de autocorrelación de valores, y otro estadístico, basado en el test de Dickey-Fuller aumentado (ADF).
 
 \begin{itemize}
-	\item El análisis gráfico consiste en observar el comportamiento de la función de autocorrelación (ACF) tras aplicar una o varias diferenciaciones. Si la serie es no estacionaria, las valores siguientes de autocorrelación decaen lentamente, indicando que queda información relevante en dichas componentes. Por el contrario, si la serie es estacionaria, la ACF suele caer rápidamente a cero, estableciendo que no es necesario continuar diferenciando. La autocorrelación en un retardo \( k \) equivale a:
-		
-		\[
-		\rho_k = \frac{\mathrm{Cov}(y_t, y_{t-k})}{\sigma^2}
-		\]
-		
-		donde \( \sigma^2 \) es la varianza de la serie y \( \mathrm{Cov}(y_t, y_{t-k}) \) es la covarianza entre los valores actuales y los desplazados \( k \) periodos atrás.
+	\item El análisis gráfico consiste en observar el comportamiento de la función de autocorrelación (ACF) tras aplicar una o varias diferenciaciones. Si la serie es no estacionaria, las valores siguientes de autocorrelación decaen lentamente, indicando que queda información relevante en dichas componentes. Por el contrario, si la serie es estacionaria, la ACF suele caer rápidamente a cero, estableciendo que no es necesario continuar diferenciando (ver figura \ref{acf}).  
+
+	\begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
+		\centering
+		\includegraphics[scale=0.25]{img/acf}
+		\caption{Gráfico ACF: no estacionario (izquierda) vs estacionario (derecha) \cite{hyndman2021stationarity}}
+		\label{acf}
+	\end{figure}  	
+	
+	Numéricamente, la autocorrelación en un retardo \( k \) equivale a:
+	
+	\[
+	\rho_k = \frac{\mathrm{Cov}(y_t, y_{t-k})}{\sigma^2}
+	\]
+	
+	donde \( \sigma^2 \) es la varianza de la serie y \( \mathrm{Cov}(y_t, y_{t-k}) \) es la covarianza entre los valores actuales y los desplazados \( k \) periodos atrás.
+	
 	
 	\item El test ADF, por su parte, nos proporciona la misma conclusión de manera numérica, para lograr un mayor rigor estadístico en la solución. Su funcionamiento radica en la búsqueda de una raíz unitaria en la serie, en cuyo caso significa que la serie presenta comportamiento no estacionario.
 	
