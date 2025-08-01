@@ -182,7 +182,7 @@ y'_t = y_t - y_{t-1}
 
 Este proceso puede aplicarse tantas veces como sea necesario para lograr estacionariedad. Dicho número de repeticiones viene controlado por el valor de orden \( d \), que indica el número de veces que se ha diferenciado la serie. En general, el modelo ARIMA supone que tras aplicar \( d \) diferencias, la serie resultante \( y^{(d)} \) puede ser modelada por un proceso estacionario ARMA(\(p,q\)). Por tanto, el componente \textit{I} de ARIMA es un procesamiento indispensable de la serie cuando no se cumpla el requisito de estacionariedad, y permitirá calcular sobre la serie resultante las componentes AR y MA con mayor facilidad. \\
 
-Para saber cuando deja de ser nececesario aplicar el proceso iterativo de integración, podemos hacer uso de dos posibles mecanismos: uno gráfico, basado en el gráfico de autocorrelación de valores, y otro estadístico, basado en el test de Dickey-Fuller aumentado (ADF).
+Para saber cuando deja de ser necesario aplicar el proceso iterativo de integración, podemos hacer uso de dos posibles mecanismos: uno gráfico, basado en el gráfico de autocorrelación de valores, y otro estadístico, basado en el test de Dickey-Fuller aumentado (ADF).
 
 \begin{itemize}
 	\item El análisis gráfico consiste en observar el comportamiento de la función de autocorrelación (ACF) tras aplicar una o varias diferenciaciones. Si la serie es no estacionaria, las valores siguientes de autocorrelación decaen lentamente, indicando que queda información relevante en dichas componentes. Por el contrario, si la serie es estacionaria, la ACF suele caer rápidamente a cero, estableciendo que no es necesario continuar diferenciando (ver figura \ref{acf}).  
@@ -370,9 +370,111 @@ A lo largo de este apartado, hemos analizado tres de los enfoques más relevante
 
 
 
-En resumen, podemos afirmar que estos modelos constituyen una base sólida para el análisis inicial de series temporales, pero enfrentamos varias dificultades con datos dinámicos, dependencias de largo plazo, series multivariantes o patrones no lineales. Es en estos contextos donde se vuelve necesaria la incorporación de modelos más avanzados, como las {redes neuronales recurrentes (RNN)}, las {LSTM} o incluso los {Transformers}, que permiten modelar dependencias temporales profundas de manera eficiente y escalar a volúmenes de datos mayores. En los apartados siguientes, analizaremos estos nuevos modelos.
+En resumen, podemos afirmar que estos modelos constituyen una base sólida para el análisis inicial de series temporales, pero enfrentamos varias dificultades con datos dinámicos, dependencias de largo plazo, series multivariantes o patrones no lineales. Es en estos contextos donde se vuelve necesaria la incorporación de modelos más avanzados, como las {redes neuronales recurrentes (RNN)} o incluso los {Transformers}, que permiten modelar dependencias temporales profundas de manera eficiente y escalar a volúmenes de datos mayores. En los apartados siguientes, analizaremos estos nuevos modelos.
 
-\subsection{RNN y LTSM}
+\subsection{Redes Neuronales Recurrentes}
+
+Hasta ahora, la mayoría de soluciones estudiadas se han basado en el procesamiento de un conjunto de datos de entrada, que es procesado y modelado de manera más o menos sofisticada, y se otorga una salida, como, por ejemplo, los modelos de descomposición que hemos abordado hasta ahora. No obstante, en escenarios donde las series temporales presentan relaciones no lineales complejas, múltiples escalas de dependencia y estructuras difíciles de modelar de forma explícita, resulta necesario recurrir a modelos más avanzados.\\
+
+Podríamos pensar en emplear modelos tradicionales vistos en otros ámbitos, como las redes neuronales. Pero en dichos problemas, las entradas y salidas no guardan una relación entre sí; son independientes. En los conjuntos de entrenamiento habituales, como problemas tabulares de regresión o clasificación, lo que nos importa es asignar el valor adecuado, y normalmente, cada instancia es independiente del resto. Pero cuando disponemos de información secuencial, como el lenguaje natural, o en nuestro caso, las series temporales, esto no es así.\\
+
+ En los métodos basados en descomposición, hemos podido apreciar que nos basamos continuamente en los valores pasados para ser capaces de modelar perdiendo la mínima información posible, y que por ejemplo, encontrar patrones como la estacionalidad es de gran importancia para minimizar el error y a su vez simplificar el modelado. Esto descarta la utilización de perceptrones multicapa, o capas densamente conectadas para el modelado de series temporales con un mínimo de complejidad, debido a dicha dependencia. Solo quizás, podríamos modelar series simples con una clara tendencia y forma, debido a que podrían asemejarse a una regresión. Pero si queremos obtener resultados escalables a redes más compleja, debemos tener en cuenta las conexiones temporales entre cada timestamp, y modelar dicho orden dentro de la secuencia global de los datos. Esto lo podemos conseguir relacionando cada salida con la anterior y es así como surge el concepto de las Redes Neuronales Recurrentes.
+ 
+ \subsubsection{Funcionamiento de las RNN}
+ 
+ Las RNN, al igual que las redes neuronales tradicionales, son capaces de procesar una entrada y arrojar una salida, modelando los datos internamente mediante sus capas ocultas. Pero la diferencia radica en la necesidad de establecer conexiones entre la salida anterior y la entrada actual. Esto se consigue con conexiones recurrentes que permiten que la información fluya de un instante al siguiente dentro de la propia red (ver figura \ref{rnn}).
+ 
+ \begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
+ 	\centering
+ 	\includegraphics[scale=0.4]{img/rnn}
+ 	\caption{RNN: arquitectura del modelo \cite{info15090517}}
+ 	\label{rnn}
+ \end{figure}  	
+ 
+Estructuralmente, una RNN clásica está compuesta de tres capas principales \cite{info15090517}: una capa de entrada, una capa oculta con conexiones recurrentes, y una capa de salida. El comportamiento de la red se define en función de cómo se actualiza su estado interno y cómo se generan las salidas. En su definición original, en cada instante de tiempo \( t \), la red recibe un vector de entrada \( \mathbf{x}_t \) y actualiza su estado oculto \( \mathbf{h}_t \) según la siguiente ecuación:
+
+\begin{equation}
+	\mathbf{h}_t = \sigma_h(\mathbf{W}_{xh} \mathbf{x}_t + \mathbf{W}_{hh} \mathbf{h}_{t-1} + \mathbf{b}_h)
+\end{equation}
+
+donde:
+\begin{itemize}
+	\item \( \mathbf{W}_{xh} \) es la matriz de pesos entre la entrada y la capa oculta,
+	\item \( \mathbf{W}_{hh} \) representa la conexión recurrente entre los estados ocultos,
+	\item \( \mathbf{b}_h \) es el vector de sesgo asociado,
+	\item \textbf{\( \sigma_h \)} es la función de activación, normalmente la tangente hiperbólica (\texttt{tanh}) o la rectificada lineal (\texttt{ReLU}).
+\end{itemize}
+
+A partir del estado oculto actualizado, se calcula la salida correspondiente mediante:
+
+\begin{equation}
+	\mathbf{y}_t = \sigma_y(\mathbf{W}_{hy} \mathbf{h}_t + \mathbf{b}_y)
+\end{equation}
+
+donde:
+\begin{itemize}
+	\item \( \mathbf{W}_{hy} \) conecta la capa oculta con la capa de salida,
+	\item \( \mathbf{b}_y \) es el vector de sesgo en la salida,
+	\item \textbf{\( \sigma_y \)} es la función de activación de la salida.
+\end{itemize}
+
+Gracias principalmente al estado oculto, podemos integrar la información de entrada actual con las salidas previas, permitiendo que la red exhiba un comportamiento ordenado temporalmente en sus salidas. Pero, sin lugar a dudas, otro de los elementos clave para el funcionamiento adecuado es escoger una correcta función de activación \( \sigma_h \), ya que se encarga de añadir la no linearidad a la salida. Una de las más empleadas es la tangente hiperbólica, $tanh$, que permite ajustar los valores de los pesos al intervalo [-1,1], el cual es bastante intuitivo gracias al estar centrado en cero, y además, permite la existencia de pesos tanto positivos como negativos.
+
+\begin{equation}
+	\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}
+\end{equation}
+  
+ También es posible encontrar ReLU o sus variantes, ya que permiten ajustar los pesos de manera computacionalmente sencilla, pero solo permite el paso de valores positivos.
+ 
+ \begin{equation}
+ 	ReLU(x) = max(0, x)
+ 	\label{eq:relu}
+ \end{equation}
+
+Elegir una u otra opción depende del tipo de problema que tratemos de resolver o incluso del conjunto de datos de entrada, pero es un elemento clave que afecta directamente al aprendizaje de los estados ocultos y la propagación de dicha información.
+
+\subsubsection{Limitaciones de las RNN estándar}
+
+Aunque las RNN suponen un gran avance en el aprendizaje de datos secuenciales y permitieron una mejora considerable en los resultados, no están exentas de problemas durante el aprendizaje. Al igual que otros modelos que usan la propagación mediante gradientes, debemos tener especial cuidado con su gestión para evitar la explosión de gradientes y, en su caso, el extremo contrario, el desvanecimiento.\\
+
+Estos efectos se ven potenciados debido al particular funcionamiento del algoritmo de retropropagación entre los diferentes pasos temporales. A diferencia de una red neuronal clásica, necesitamos que los pesos tengan relación también con los pasos anteriores de la secuencia, y para lograrlo, debemos modificar el proceso, de manera que podamos emplear el procedimiento habitual con la nueva estructura oculta de pesos. En cada etapa de actualización:
+
+\begin{enumerate}
+	\item La RNN se desenrolla (\textit{unroll}) en el tiempo durante un número finito de pasos (por ejemplo, 10).
+	
+	\item Se aplica retropropagación en la red desenrollada de la manera habitual.
+	
+	\item Se acumulan los gradientes de todos los pasos temporales hacia los pesos compartidos.
+	
+	\item Los parámetros se actualizan con una optimización como SGD o Adam.
+\end{enumerate}
+
+De esta forma, implementamos el mecanismo conocido como \textit{Backpropagation Through Time} (BPTT). Durante el entrenamiento con este mecanismo, calculamos los gradientes de la función de pérdida respecto a los pesos de la red a lo largo de varios pasos temporales, y es al propagar cuando podemos enfrentarnos a los dos problemas ya mencionados: la explosión y el desvanecimiento del gradiente.\\
+
+El desvanecimiento del gradiente se produce si los términos derivados que aparecen en el cálculo (concretamente, los productos sucesivos de matrices Jacobianas) tienen valores propios menores que uno, su multiplicación sucesiva tiende a cero. Esto provoca que los gradientes disminuyan exponencialmente a medida que retrocedemos en el tiempo, impidiendo que la red actualice adecuadamente los pesos de las capas o pasos más antiguos, y como consecuencia, la red pierde la capacidad de aprender dependencias a largo plazo, ya que el error no alcanza a modificar significativamente las entradas lejanas.\\
+	
+Por otro lado, la explosión del gradiente es justo el caso opuesto; si los valores propios de las Jacobianas son mayores que uno, la multiplicación produce gradientes que crecen exponencialmente. Esto puede llevar a actualizaciones de pesos excesivas, provocando inestabilidad numérica. En ambos casos, por tanto, la capacidad de aprendizaje de la red se ve comprometida, y puede perjudicar gravemente a los resultados obtenidos.\\
+
+Formalmente, podemos ver reflejado este comportamiento mediante el desarrollo de los estados ocultos. A partir de la fórmula recurrente del estado oculto:
+
+\begin{equation}
+	\mathbf{h}_t = \sigma_h\left( \mathbf{W}_{xh} \mathbf{x}_t + \mathbf{W}_{hh} \, \sigma_h\left( \mathbf{W}_{xh} \mathbf{x}_{t-1} + \mathbf{W}_{hh} \mathbf{h}_{t-2} + \mathbf{b}_h \right) + \mathbf{b}_h \right),
+	\label{eq:hidden_state_expansion}
+\end{equation}
+
+el cálculo del gradiente de \(\mathbf{h}_t\) respecto a un estado anterior \(\mathbf{h}_{t-n}\) implica el producto de Jacobianas:
+
+\begin{equation}
+	\frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_{t-n}} = \prod_{k=t-n}^{t-1} \mathbf{J}_k,
+	\label{eq:jacobian_product}
+\end{equation}
+
+donde \(\mathbf{J}_k\) representa la matriz Jacobiana del estado oculto en el instante \(k\). La estabilidad de estos productos depende críticamente de los valores propios de \(\mathbf{J}_k\), por lo que se trata del elemento clave causante de las dos problemáticas descritas.\\
+
+Para tratar de solucionar este problema, podemos encontrar variantes de este algoritmo en el estado del arte. Algunas, tratan de simplemente modificar el funcionamiento de la propagación, con técnicas como el \textit{gradient clipping}, que permiten limitar el tamaño máximo del gradiente durante la retropropagación, evitando explosiones incontroladas. Pero también podemos encontrar arquitecturas específicas como las LSTM (Long Short-Term Memory), que introducen mecanismos de control del flujo de información mediante puertas, facilitando la retención de información relevante a largo plazo y mitigando el problema desvanecimiento de gradientes de manera estructural.
+
+\subsubsection{LSTM}
+
 \subsection{Transformers}
 
 \section{Positional Encoding en Transformers}
