@@ -424,7 +424,7 @@ Gracias principalmente al estado oculto, podemos integrar la información de ent
 	\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}
 \end{equation}
   
- También es posible encontrar ReLU o sus variantes, ya que permiten ajustar los pesos de manera computacionalmente sencilla, pero solo permite el paso de valores positivos.
+ También es posible encontrar ReLU o sus variantes, ya que permiten ajustar los pesos de manera computacionalmente sencilla, pero solo permite el paso de valores positivos. 
  
  \begin{equation}
  	ReLU(x) = max(0, x)
@@ -474,6 +474,54 @@ donde \(\mathbf{J}_k\) representa la matriz Jacobiana del estado oculto en el in
 Para tratar de solucionar este problema, podemos encontrar variantes de este algoritmo en el estado del arte. Algunas, tratan de simplemente modificar el funcionamiento de la propagación, con técnicas como el \textit{gradient clipping}, que permiten limitar el tamaño máximo del gradiente durante la retropropagación, evitando explosiones incontroladas. Pero también podemos encontrar arquitecturas específicas como las LSTM (Long Short-Term Memory), que introducen mecanismos de control del flujo de información mediante puertas, facilitando la retención de información relevante a largo plazo y mitigando el problema desvanecimiento de gradientes de manera estructural.
 
 \subsubsection{LSTM}
+
+Para resolver los problemas de desvanecimiento del gradiente asociados a las RNN clásicas, Hochreiter y Schmidhuber propusieron en 1997 las \textit{Long Short-Term Memory networks} (LSTM)~\cite{10.1162/neco.1997.9.8.1735}. La innovación clave de estas redes es la introducción de mecanismos de puertas que regulan el flujo de información a lo largo del tiempo, permitiendo mantener una memoria a largo plazo de forma más estable.\\
+
+Cada célula LSTM incorpora tres compuertas principales: la compuerta de entrada, la compuerta de olvido y la compuerta de salida. Estas compuertas permiten decidir qué información se debe incorporar, qué parte del estado anterior se debe olvidar y qué parte del nuevo estado se debe transmitir a la siguiente etapa. Gracias a este diseño, las redes LSTM son especialmente eficaces para modelar dependencias temporales de largo alcance.
+
+El comportamiento interno de una célula LSTM se puede describir mediante las siguientes ecuaciones:
+
+\begin{align}
+	i_t &= \sigma(W_{xi}x_t + W_{hi}h_{t-1} + b_i) \quad &\text{(compuerta de entrada)} \\
+	f_t &= \sigma(W_{xf}x_t + W_{hf}h_{t-1} + b_f) \quad &\text{(compuerta de olvido)} \\
+	o_t &= \sigma(W_{xo}x_t + W_{ho}h_{t-1} + b_o) \quad &\text{(compuerta de salida)} \\
+	g_t &= \tanh(W_{xc}x_t + W_{hc}h_{t-1} + b_c) \quad &\text{(nuevo contenido candidato)} \\
+	c_t &= f_t \odot c_{t-1} + i_t \odot \tilde{c}_t \quad &\text{(estado de la celda)} \\
+	h_t &= o_t \odot \tanh(c_t) \quad &\text{(estado oculto)}
+\end{align}
+
+Donde $\sigma$ representa la función sigmoide, $\tanh$ la tangente hiperbólica, y $\odot$ la multiplicación elemento a elemento. Esta arquitectura permite mantener y actualizar información relevante a lo largo del tiempo, mitigando los problemas habituales en el aprendizaje de secuencias largas.\\
+
+Cada compuerta dentro de una celda LSTM desempeña una función específica en la regulación del flujo de información. La compuerta de entrada controla cuánta información del nuevo vector de entrada $x_t$ se incorpora al estado de la celda $c_t$; la compuerta de olvido determina qué parte del estado anterior $c_{t-1}$ se retiene, y, finalmente, la compuerta de salida decide cuánta información del estado actual $c_t$ se utiliza para calcular el estado oculto $h_t$ (ver figura \ref{lstm}).
+
+\begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
+	\centering
+	\includegraphics[scale=1]{img/lstm}
+	\caption{LSTM: funcionamiento de la arquitectura de puertas}
+	\label{lstm}
+\end{figure}  	
+
+
+Además, la entrada candidata de la celda, denotada como $g_t$, representa nueva información que podría añadirse al estado de la celda tras ser modulada por la compuerta de entrada.\\
+
+Gracias a estos mecanismos de control, las redes LSTM pueden decidir dinámicamente qué información conservar o descartar en cada momento, lo que les permite gestionar dependencias temporales a largo plazo de manera mucho más eficaz que las RNN convencionales. En esta arquitectura, la recurrencia se mantienen a través del estado de la celda $c_t$, que actúa como una cinta transportadora que permite el traspaso continuo de información entre pasos temporales. Este flujo sostenido de memoria facilita la conservación de patrones relevantes a lo largo de secuencias de larga extensión. \\
+
+Las multiplicaciones elemento a elemento entre compuertas y vectores asociados aseguran una interacción eficiente entre componentes, posibilitando transformaciones complejas sin comprometer la estabilidad durante el entrenamiento. En conjunto, las LSTM mantienen un equilibrio entre flexibilidad, memoria y estabilidad en el aprendizaje.\\
+
+Sin embargo, no suponen la solución definitiva a los problemas, pues, si bien conseguimos solucionar el problema de los gradientes, hemos incorporado complejidad adicional al modelo que puede afectar en diferentes aspectos:
+
+\begin{itemize}
+	\item \textbf{Complejidad computacional:} se requieren más recursos que modelos más simples debido al uso de múltiples compuertas y operaciones por paso temporal, incrementando el número de parámetros y el tiempo de entrenamiento. Además, su estructura recurrente impide aprovechar eficientemente las GPU, y aprovechar su potencia para lograr un buen escalado.
+	
+	\item \textbf{Dificultad para capturar dependencias muy largas:} Aunque superan a las RNN básicas, si tratamos de modelar predicciones a largo plazo, como buscamos en este trabajo, podemos apreciar una pérdida de efectividad.
+	
+	\item \textbf{Sensibilidad a la configuración:} el rendimiento depende de manera sensible de los parámetros escogidos, cuya selección no es una tarea trivial y puede afectar considerablemente a los resultados.
+	
+	\item \textbf{Interpretabilidad:} aunque su arquitectura muestra el flujo que sigue la información, interpretar de forma precisa el funcionamiento interno es un proceso complicado al agregar elementos adicionales como las puertas.
+
+\end{itemize}
+
+A modo de conclusión, aunque las LSTM representaron un avance fundamental en el ámbito del forecasting, en aplicaciones modernas suelen ser superadas por arquitecturas más flexibles y escalables como los Transformers, los cuales estudiaremos a continuación, y serán nuestro principal foco de atención.
 
 \subsection{Transformers}
 
