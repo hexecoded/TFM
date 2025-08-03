@@ -525,5 +525,128 @@ A modo de conclusión, aunque las LSTM representaron un avance fundamental en el
 
 \section{Transformers}
 
-\subsection{Fundamentos}
-\subsection{Aplicación en forecasting de series temporales}
+Los Transformes son una de las mayores invenciones de los últimos años en el tratamiento de datos secuenciales, como el lenguaje natural, y en series temporales. Su estructura (ver figura \ref{trans}), la cual propone el uso de mecanismos basados en atención, ha permitido prescindir de los algoritmos basados en recurrencia, y simplificar el proceso complejo de aprendizaje que teníamos debido a los problemas con la propagación y los gradientes.\\
+
+A diferencia de las redes RNN o LSTM, que procesan la información de forma secuencial y requieren mantener estados ocultos a lo largo del tiempo, los Transformers permiten procesar todas las posiciones de la secuencia en paralelo, lo que mejora drásticamente la eficiencia computacional y la capacidad de modelar relaciones a largo plazo. Esto nos permite también aprovechar arquitecturas de computación con gran capacidad para la paralelización, como el uso de GPUs, y así reducir tiempos de ejecución, o bien, aprovechar la capacidad extra de paralelización para enfrentarnos a problemas mucho más complejos, con mayor número de parámetros y dependencias a largo plazo.
+
+\begin{figure}[!ht] %con el [H] le obligamos a situar aquí la figura
+	\centering
+	\includegraphics[scale=0.2]{img/attention_research_1}
+	\caption{Transformer: modelo de arquitectura encoder-decoder \cite{vaswani2023attentionneed}}
+	\label{trans}
+\end{figure}  	
+
+Su funcionamiento se basa en cuatro elementos, los cuales estudiaremos a continuación: su arquitectura basada en bloques encoder-decoder, la posiblidad de parelelizado mediante múltiples heads, el mecanismo de \textit{self-attention}, y la incorporación de información adicional mediante \textit{embeddings}, para así introducir información de orden, siendo este último el elemento que nos permitirá mejorar de manera drástica los resultados obtenidos al aplicar Transformers en series temporales.\\
+
+A partir de ahora, nos centraremos en estudiar a fondo su aplicación y ajuste para tratar de mejorar los resultados obtenidos en series temporales.
+
+
+\subsection{Conceptos previos: token y embedding}
+
+En los modelos basados en Transformers, uno de los pasos principales antes de dotar la información a la arquitectura es transformar los datos en un formato numérico comprensible para la red neuronal. Esto es especialmente importante con textos, ya que tenemos la información codificada en caracteres.\\
+
+Para construir las entradas, se emplea el concepto de \textit{token}, que representa la unidad mínima de entrada al modelo. Su tamaño depende del problema, y no existe una unidad cocnreta: podría ser una secuencia completa, una subpalabra, un carácter o incluso un símbolo de puntuación.\\
+
+En su definición original para textos, el proceso de tokenización convierte una secuencia de texto en una lista de tokens, cada uno de los cuales es mapeado a un identificador entero a través de un vocabulario predefinido. Dicho mapeo sirve como base para generar una representación vectorial de cada token, conocida como \textbf{embedding}. Esta representación no se limita a un único vector, sino que resulta de la combinación de distintos componentes que aportan información contextual adicional.\\
+
+En los modelos Transformer clásicos, cada token es transformado en un vector de entrada única de manera aditiva:
+
+\begin{itemize}
+	\item \textbf{Token embedding:} representa el significado semántico del token, aprendido durante el entrenamiento.
+	\item \textbf{Positional encoding:} añade información sobre la posición del token en la secuencia, necesaria dado que los Transformers no procesan los datos de manera secuencial.
+	\item \textbf{Segment embedding:} es un elemento opcional, el cual indica a qué segmento o frase pertenece cada token, útil en tareas de relación entre pares de oraciones.
+\end{itemize}
+
+La suma de estos tres vectores produce la entrada final que el modelo utiliza en la capa de atención, y permite que el modelo tenga acceso simultáneo tanto al contenido semántico como a la estructura secuencial del texto.\\
+
+En el caso de las series temporales, el término token puede ser algo menos intuitivo de entender, ya que no tenemos palabras como tal. Pero cada punto temporal o ventana de datos puede considerarse una unidad equivalente. Aquí, el \textit{token embedding} suele derivarse directamente de los valores numéricos observados, y es la codificación posicional el elemento que cobra relevancia, ya que los valores de tiempo no están implícitos en la secuencia misma, sino que deben incorporarse explícitamente mediante un mecanismo que represente la fecha u hora.\\
+
+De esta forma, podemos apreciar el paralelismo entre ambos dominios: mientras que en texto los embeddings representan palabras y estructuras lingüísticas, en series temporales encapsulan magnitudes numéricas y patrones temporales, pero dejando al margen la forma en la que construimos el embedding, en ambos casos buscamos representar y modelar las relaciones contextuales a lo largo del tiempo o de la secuencia.
+
+\subsection{Arquitectura: encoder y decoder}
+
+La arquitectura Transformer se construye sobre un esquema de tipo \textit{encoder–decoder}. Para comprenderlo mejor, podemos tomar como referencia los autoencoders, pero teniendo en cuenta que ahora nos centramos en el modelado de secuencias; mientras que un autoencoder clásico codifica una entrada en una representación latente para luego reconstruirla, el Transformer aplica esta idea para tareas de transformación de secuencia a secuencia: el encoder transforma la secuencia de entrada en una representación intermedia rica en contexto, y el decoder genera la secuencia de salida basada en dicha representación.
+
+\subsubsection{Encoder}  
+El encoder es la parte del modelo  que toma como entrada una secuencia de vectores (habitualmente embeddings de palabras o características de entrada), y produce una secuencia de vectores de igual longitud que contienen información contextualizada. Para aprovechar el paralelismo, está compuesto por una pila de $N$ bloques idénticos, donde cada uno incluye:
+
+\begin{itemize}
+	\item Un mecanismo de \textit{self-attention}, que permite a cada elemento de la secuencia atender a todos los demás y capturar relaciones globales, y cuyo funcionamiento profundizaremos posteriormente.
+	\item Una red neuronal totalmente conectada, aplicada de manera independiente en cada posición.
+\end{itemize}
+
+Ambas subcapas están envueltas en una conexión residual seguida de una normalización por capas, de manera que no se produzca desvanecimiento de gradientes cuando tomamos largas secuencias de entrada, y además, se mejore la convergencia gracias al efecto de la normalización.
+
+\subsubsection{Decoder}  
+El decoder también consta de $N$ bloques, pero su estructura es ligeramente más compleja, ya que debe generar una secuencia salida de manera autoregresiva, que mantega la información contextual del orden. Cada bloque del decoder contiene:
+
+\begin{itemize}
+	\item Un \textit{self-attention} enmascarado. Su pricipal función es que el modelo, en un instante del proceso de predicción, pueda acceder a la información de tokens anteriores o a sí misma, pero no ver la información de tokens futuros.
+	\item Un mecanismo de \textit{cross-attention}, que permite que cada token del decoder acceda a toda la información producida por el encoder, lo cual es esencial cuando existe una fuerte relación entre la información de entrada y la salida que se desea producir.
+	\item Una red totalmente conectada de tipo feed-forward, similar a la del encoder.
+\end{itemize}
+
+Cada paso de generación en el decoder depende tanto de los tokens generados hasta el momento como de la representación completa de la entrada, por lo que se está aprovechando la información de orden existente en los datos y el conocimiento disponible, siendo este proceso totalmente compatible con la aplicación en series temporales.\\
+
+Teniendo en cuenta el anterior símil del Transformer con los Autoencoders, es importante tener clara la diferencia para no entrar en cofusión. Aunque los Transformers no buscan reconstruir directamente la entrada como en los autoencoders clásicos, la estructura encoder–decoder cumple un propósito análogo: transformar información de entrada en una forma útil y compacta que el decoder pueda explotar para generar la salida deseada. A esta diferencia, se le suma también la utilidad de la información contextual: para mejorar el rendimiento, y facilitar el proceso de aprendizaje, el modelo hace uso de información que permita identificar relaciones de orden y facilitar el proceso de recurrencia de manera implícita en los datos.
+
+\subsection{Mecanismo de atención}
+
+El núcleo del Transformer es el mecanismo de \textit{self-attention}. Este se basa en la definición de 3 subespacios: Queries ($Q$), Keys ($K$) y Values ($V$). Profundizaremos en ver cómo se relacionan estos elementos desde un punto de vista formal.\\
+
+La atención entre posiciones se calcula como una similitud entre queries y keys, seguida de una ponderación de los values:
+
+\begin{equation}
+	\text{Attention}(Q, K, V) = \text{softmax} \left( \frac{QK^T}{\sqrt{d_k}} \right)V
+\end{equation}
+
+Es frecuente encontrar en el denominador el término $\sqrt{d_k}$, ya que su principal función es evitar que los productos escalares sean excesivamente grandes, y actúa a modo de normalización para evitar problemas con los gradientes.\\
+
+De por sí solo, este mecanismo es el principal elemento en el funcionamiento de los transformers. Pero podemos mejorar su potencial si lo paralelizamos. Es aquí cuando entra en acción el mecanismo de \textit{multi-head attention}, donde se realizan múltiples operaciones de atención en paralelo, cada una con sus propias proyecciones aprendidas, permitiendo al modelo aprender distintas relaciones entre tokens en diferentes subespacios de representación. 
+
+\begin{equation}
+	\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h)W^O
+\end{equation}
+
+Posteriormente, estos valores se concatenan, y podemos obtener el resultado que buscábamos de manera paralela.
+
+
+\subsection{Importancia del Positional Encoding}
+
+Dado que el Transformer no incorpora mecanismos recurrentes ni convolucionales, carece de una forma intrínseca para captar el orden relativo o absoluto de los elementos que recibe como entrada. Para superar esta limitación, los autores del modelo original introdujeron el concepto de \textit{positional encodings}, vectores que se suman a las representaciones embebidas de cada token en función de su posición dentro de la secuencia. Estos vectores proporcionan una señal explícita de la ubicación de cada elemento, permitiendo que el modelo incorpore información posicional en el cálculo de la atención.\\
+
+En el modelo original de transformer, el cual denominaremos en futuras secciones como Transformer \textit{vanilla}, el positional encoding se definió mediante funciones periódicas basadas en seno y coseno con distintas frecuencias, cuya formulación es la siguiente:
+
+\begin{equation}
+	\text{PE}_{(pos, 2i)} = \sin\left( \frac{pos}{10000^{2i/d_{\text{model}}}} \right)
+\end{equation}
+\begin{equation}
+	\text{PE}_{(pos, 2i+1)} = \cos\left( \frac{pos}{10000^{2i/d_{\text{model}}}} \right)
+\end{equation}
+
+Este diseño ofrece varias ventajas: al ser funciones periódicas y deterministas, no requieren parámetros adicionales a entrenar y permiten que el modelo generalice a secuencias más largas que las vistas durante el entrenamiento. Además, facilitan que la red aprenda a reconocer patrones posicionales y relaciones relativas entre elementos, aprovechando las propiedades de las ondas seno y coseno para captar distancias y ciclos.\\
+
+No obstante, aunque esta técnica es adecuada para procesar texto, donde el orden es fundamental, su aplicabilidad en series temporales es más compleja y no siempre ha de producir un buen resultados. En las series temporales, la posición en la secuencia no es solo un índice ordinal, sino que representa una dimensión temporal real, ligada a un instante específico. Esto implica que los elementos de la secuencia deben ordenarse dado su timestamp, pero también contienen información contextual inherente al tiempo: estacionalidad, tendencias que evolucionan a lo largo del tiempo, y eventos que ocurren en momentos concretos.\\
+
+En las series temporales, cuando queremos detectar sucesos concretos o anomalías, para posteriormente modelar y crear predicciones largo plazo, toda la información no suele estar concentrada en único timestamp. Por ejemplo, si tenemos un dataset muestreado por horas, puede ser frecuente y viable que para comprender el fenómeno, debamos mirar no sólo la información de una hora concreta, sino del día completo. Por tanto, la codificación posicional tradicional basada en seno y coseno no captura explícitamente estas características, pues si bien es capaz de establecer un orden en el punto de vista global de los datos, no es capaz de contener y explicar información local de estos. 	Estamos perdiendo información contenida en patrones temporales más complejos.\\
+
+Esto plantea un desafío fundamental: la necesidad de diseñar o adaptar mecanismos de \textit{positional encoding} que sean capaces de integrar no solo la información ordinal, sino también las propiedades temporales explícitas que caracterizan a estos datos. En el estado del arte, podemos encontrar ya algunos enfoques en esta dirección:
+
+\begin{itemize}
+	\item \textbf{Encodings aprendibles}. Permiten al modelo optimizar vectores posicionales específicos para las características del conjunto de datos. Tienen la ventaja de facilitar el proceso de entrenamiento sin necesidad de especificar parámetros de forma explícita, pero se debe tener especial cuidado con la inicialización y la normalización de valores, para evitar problemas de crecimiento desproporcionado en ciertos parámetros.
+	\item \textbf{Codificaciones basadas en atributos del timestamp}. Consiste en incluir explícitamente variables de tiempo (hora, día de la semana, mes, año) que añaden señales temporales al embedding, de forma que se pueda usar su información para el orden, pero también como un atributo más del problema.
+	\item \textbf{Transformaciones basadas en series de Fourier o wavelets}. Capturan patrones periódicos más complejos y multi-escalares, aunque, dada su naturaleza basada también en funciones trigonométricas, acercan la codificación a los datos pero sigue siendo un enfoque similar al original con sus correspondientes limitaciones.
+\end{itemize}
+
+Aunque se han logrado mejoras y avances sobre la definición vanilla del encoding posicional gracias a estas propuestas, la mayoría de estas aproximaciones comparten una limitación estructural: la escasa vinculación semántica y local entre los datos de entrada y su codificación posicional.\\
+
+De manera más detallada,frecuentemente los vectores que representan la posición suelen ser generados de forma independiente al contenido real de la secuencia. Esto significa que dos tokens o timestamp con significado similar pero ubicados en posiciones diferentes reciben representaciones posicionales completamente distintas, sin ningún tipo de correspondencia semántica entre ellas. En series temporales, puede suponer un grave problema: encontrar patrones como la estacionalidad pueden ser claves en el modelado, y con este enfoque, este tipo de ciclos sería prácticamente imposible de detectar.\\
+
+Un ejemplo sencillo podría ser la estimación del consumo eléctrico. En una serie que recoge datos meteorológicos diarios durante varios años, los valores correspondientes a una hora concreta de diferentes días podrían compartir patrones similares; es habitual encontrar por ejemplo consumos superiores en las horas cercanas al almuerzo o la cena, y de menor uso en altas horas de la madrugada. Pero, si la codificación posicional no reconoce esta regularidad por tratarse de posiciones globalmente distintas en la secuencia, el modelo no podrá aprovechar dicha repetición estructural, limitando su capacidad de modelado.\\
+
+Además, en muchos contextos, los eventos relevantes están más determinados por la posición relativa y el entorno local inmediato que por una posición absoluta dentro de la secuencia. La falta de mecanismos que conecten directamente el significado de los datos con su ubicación limita el poder expresivo de la red y su capacidad para realizar generalizaciones útiles. Esta problemática refuerza la necesidad de proponer codificaciones posicionales con mayor semántica, más contextualizadas, que integren explícitamente el contenido de los datos y su estructura temporal.\\
+
+A lo largo de este trabajo, exploraremos esta línea de mejora como eje central de nuestra nueva metodología de codificación.
+
+
+\subsection{Modelos aplicados al forecasting de series temporales}
