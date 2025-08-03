@@ -182,7 +182,7 @@ y'_t = y_t - y_{t-1}
 
 Este proceso puede aplicarse tantas veces como sea necesario para lograr estacionariedad. Dicho número de repeticiones viene controlado por el valor de orden \( d \), que indica el número de veces que se ha diferenciado la serie. En general, el modelo ARIMA supone que tras aplicar \( d \) diferencias, la serie resultante \( y^{(d)} \) puede ser modelada por un proceso estacionario ARMA(\(p,q\)). Por tanto, el componente \textit{I} de ARIMA es un procesamiento indispensable de la serie cuando no se cumpla el requisito de estacionariedad, y permitirá calcular sobre la serie resultante las componentes AR y MA con mayor facilidad. \\
 
-Para saber cuando deja de ser nececesario aplicar el proceso iterativo de integración, podemos hacer uso de dos posibles mecanismos: uno gráfico, basado en el gráfico de autocorrelación de valores, y otro estadístico, basado en el test de Dickey-Fuller aumentado (ADF).
+Para saber cuando deja de ser necesario aplicar el proceso iterativo de integración, podemos hacer uso de dos posibles mecanismos: uno gráfico, basado en el gráfico de autocorrelación de valores, y otro estadístico, basado en el test de Dickey-Fuller aumentado (ADF).
 
 \begin{itemize}
 	\item El análisis gráfico consiste en observar el comportamiento de la función de autocorrelación (ACF) tras aplicar una o varias diferenciaciones. Si la serie es no estacionaria, las valores siguientes de autocorrelación decaen lentamente, indicando que queda información relevante en dichas componentes. Por el contrario, si la serie es estacionaria, la ACF suele caer rápidamente a cero, estableciendo que no es necesario continuar diferenciando (ver figura \ref{acf}).  
@@ -370,11 +370,283 @@ A lo largo de este apartado, hemos analizado tres de los enfoques más relevante
 
 
 
-En resumen, podemos afirmar que estos modelos constituyen una base sólida para el análisis inicial de series temporales, pero enfrentamos varias dificultades con datos dinámicos, dependencias de largo plazo, series multivariantes o patrones no lineales. Es en estos contextos donde se vuelve necesaria la incorporación de modelos más avanzados, como las {redes neuronales recurrentes (RNN)}, las {LSTM} o incluso los {Transformers}, que permiten modelar dependencias temporales profundas de manera eficiente y escalar a volúmenes de datos mayores. En los apartados siguientes, analizaremos estos nuevos modelos.
+En resumen, podemos afirmar que estos modelos constituyen una base sólida para el análisis inicial de series temporales, pero enfrentamos varias dificultades con datos dinámicos, dependencias de largo plazo, series multivariantes o patrones no lineales. Es en estos contextos donde se vuelve necesaria la incorporación de modelos más avanzados, como las {redes neuronales recurrentes (RNN)} o incluso los {Transformers}, que permiten modelar dependencias temporales profundas de manera eficiente y escalar a volúmenes de datos mayores. En los apartados siguientes, analizaremos estos nuevos modelos.
 
-\subsection{RNN y LTSM}
-\subsection{Transformers}
+\subsection{Redes Neuronales Recurrentes}
 
-\section{Positional Encoding en Transformers}
+Hasta ahora, la mayoría de soluciones estudiadas se han basado en el procesamiento de un conjunto de datos de entrada, que es procesado y modelado de manera más o menos sofisticada, y se otorga una salida, como, por ejemplo, los modelos de descomposición que hemos abordado hasta ahora. No obstante, en escenarios donde las series temporales presentan relaciones no lineales complejas, múltiples escalas de dependencia y estructuras difíciles de modelar de forma explícita, resulta necesario recurrir a modelos más avanzados.\\
 
-\section{Conjuntos de datos disponibles}
+Podríamos pensar en emplear modelos tradicionales vistos en otros ámbitos, como las redes neuronales. Pero en dichos problemas, las entradas y salidas no guardan una relación entre sí; son independientes. En los conjuntos de entrenamiento habituales, como problemas tabulares de regresión o clasificación, lo que nos importa es asignar el valor adecuado, y normalmente, cada instancia es independiente del resto. Pero cuando disponemos de información secuencial, como el lenguaje natural, o en nuestro caso, las series temporales, esto no es así.\\
+
+ En los métodos basados en descomposición, hemos podido apreciar que nos basamos continuamente en los valores pasados para ser capaces de modelar perdiendo la mínima información posible, y que por ejemplo, encontrar patrones como la estacionalidad es de gran importancia para minimizar el error y a su vez simplificar el modelado. Esto descarta la utilización de perceptrones multicapa, o capas densamente conectadas para el modelado de series temporales con un mínimo de complejidad, debido a dicha dependencia. Solo quizás, podríamos modelar series simples con una clara tendencia y forma, debido a que podrían asemejarse a una regresión. Pero si queremos obtener resultados escalables a redes más compleja, debemos tener en cuenta las conexiones temporales entre cada timestamp, y modelar dicho orden dentro de la secuencia global de los datos. Esto lo podemos conseguir relacionando cada salida con la anterior y es así como surge el concepto de las Redes Neuronales Recurrentes.
+ 
+ \subsubsection{Funcionamiento de las RNN}
+ 
+ Las RNN, al igual que las redes neuronales tradicionales, son capaces de procesar una entrada y arrojar una salida, modelando los datos internamente mediante sus capas ocultas. Pero la diferencia radica en la necesidad de establecer conexiones entre la salida anterior y la entrada actual. Esto se consigue con conexiones recurrentes que permiten que la información fluya de un instante al siguiente dentro de la propia red (ver figura \ref{rnn}).
+ 
+ \begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
+ 	\centering
+ 	\includegraphics[scale=0.4]{img/rnn}
+ 	\caption{RNN: arquitectura del modelo \cite{info15090517}}
+ 	\label{rnn}
+ \end{figure}  	
+ 
+Estructuralmente, una RNN clásica está compuesta de tres capas principales \cite{info15090517}: una capa de entrada, una capa oculta con conexiones recurrentes, y una capa de salida. El comportamiento de la red se define en función de cómo se actualiza su estado interno y cómo se generan las salidas. En su definición original, en cada instante de tiempo \( t \), la red recibe un vector de entrada \( \mathbf{x}_t \) y actualiza su estado oculto \( \mathbf{h}_t \) según la siguiente ecuación:
+
+\begin{equation}
+	\mathbf{h}_t = \sigma_h(\mathbf{W}_{xh} \mathbf{x}_t + \mathbf{W}_{hh} \mathbf{h}_{t-1} + \mathbf{b}_h)
+\end{equation}
+
+donde:
+\begin{itemize}
+	\item \( \mathbf{W}_{xh} \) es la matriz de pesos entre la entrada y la capa oculta,
+	\item \( \mathbf{W}_{hh} \) representa la conexión recurrente entre los estados ocultos,
+	\item \( \mathbf{b}_h \) es el vector de sesgo asociado,
+	\item \textbf{\( \sigma_h \)} es la función de activación, normalmente la tangente hiperbólica (\texttt{tanh}) o la rectificada lineal (\texttt{ReLU}).
+\end{itemize}
+
+A partir del estado oculto actualizado, se calcula la salida correspondiente mediante:
+
+\begin{equation}
+	\mathbf{y}_t = \sigma_y(\mathbf{W}_{hy} \mathbf{h}_t + \mathbf{b}_y)
+\end{equation}
+
+donde:
+\begin{itemize}
+	\item \( \mathbf{W}_{hy} \) conecta la capa oculta con la capa de salida,
+	\item \( \mathbf{b}_y \) es el vector de sesgo en la salida,
+	\item \textbf{\( \sigma_y \)} es la función de activación de la salida.
+\end{itemize}
+
+Gracias principalmente al estado oculto, podemos integrar la información de entrada actual con las salidas previas, permitiendo que la red exhiba un comportamiento ordenado temporalmente en sus salidas. Pero, sin lugar a dudas, otro de los elementos clave para el funcionamiento adecuado es escoger una correcta función de activación \( \sigma_h \), ya que se encarga de añadir la no linearidad a la salida. Una de las más empleadas es la tangente hiperbólica, $tanh$, que permite ajustar los valores de los pesos al intervalo [-1,1], el cual es bastante intuitivo gracias al estar centrado en cero, y además, permite la existencia de pesos tanto positivos como negativos.
+
+\begin{equation}
+	\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}
+\end{equation}
+  
+ También es posible encontrar ReLU o sus variantes, ya que permiten ajustar los pesos de manera computacionalmente sencilla, pero solo permite el paso de valores positivos. 
+ 
+ \begin{equation}
+ 	ReLU(x) = max(0, x)
+ 	\label{eq:relu}
+ \end{equation}
+
+Elegir una u otra opción depende del tipo de problema que tratemos de resolver o incluso del conjunto de datos de entrada, pero es un elemento clave que afecta directamente al aprendizaje de los estados ocultos y la propagación de dicha información.
+
+\subsubsection{Limitaciones de las RNN estándar}
+
+Aunque las RNN suponen un gran avance en el aprendizaje de datos secuenciales y permitieron una mejora considerable en los resultados, no están exentas de problemas durante el aprendizaje. Al igual que otros modelos que usan la propagación mediante gradientes, debemos tener especial cuidado con su gestión para evitar la explosión de gradientes y, en su caso, el extremo contrario, el desvanecimiento.\\
+
+Estos efectos se ven potenciados debido al particular funcionamiento del algoritmo de retropropagación entre los diferentes pasos temporales. A diferencia de una red neuronal clásica, necesitamos que los pesos tengan relación también con los pasos anteriores de la secuencia, y para lograrlo, debemos modificar el proceso, de manera que podamos emplear el procedimiento habitual con la nueva estructura oculta de pesos. En cada etapa de actualización:
+
+\begin{enumerate}
+	\item La RNN se desenrolla (\textit{unroll}) en el tiempo durante un número finito de pasos (por ejemplo, 10).
+	
+	\item Se aplica retropropagación en la red desenrollada de la manera habitual.
+	
+	\item Se acumulan los gradientes de todos los pasos temporales hacia los pesos compartidos.
+	
+	\item Los parámetros se actualizan con una optimización como SGD o Adam.
+\end{enumerate}
+
+De esta forma, implementamos el mecanismo conocido como \textit{Backpropagation Through Time} (BPTT). Durante el entrenamiento con este mecanismo, calculamos los gradientes de la función de pérdida respecto a los pesos de la red a lo largo de varios pasos temporales, y es al propagar cuando podemos enfrentarnos a los dos problemas ya mencionados: la explosión y el desvanecimiento del gradiente.\\
+
+El desvanecimiento del gradiente se produce si los términos derivados que aparecen en el cálculo (concretamente, los productos sucesivos de matrices Jacobianas) tienen valores propios menores que uno, su multiplicación sucesiva tiende a cero. Esto provoca que los gradientes disminuyan exponencialmente a medida que retrocedemos en el tiempo, impidiendo que la red actualice adecuadamente los pesos de las capas o pasos más antiguos, y como consecuencia, la red pierde la capacidad de aprender dependencias a largo plazo, ya que el error no alcanza a modificar significativamente las entradas lejanas.\\
+	
+Por otro lado, la explosión del gradiente es justo el caso opuesto; si los valores propios de las Jacobianas son mayores que uno, la multiplicación produce gradientes que crecen exponencialmente. Esto puede llevar a actualizaciones de pesos excesivas, provocando inestabilidad numérica. En ambos casos, por tanto, la capacidad de aprendizaje de la red se ve comprometida, y puede perjudicar gravemente a los resultados obtenidos.\\
+
+Formalmente, podemos ver reflejado este comportamiento mediante el desarrollo de los estados ocultos. A partir de la fórmula recurrente del estado oculto:
+
+\begin{equation}
+	\mathbf{h}_t = \sigma_h\left( \mathbf{W}_{xh} \mathbf{x}_t + \mathbf{W}_{hh} \, \sigma_h\left( \mathbf{W}_{xh} \mathbf{x}_{t-1} + \mathbf{W}_{hh} \mathbf{h}_{t-2} + \mathbf{b}_h \right) + \mathbf{b}_h \right),
+	\label{eq:hidden_state_expansion}
+\end{equation}
+
+el cálculo del gradiente de \(\mathbf{h}_t\) respecto a un estado anterior \(\mathbf{h}_{t-n}\) implica el producto de Jacobianas:
+
+\begin{equation}
+	\frac{\partial \mathbf{h}_t}{\partial \mathbf{h}_{t-n}} = \prod_{k=t-n}^{t-1} \mathbf{J}_k,
+	\label{eq:jacobian_product}
+\end{equation}
+
+donde \(\mathbf{J}_k\) representa la matriz Jacobiana del estado oculto en el instante \(k\). La estabilidad de estos productos depende críticamente de los valores propios de \(\mathbf{J}_k\), por lo que se trata del elemento clave causante de las dos problemáticas descritas.\\
+
+Para tratar de solucionar este problema, podemos encontrar variantes de este algoritmo en el estado del arte. Algunas, tratan de simplemente modificar el funcionamiento de la propagación, con técnicas como el \textit{gradient clipping}, que permiten limitar el tamaño máximo del gradiente durante la retropropagación, evitando explosiones incontroladas. Pero también podemos encontrar arquitecturas específicas como las LSTM (Long Short-Term Memory), que introducen mecanismos de control del flujo de información mediante puertas, facilitando la retención de información relevante a largo plazo y mitigando el problema desvanecimiento de gradientes de manera estructural.
+
+\subsubsection{LSTM}
+
+Para resolver los problemas de desvanecimiento del gradiente asociados a las RNN clásicas, Hochreiter y Schmidhuber propusieron en 1997 las \textit{Long Short-Term Memory networks} (LSTM)~\cite{10.1162/neco.1997.9.8.1735}. La innovación clave de estas redes es la introducción de mecanismos de puertas que regulan el flujo de información a lo largo del tiempo, permitiendo mantener una memoria a largo plazo de forma más estable.\\
+
+Cada célula LSTM incorpora tres compuertas principales: la compuerta de entrada, la compuerta de olvido y la compuerta de salida. Estas compuertas permiten decidir qué información se debe incorporar, qué parte del estado anterior se debe olvidar y qué parte del nuevo estado se debe transmitir a la siguiente etapa. Gracias a este diseño, las redes LSTM son especialmente eficaces para modelar dependencias temporales de largo alcance.
+
+El comportamiento interno de una célula LSTM se puede describir mediante las siguientes ecuaciones:
+
+\begin{align}
+	i_t &= \sigma(W_{xi}x_t + W_{hi}h_{t-1} + b_i) \quad &\text{(compuerta de entrada)} \\
+	f_t &= \sigma(W_{xf}x_t + W_{hf}h_{t-1} + b_f) \quad &\text{(compuerta de olvido)} \\
+	o_t &= \sigma(W_{xo}x_t + W_{ho}h_{t-1} + b_o) \quad &\text{(compuerta de salida)} \\
+	g_t &= \tanh(W_{xc}x_t + W_{hc}h_{t-1} + b_c) \quad &\text{(nuevo contenido candidato)} \\
+	c_t &= f_t \odot c_{t-1} + i_t \odot \tilde{c}_t \quad &\text{(estado de la celda)} \\
+	h_t &= o_t \odot \tanh(c_t) \quad &\text{(estado oculto)}
+\end{align}
+
+Donde $\sigma$ representa la función sigmoide, $\tanh$ la tangente hiperbólica, y $\odot$ la multiplicación elemento a elemento. Esta arquitectura permite mantener y actualizar información relevante a lo largo del tiempo, mitigando los problemas habituales en el aprendizaje de secuencias largas.\\
+
+Cada compuerta dentro de una celda LSTM desempeña una función específica en la regulación del flujo de información. La compuerta de entrada controla cuánta información del nuevo vector de entrada $x_t$ se incorpora al estado de la celda $c_t$; la compuerta de olvido determina qué parte del estado anterior $c_{t-1}$ se retiene, y, finalmente, la compuerta de salida decide cuánta información del estado actual $c_t$ se utiliza para calcular el estado oculto $h_t$ (ver figura \ref{lstm}).
+
+\begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
+	\centering
+	\includegraphics[scale=1]{img/lstm}
+	\caption{LSTM: funcionamiento de la arquitectura de puertas}
+	\label{lstm}
+\end{figure}  	
+
+
+Además, la entrada candidata de la celda, denotada como $g_t$, representa nueva información que podría añadirse al estado de la celda tras ser modulada por la compuerta de entrada.\\
+
+Gracias a estos mecanismos de control, las redes LSTM pueden decidir dinámicamente qué información conservar o descartar en cada momento, lo que les permite gestionar dependencias temporales a largo plazo de manera mucho más eficaz que las RNN convencionales. En esta arquitectura, la recurrencia se mantienen a través del estado de la celda $c_t$, que actúa como una cinta transportadora que permite el traspaso continuo de información entre pasos temporales. Este flujo sostenido de memoria facilita la conservación de patrones relevantes a lo largo de secuencias de larga extensión. \\
+
+Las multiplicaciones elemento a elemento entre compuertas y vectores asociados aseguran una interacción eficiente entre componentes, posibilitando transformaciones complejas sin comprometer la estabilidad durante el entrenamiento. En conjunto, las LSTM mantienen un equilibrio entre flexibilidad, memoria y estabilidad en el aprendizaje.\\
+
+Sin embargo, no suponen la solución definitiva a los problemas, pues, si bien conseguimos solucionar el problema de los gradientes, hemos incorporado complejidad adicional al modelo que puede afectar en diferentes aspectos:
+
+\begin{itemize}
+	\item \textbf{Complejidad computacional:} se requieren más recursos que modelos más simples debido al uso de múltiples compuertas y operaciones por paso temporal, incrementando el número de parámetros y el tiempo de entrenamiento. Además, su estructura recurrente impide aprovechar eficientemente las GPU, y aprovechar su potencia para lograr un buen escalado.
+	
+	\item \textbf{Dificultad para capturar dependencias muy largas:} Aunque superan a las RNN básicas, si tratamos de modelar predicciones a largo plazo, como buscamos en este trabajo, podemos apreciar una pérdida de efectividad.
+	
+	\item \textbf{Sensibilidad a la configuración:} el rendimiento depende de manera sensible de los parámetros escogidos, cuya selección no es una tarea trivial y puede afectar considerablemente a los resultados.
+	
+	\item \textbf{Interpretabilidad:} aunque su arquitectura muestra el flujo que sigue la información, interpretar de forma precisa el funcionamiento interno es un proceso complicado al agregar elementos adicionales como las puertas.
+
+\end{itemize}
+
+A modo de conclusión, aunque las LSTM representaron un avance fundamental en el ámbito del forecasting, en aplicaciones modernas suelen ser superadas por arquitecturas más flexibles y escalables como los Transformers, los cuales estudiaremos a continuación, y serán nuestro principal foco de atención.
+
+\section{Transformers}
+
+Los Transformes son una de las mayores invenciones de los últimos años en el tratamiento de datos secuenciales, como el lenguaje natural, y en series temporales. Su estructura (ver figura \ref{trans}), la cual propone el uso de mecanismos basados en atención, ha permitido prescindir de los algoritmos basados en recurrencia, y simplificar el proceso complejo de aprendizaje que teníamos debido a los problemas con la propagación y los gradientes.\\
+
+A diferencia de las redes RNN o LSTM, que procesan la información de forma secuencial y requieren mantener estados ocultos a lo largo del tiempo, los Transformers permiten procesar todas las posiciones de la secuencia en paralelo, lo que mejora drásticamente la eficiencia computacional y la capacidad de modelar relaciones a largo plazo. Esto nos permite también aprovechar arquitecturas de computación con gran capacidad para la paralelización, como el uso de GPUs, y así reducir tiempos de ejecución, o bien, aprovechar la capacidad extra de paralelización para enfrentarnos a problemas mucho más complejos, con mayor número de parámetros y dependencias a largo plazo.
+
+\begin{figure}[!ht] %con el [H] le obligamos a situar aquí la figura
+	\centering
+	\includegraphics[scale=0.2]{img/attention_research_1}
+	\caption{Transformer: modelo de arquitectura encoder-decoder \cite{vaswani2023attentionneed}}
+	\label{trans}
+\end{figure}  	
+
+Su funcionamiento se basa en cuatro elementos, los cuales estudiaremos a continuación: su arquitectura basada en bloques encoder-decoder, la posiblidad de parelelizado mediante múltiples heads, el mecanismo de \textit{self-attention}, y la incorporación de información adicional mediante \textit{embeddings}, para así introducir información de orden, siendo este último el elemento que nos permitirá mejorar de manera drástica los resultados obtenidos al aplicar Transformers en series temporales.\\
+
+A partir de ahora, nos centraremos en estudiar a fondo su aplicación y ajuste para tratar de mejorar los resultados obtenidos en series temporales.
+
+
+\subsection{Conceptos previos: token y embedding}
+
+En los modelos basados en Transformers, uno de los pasos principales antes de dotar la información a la arquitectura es transformar los datos en un formato numérico comprensible para la red neuronal. Esto es especialmente importante con textos, ya que tenemos la información codificada en caracteres.\\
+
+Para construir las entradas, se emplea el concepto de \textit{token}, que representa la unidad mínima de entrada al modelo. Su tamaño depende del problema, y no existe una unidad cocnreta: podría ser una secuencia completa, una subpalabra, un carácter o incluso un símbolo de puntuación.\\
+
+En su definición original para textos, el proceso de tokenización convierte una secuencia de texto en una lista de tokens, cada uno de los cuales es mapeado a un identificador entero a través de un vocabulario predefinido. Dicho mapeo sirve como base para generar una representación vectorial de cada token, conocida como \textbf{embedding}. Esta representación no se limita a un único vector, sino que resulta de la combinación de distintos componentes que aportan información contextual adicional.\\
+
+En los modelos Transformer clásicos, cada token es transformado en un vector de entrada única de manera aditiva:
+
+\begin{itemize}
+	\item \textbf{Token embedding:} representa el significado semántico del token, aprendido durante el entrenamiento.
+	\item \textbf{Positional encoding:} añade información sobre la posición del token en la secuencia, necesaria dado que los Transformers no procesan los datos de manera secuencial.
+	\item \textbf{Segment embedding:} es un elemento opcional, el cual indica a qué segmento o frase pertenece cada token, útil en tareas de relación entre pares de oraciones.
+\end{itemize}
+
+La suma de estos tres vectores produce la entrada final que el modelo utiliza en la capa de atención, y permite que el modelo tenga acceso simultáneo tanto al contenido semántico como a la estructura secuencial del texto.\\
+
+En el caso de las series temporales, el término token puede ser algo menos intuitivo de entender, ya que no tenemos palabras como tal. Pero cada punto temporal o ventana de datos puede considerarse una unidad equivalente. Aquí, el \textit{token embedding} suele derivarse directamente de los valores numéricos observados, y es la codificación posicional el elemento que cobra relevancia, ya que los valores de tiempo no están implícitos en la secuencia misma, sino que deben incorporarse explícitamente mediante un mecanismo que represente la fecha u hora.\\
+
+De esta forma, podemos apreciar el paralelismo entre ambos dominios: mientras que en texto los embeddings representan palabras y estructuras lingüísticas, en series temporales encapsulan magnitudes numéricas y patrones temporales, pero dejando al margen la forma en la que construimos el embedding, en ambos casos buscamos representar y modelar las relaciones contextuales a lo largo del tiempo o de la secuencia.
+
+\subsection{Arquitectura: encoder y decoder}
+
+La arquitectura Transformer se construye sobre un esquema de tipo \textit{encoder–decoder}. Para comprenderlo mejor, podemos tomar como referencia los autoencoders, pero teniendo en cuenta que ahora nos centramos en el modelado de secuencias; mientras que un autoencoder clásico codifica una entrada en una representación latente para luego reconstruirla, el Transformer aplica esta idea para tareas de transformación de secuencia a secuencia: el encoder transforma la secuencia de entrada en una representación intermedia rica en contexto, y el decoder genera la secuencia de salida basada en dicha representación.
+
+\subsubsection{Encoder}  
+El encoder es la parte del modelo  que toma como entrada una secuencia de vectores (habitualmente embeddings de palabras o características de entrada), y produce una secuencia de vectores de igual longitud que contienen información contextualizada. Para aprovechar el paralelismo, está compuesto por una pila de $N$ bloques idénticos, donde cada uno incluye:
+
+\begin{itemize}
+	\item Un mecanismo de \textit{self-attention}, que permite a cada elemento de la secuencia atender a todos los demás y capturar relaciones globales, y cuyo funcionamiento profundizaremos posteriormente.
+	\item Una red neuronal totalmente conectada, aplicada de manera independiente en cada posición.
+\end{itemize}
+
+Ambas subcapas están envueltas en una conexión residual seguida de una normalización por capas, de manera que no se produzca desvanecimiento de gradientes cuando tomamos largas secuencias de entrada, y además, se mejore la convergencia gracias al efecto de la normalización.
+
+\subsubsection{Decoder}  
+El decoder también consta de $N$ bloques, pero su estructura es ligeramente más compleja, ya que debe generar una secuencia salida de manera autoregresiva, que mantega la información contextual del orden. Cada bloque del decoder contiene:
+
+\begin{itemize}
+	\item Un \textit{self-attention} enmascarado. Su pricipal función es que el modelo, en un instante del proceso de predicción, pueda acceder a la información de tokens anteriores o a sí misma, pero no ver la información de tokens futuros.
+	\item Un mecanismo de \textit{cross-attention}, que permite que cada token del decoder acceda a toda la información producida por el encoder, lo cual es esencial cuando existe una fuerte relación entre la información de entrada y la salida que se desea producir.
+	\item Una red totalmente conectada de tipo feed-forward, similar a la del encoder.
+\end{itemize}
+
+Cada paso de generación en el decoder depende tanto de los tokens generados hasta el momento como de la representación completa de la entrada, por lo que se está aprovechando la información de orden existente en los datos y el conocimiento disponible, siendo este proceso totalmente compatible con la aplicación en series temporales.\\
+
+Teniendo en cuenta el anterior símil del Transformer con los Autoencoders, es importante tener clara la diferencia para no entrar en cofusión. Aunque los Transformers no buscan reconstruir directamente la entrada como en los autoencoders clásicos, la estructura encoder–decoder cumple un propósito análogo: transformar información de entrada en una forma útil y compacta que el decoder pueda explotar para generar la salida deseada. A esta diferencia, se le suma también la utilidad de la información contextual: para mejorar el rendimiento, y facilitar el proceso de aprendizaje, el modelo hace uso de información que permita identificar relaciones de orden y facilitar el proceso de recurrencia de manera implícita en los datos.
+
+\subsection{Mecanismo de atención}
+
+El núcleo del Transformer es el mecanismo de \textit{self-attention}. Este se basa en la definición de 3 subespacios: Queries ($Q$), Keys ($K$) y Values ($V$). Profundizaremos en ver cómo se relacionan estos elementos desde un punto de vista formal.\\
+
+La atención entre posiciones se calcula como una similitud entre queries y keys, seguida de una ponderación de los values:
+
+\begin{equation}
+	\text{Attention}(Q, K, V) = \text{softmax} \left( \frac{QK^T}{\sqrt{d_k}} \right)V
+\end{equation}
+
+Es frecuente encontrar en el denominador el término $\sqrt{d_k}$, ya que su principal función es evitar que los productos escalares sean excesivamente grandes, y actúa a modo de normalización para evitar problemas con los gradientes.\\
+
+De por sí solo, este mecanismo es el principal elemento en el funcionamiento de los transformers. Pero podemos mejorar su potencial si lo paralelizamos. Es aquí cuando entra en acción el mecanismo de \textit{multi-head attention}, donde se realizan múltiples operaciones de atención en paralelo, cada una con sus propias proyecciones aprendidas, permitiendo al modelo aprender distintas relaciones entre tokens en diferentes subespacios de representación. 
+
+\begin{equation}
+	\text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h)W^O
+\end{equation}
+
+Posteriormente, estos valores se concatenan, y podemos obtener el resultado que buscábamos de manera paralela.
+
+
+\subsection{Importancia del Positional Encoding}
+
+Dado que el Transformer no incorpora mecanismos recurrentes ni convolucionales, carece de una forma intrínseca para captar el orden relativo o absoluto de los elementos que recibe como entrada. Para superar esta limitación, los autores del modelo original introdujeron el concepto de \textit{positional encodings}, vectores que se suman a las representaciones embebidas de cada token en función de su posición dentro de la secuencia. Estos vectores proporcionan una señal explícita de la ubicación de cada elemento, permitiendo que el modelo incorpore información posicional en el cálculo de la atención.\\
+
+En el modelo original de transformer, el cual denominaremos en futuras secciones como Transformer \textit{vanilla}, el positional encoding se definió mediante funciones periódicas basadas en seno y coseno con distintas frecuencias, cuya formulación es la siguiente:
+
+\begin{equation}
+	\text{PE}_{(pos, 2i)} = \sin\left( \frac{pos}{10000^{2i/d_{\text{model}}}} \right)
+\end{equation}
+\begin{equation}
+	\text{PE}_{(pos, 2i+1)} = \cos\left( \frac{pos}{10000^{2i/d_{\text{model}}}} \right)
+\end{equation}
+
+Este diseño ofrece varias ventajas: al ser funciones periódicas y deterministas, no requieren parámetros adicionales a entrenar y permiten que el modelo generalice a secuencias más largas que las vistas durante el entrenamiento. Además, facilitan que la red aprenda a reconocer patrones posicionales y relaciones relativas entre elementos, aprovechando las propiedades de las ondas seno y coseno para captar distancias y ciclos.\\
+
+No obstante, aunque esta técnica es adecuada para procesar texto, donde el orden es fundamental, su aplicabilidad en series temporales es más compleja y no siempre ha de producir un buen resultados. En las series temporales, la posición en la secuencia no es solo un índice ordinal, sino que representa una dimensión temporal real, ligada a un instante específico. Esto implica que los elementos de la secuencia deben ordenarse dado su timestamp, pero también contienen información contextual inherente al tiempo: estacionalidad, tendencias que evolucionan a lo largo del tiempo, y eventos que ocurren en momentos concretos.\\
+
+En las series temporales, cuando queremos detectar sucesos concretos o anomalías, para posteriormente modelar y crear predicciones largo plazo, toda la información no suele estar concentrada en único timestamp. Por ejemplo, si tenemos un dataset muestreado por horas, puede ser frecuente y viable que para comprender el fenómeno, debamos mirar no sólo la información de una hora concreta, sino del día completo. Por tanto, la codificación posicional tradicional basada en seno y coseno no captura explícitamente estas características, pues si bien es capaz de establecer un orden en el punto de vista global de los datos, no es capaz de contener y explicar información local de estos. 	Estamos perdiendo información contenida en patrones temporales más complejos.\\
+
+Esto plantea un desafío fundamental: la necesidad de diseñar o adaptar mecanismos de \textit{positional encoding} que sean capaces de integrar no solo la información ordinal, sino también las propiedades temporales explícitas que caracterizan a estos datos. En el estado del arte, podemos encontrar ya algunos enfoques en esta dirección:
+
+\begin{itemize}
+	\item \textbf{Encodings aprendibles}. Permiten al modelo optimizar vectores posicionales específicos para las características del conjunto de datos. Tienen la ventaja de facilitar el proceso de entrenamiento sin necesidad de especificar parámetros de forma explícita, pero se debe tener especial cuidado con la inicialización y la normalización de valores, para evitar problemas de crecimiento desproporcionado en ciertos parámetros.
+	\item \textbf{Codificaciones basadas en atributos del timestamp}. Consiste en incluir explícitamente variables de tiempo (hora, día de la semana, mes, año) que añaden señales temporales al embedding, de forma que se pueda usar su información para el orden, pero también como un atributo más del problema.
+	\item \textbf{Transformaciones basadas en series de Fourier o wavelets}. Capturan patrones periódicos más complejos y multi-escalares, aunque, dada su naturaleza basada también en funciones trigonométricas, acercan la codificación a los datos pero sigue siendo un enfoque similar al original con sus correspondientes limitaciones.
+\end{itemize}
+
+Aunque se han logrado mejoras y avances sobre la definición vanilla del encoding posicional gracias a estas propuestas, la mayoría de estas aproximaciones comparten una limitación estructural: la escasa vinculación semántica y local entre los datos de entrada y su codificación posicional.\\
+
+De manera más detallada,frecuentemente los vectores que representan la posición suelen ser generados de forma independiente al contenido real de la secuencia. Esto significa que dos tokens o timestamp con significado similar pero ubicados en posiciones diferentes reciben representaciones posicionales completamente distintas, sin ningún tipo de correspondencia semántica entre ellas. En series temporales, puede suponer un grave problema: encontrar patrones como la estacionalidad pueden ser claves en el modelado, y con este enfoque, este tipo de ciclos sería prácticamente imposible de detectar.\\
+
+Un ejemplo sencillo podría ser la estimación del consumo eléctrico. En una serie que recoge datos meteorológicos diarios durante varios años, los valores correspondientes a una hora concreta de diferentes días podrían compartir patrones similares; es habitual encontrar por ejemplo consumos superiores en las horas cercanas al almuerzo o la cena, y de menor uso en altas horas de la madrugada. Pero, si la codificación posicional no reconoce esta regularidad por tratarse de posiciones globalmente distintas en la secuencia, el modelo no podrá aprovechar dicha repetición estructural, limitando su capacidad de modelado.\\
+
+Además, en muchos contextos, los eventos relevantes están más determinados por la posición relativa y el entorno local inmediato que por una posición absoluta dentro de la secuencia. La falta de mecanismos que conecten directamente el significado de los datos con su ubicación limita el poder expresivo de la red y su capacidad para realizar generalizaciones útiles. Esta problemática refuerza la necesidad de proponer codificaciones posicionales con mayor semántica, más contextualizadas, que integren explícitamente el contenido de los datos y su estructura temporal.\\
+
+A lo largo de este trabajo, exploraremos esta línea de mejora como eje central de nuestra nueva metodología de codificación.
+
+
+\subsection{Modelos aplicados al forecasting de series temporales}
