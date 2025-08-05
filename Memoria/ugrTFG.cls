@@ -147,6 +147,15 @@
 \usepackage{array}
 \usepackage[table]{xcolor}
 
+
+% Redefinir \paragraph
+\makeatletter
+\renewcommand\paragraph[1]{%
+	\vspace{1em}% espacio antes del título
+	\noindent\textbf{#1}\par % título en negrita y salto de línea
+}
+\makeatother
+
 % Define una nueva columna sin corte de palabras
 \newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
 
