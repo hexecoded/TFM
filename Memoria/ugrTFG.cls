@@ -139,7 +139,6 @@
 \RequirePackage{booktabs}
 % \renewcommand{\arraystretch}{1.5} % Aumenta el espacio vertical entre las filas de un entorno tabular
 
-\RequirePackage{xcolor} 
 \RequirePackage{graphicx}
   % Carpeta donde buscar los archivos de imagen por defecto
   \graphicspath{{img/}}

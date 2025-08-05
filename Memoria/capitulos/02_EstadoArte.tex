@@ -650,3 +650,47 @@ A lo largo de este trabajo, exploraremos esta línea de mejora como eje central 
 
 
 \subsection{Modelos aplicados al forecasting de series temporales}
+
+En el estado del arte, podemos encontrar multitud de modelos que proponen adaptaciones y soluciones alternativas al uso de Transformers para series temporales. Algunas, son soluciones propias de lenguaje natural adaptadas a su uso en series temporales, mientras que en otros casos tratan de basarse en conceptos básicos anteriormente explotados en series, como la descomposición o el uso de la autocorrelación, pero empleando Transformers como vía de aprendizaje.\\
+
+Concretamente, comenzaremos analizando variantes del modelo Transformer original que tuvieron un gran impacto en los modelos adaptados, como TransformerXL \cite{dai2019transformerxlattentivelanguagemodels}, Reformer \cite{kitaev2020reformerefficienttransformer} y LogTrans, para posteriormente analizar el funcionamiento de Informer, Reformer, Autoformer, FEDFormer, y modelos más recientes como PatchTST y TimesNet.
+
+\subsubsection{Modelos y mejoras previas}
+
+El modelo original de Transformer propuesto en \textit{Attention is All You Need} \cite{vaswani2023attentionneed} ha sido objetivo de muchas investigaciones que han buscado optimizar tanto la capacidad de modelado como la eficiencia computacional. Si bien su principal campo de aplicación siguió siendo el lenguaje natural, dichas innovaciones han permitido posteriores mejoras a las aplicaciones de Transformers en series temporales.\\
+
+De entre las características deseables, se han buscado continuamente mejoras de rendimiento para dominios de larga secuencia, relaciones de dependencia a múltiples escalas y mejoras a nivel computacional, tratando de reducir la complejidad de ejecución pero sacrificando el mínimo rendimiento posible.
+
+\paragraph{\textbf{Transformer-XL (2019)}}
+\mbox{}
+
+Una de las primeras propuestas realizadas es el Transformer-XL \cite{dai2019transformerxlattentivelanguagemodels}. Esta profundiza sobre el concepto de positional encoding relativo, reemplazando el esquema absoluto original por uno que codifica distancias relativas entre tokens. Esto no solo permite capturar mejor dependencias a largo plazo, sino que también hace posible extender el contexto más allá de la ventana de entrenamiento, reutilizando estados ocultos de segmentos previos y patrones locales.\\
+
+En series temporales, esta técnica tiene una gran relevancia en la detección de patrones estacionales, ya que nos permite encontrar patrones, donde el significado de la relación temporal radica sobre todo en dónde se ubica un evento concreto dentro del período estacional, y no tanto en su posición absoluta en la secuencia.
+
+
+\paragraph{\textbf{Reformer (2020)}}
+\mbox{}
+
+Reformer \cite{kitaev2020reformerefficienttransformer} aborda otro de los cuellos de botella principales de los Transformer: el coste $O(n^2)$ del cálculo de atenciones. En secuencias muy largas, el orden cuadrático puede aumentar considerablemente los tiempos de ejecución, hasta el punto de que en datasets de gran tamaño, puede suponer un obstáculo de cara a poder ser ejecutado. Dicho orden de complejidad proviene de realizar el producto entre los diferentes tokens de entrada, pues se debe realizar el producto de cada elemento por el resto, y esto depende directamente del tamaño de los datos.\\
+
+
+Para tratar de reducir dicha complejidad, Reformer introduce varios conceptos fundamentales que mejoran la eficiencia sin sacrificar la calidad del aprendizaje.
+
+\begin{itemize}
+	\item \textbf{Locality-Sensitive Hashing (LSH):} Esta técnica permite aproximar el cálculo de la atención agrupando tokens similares mediante el uso de funciones hash, diseñadas para preservar la proximidad en el espacio vectorial. En lugar de calcular la atención entre todos los pares de tokens, el modelo solo la calcula dentro de unos grupos, llamados \textit{buckets}, que están formados por tokens cercanos en su representación (ver figura \ref{reformer}).
+		
+	 Gracias a ello, podemos reducir el coste de \(O(n^2)\) a aproximadamente \(O(n \log n)\), al limitar las interacciones a subconjuntos relevantes. Además, LSH favorece que la atención se concentre en relaciones locales y semánticamente relevantes, lo cual favorece también colateralmente a su aplicación en series temporales y la detección de estacionalidad.
+
+	\begin{figure}[!ht] %con el [H] le obligamos a situar aquí la figura
+	\centering
+	\includegraphics[scale=0.225]{img/reformer}
+	\caption{Reformer: funcionamiento del mecanismo de creación de \textit{buckets} \cite{kitaev2020reformerefficienttransformer}}
+	\label{reformer}
+\end{figure}  	
+
+	\item \textbf{Codificación reversible:} Continuando con las mejoras de eficiencia, Reformer modifica la arquitectura para emplear redes residuales reversibles que permiten reconstruir los estados intermedios de cada capa durante \textit{backpropagation}, en lugar de almacenarlos durante el \textit{forward}. Esto reduce drásticamente la memoria requerida para entrenar modelos profundos y secuencias largas. La invertibilidad de las capas permite recuperar el input de cada capa a partir de su output, lo que implica una compensación entre tiempo computacional (por el costo de recalcular estados) y memoria. Su impacto puede apreciar en mayor medida cuando el conjunto de entrada dispone miles o millones de instancias o pasos a analizar.
+	
+\end{itemize}
+
+Entre las principales ventajas de esta mejora, podemos encontrar principalmente el aprovechamiento de la memoria de video, gracias a la agrupación de los conjuntos similares y al aprovechamiento de la codificación en la fase de backpropagation.
