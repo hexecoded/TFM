@@ -139,7 +139,6 @@
 \RequirePackage{booktabs}
 % \renewcommand{\arraystretch}{1.5} % Aumenta el espacio vertical entre las filas de un entorno tabular
 
-\RequirePackage{xcolor} 
 \RequirePackage{graphicx}
   % Carpeta donde buscar los archivos de imagen por defecto
   \graphicspath{{img/}}
@@ -147,6 +146,14 @@
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage[table]{xcolor}
+
+% Redefinir \paragraph
+\makeatletter
+\renewcommand\paragraph[1]{%
+	\vspace{1em}% espacio antes del título
+	\noindent\textbf{#1}\par % título en negrita y salto de línea
+}
+\makeatother
 
 % Define una nueva columna sin corte de palabras
 \newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}

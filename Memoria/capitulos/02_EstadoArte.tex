@@ -102,7 +102,7 @@ A continuación, definiremos en mayor detalle 3 de los algoritmos basados en des
 Esta técnica, llamada \textit{Seasonal Time-Series Decomposition}, nos permite descomponer la serie en partes más sencillas de modelar, separando la serie en tres componentes básicas: tendencia, estacionalidad y resto, siguiendo así el esquema visto anteriormente. De esta forma, podemos comprender en mayor detalle cómo evolucionan los valores a lo largo del tiempo, y comprender mejor cómo modelar su comportamiento. 
 
 \paragraph{Funcionamiento}
-\mbox{}
+
 
 Para obtener un modelo para cada una de ellas,  normalmente se sigue un proceso de 3 pasos que nos permite aislar la información.
 
@@ -151,7 +151,7 @@ En su publicación original, podemos encontrar un ejemplo de ejecución sobre el
 En este caso, podemos apreciar visualmente una serie fácilmente modelable por este enfoque, ya que la curva describe una tendencia creciente bastante clara, y los periodos estacionales están bastante bien delimitados y no se ven influenciados por el crecimiento recogido en la tendencia. Es un ejemplo perfecto para el uso de los modelos basados en descomposición aditiva.
 
 \paragraph{Conclusiones}
-\mbox{}
+
 
 STL supuso una buena base para modelos posteriores, pero esta forma de modelado presenta varias limitaciones, que acotan su funcionamiento a problemas simples:
 
@@ -170,7 +170,7 @@ Esto lo hace en un método interesante desde el punto de vista de análisis, y q
 Basándonos de nuevo en el método de descomposición de series, podemos encontrar el modelo \textbf{ARIMA} (\textit{AutoRegressive Integrated Moving Average}) una técnica estadística ampliamente utilizada para el modelado de series temporales univariantes. Como ya adelantamos en la introducción del proyecto, su estructura se basa en la combinación de tres componentes principales: una parte autoregresiva (AR), una parte integrada (I) y una parte de media móvil (MA). Cada una de estas partes permite capturar diferentes aspectos del comportamiento temporal de los datos.
 
 \paragraph{Componente de Integración}
-\mbox{}
+
 
 Por integración, entendemos el número de veces que es necesario integrar la serie temporal original para que esta se vuelva estacionaria.  De manera resumida, una serie estacionaria es aquella cuyas propiedades estadísticas, como la media, la varianza y la autocorrelación entre valores, se mantienen constantes a lo largo del tiempo,  como ya vimos en la definición de los modelos aditivos.\\
 
@@ -224,7 +224,7 @@ Para saber cuando deja de ser necesario aplicar el proceso iterativo de integrac
 
 
 \paragraph{Componente autoregresiva (AR)}
-\mbox{}
+
 
 Esta parte del modelo representa la relación entre el valor actual de la serie y sus valores pasados. Supone que el valor presente puede explicarse como una combinación lineal de observaciones anteriores, los cuales se denominan retardos o lags. Normalmente, el número de lags a emplear es un hiperparámetro clave del modelo, el cual es controlado por  \( p \).
 
@@ -243,7 +243,7 @@ Esta parte del modelo representa la relación entre el valor actual de la serie 
 	Gracias a la componente AR, podemos capturar relaciones de corto plazo y patrones de dependencia temporal, siempre que la serie sea estacionaria. Es habitual que muchas series temporales muestren este tipo de estructura, donde los valores pasados son predictivos del comportamiento futuro inmediato, como ya vimos con el caso de las temperaturas y el consumo eléctrico. Por tanto, la elección del parámetro \( p \) es clave:  un valor pequeño implica que sólo los valores más recientes tengan influencia, mientras que un valor mayor permite capturar relaciones más amplias en el tiempo, pero puede aumentar el riesgo de sobreajuste y se pierda localidad. En definitiva, se trata de un elemento esencial del rendimiento de ARIMA, por lo que es clave elegir adecuadamente su valor.
 	
 	\paragraph{Componente de media móvil (MA)}
-	\mbox{}
+	
 	
 	Por último, nos queda describir el funcionamiento de la media móvil. Esta tiene como objetivo modelar la parte estocástica de la serie temporal, es decir, los errores de predicción cometidos en instantes anteriores. Anteriormente,  vimos que la parte autoregresiva se basaba en realizar la media sobre sus mismos valores, mientras que aquí tratamos de extraer información de los residuos.
 	
@@ -271,7 +271,7 @@ Esta parte del modelo representa la relación entre el valor actual de la serie 
 	
 
 \paragraph{Conclusiones}
-\mbox{}
+
 
 En resumen, ARIMA nos permite modelar gran cantidad de problemas de manera simple, cumplendo como única restricción la estacionariedad. Pero principalmente esta característica, si bien facilita enormemente el proceso, también impacta sobre la calidad del resultado; si la serie tiene una estructura muy compleja y no estacionaria, convertirla para que lo sea puede provocar una pérdida masiva de información, ya que al diferenciar estamos suprimiendo información que podría ser potencialmente relevante. En casos extremos, la pérdida de expresividad podría ser tal hasta lograr una serie muy plana, sin comportamientos aparentes. Por tanto, es necesario emplear técnicas más sofisticadas que no requieran dicha condición para extraer modelos más generalizables.\\
 
@@ -284,7 +284,7 @@ Por último, en caso de que se disponga de información adicional, como interval
 Como alternativa más reciente de los modelos aditivos, disponemos de Prophet \cite{taylor2018prophet}. Desarrollado por Meta, apareció teniendo como objetivo facilitar la generación de predicciones de calidad, incluso si es empleado por analistas sin experiencia en series temporales. Según su blog oficial \cite{prophet2017}, Prophet fue creado para responder a la necesidad de escalar la producción de pronósticos precisos en entornos empresariales sin necesidad de altos conocimientos para poder extraer buenas conclusiones. 
 
 \paragraph{Funcionamiento}
-\mbox{}
+
 
 A diferencia de los modelos anteriores, que definían la necesidad de cumplir ciertas restricciones, como la estacionariedad, Prophet nos permite trabajar con entornos más cambiantes, al estar diseñado para recibir datos de al menos varios meses de duración, donde si bien existen patrones estacionales claros por la estructura de tipo calendario, es capaz de adaptarse a cambios e imprevistos. Es decir, es capaz de modelar días festivos o de caracter especial sobre el impacto del desarrollo de la serie (como el lanzamiento de un nuevo servicio o producto de una empresa) y es más robusto frente a outliers que los modelos que vimos anteriormente. (ver figura \ref{prophetex}).\\
 
@@ -313,7 +313,7 @@ Entrando en mayores detalles de implementación, una de las principales novedade
 \end{figure}  	
 
 
-Adicionalmente, la modelización de la estacionalidad también recibe un formulación más sofisticada. Usando Fourier, podemos introducir la duración del período de cada ciclo (\textit{P}) e ir ajustando su precisión mediante el parámetro \textit{n} (ver ecuación \ref{fftprophet}). Pero lo más intersante es que se facilita la inclusión explícita de festividades o eventos que pueden afectar significativamente la serie. Para ello, el modelo permite especificar ventanas alrededor de esos puntos para así aprender también su comportamiento.
+Adicionalmente, la modelización de la estacionalidad también recibe un formulación más sofisticada. Usando Fourier, podemos introducir la duración del período de cada ciclo (\textit{P}) e ir ajustando su precisión mediante el parámetro \textit{n} (ver ecuación \ref{fftprophet}). Pero lo más interesante es que se facilita la inclusión explícita de festividades o eventos que pueden afectar significativamente la serie. Para ello, el modelo permite especificar ventanas alrededor de esos puntos para así aprender también su comportamiento.
 
 \begin{equation}
 	s(t) = \sum_{n=1}^{N} \left[ a_n \cos\left( \frac{2\pi n t}{P} \right) + b_n \sin\left( \frac{2\pi n t}{P} \right) \right]
@@ -321,7 +321,6 @@ Adicionalmente, la modelización de la estacionalidad también recibe un formula
 \end{equation}
 
 \paragraph{Conclusiones}
-\mbox{}
 
 En resumen, Prophet supone un salto considerable en cuanto a adaptación y cercanía a los datos extraídos de casos reales. Nos permite insertar la información explícita que mencionabamos en ARIMA, ya que nos permite añadir de manera muy intuitiva información adicional del problema. Además, en su publicación original se destaca la eficacia incluso cuando los datos presentan imperfecciones, como valores atípicos, datos faltantes o cambios abruptos en la tendencia, lo cual facilita enormemente el proceso de preprocesado, el cual puede reducirse al mínimo. Esto aporta considerablemente a su faceta relacionada con la facilidad de uso.\\
 
@@ -650,3 +649,266 @@ A lo largo de este trabajo, exploraremos esta línea de mejora como eje central 
 
 
 \subsection{Modelos aplicados al forecasting de series temporales}
+
+En el estado del arte, podemos encontrar multitud de modelos que proponen adaptaciones y soluciones alternativas al uso de Transformers para series temporales. Algunas, son soluciones propias de lenguaje natural adaptadas a su uso en series temporales, mientras que en otros casos tratan de basarse en conceptos básicos anteriormente explotados en series, como la descomposición o el uso de la autocorrelación, pero empleando Transformers como vía de aprendizaje.\\
+
+Concretamente, comenzaremos analizando variantes del modelo Transformer original que tuvieron un gran impacto en los modelos adaptados, como TransformerXL \cite{dai2019transformerxlattentivelanguagemodels}, Reformer \cite{kitaev2020reformerefficienttransformer} y LogTrans~\cite{NEURIPS2019_6775a063}, para posteriormente analizar el funcionamiento de Informer~\cite{zhou2021informerefficienttransformerlong}, Autoformer~\cite{wu2022autoformerdecompositiontransformersautocorrelation}, FEDFormer, y modelos más recientes como PatchTST y TimesNet.
+
+\subsubsection{Variantes de Transformer y mejoras previas}
+
+El modelo original de Transformer propuesto en \textit{Attention is All You Need} \cite{vaswani2023attentionneed} ha sido objetivo de muchas investigaciones que han buscado optimizar tanto la capacidad de modelado como la eficiencia computacional. Si bien su principal campo de aplicación siguió siendo el lenguaje natural, dichas innovaciones han permitido posteriores mejoras a las aplicaciones de Transformers en series temporales.\\
+
+De entre las características deseables, se han buscado continuamente mejoras de rendimiento para dominios de larga secuencia, relaciones de dependencia a múltiples escalas y mejoras a nivel computacional, tratando de reducir la complejidad de ejecución pero sacrificando el mínimo rendimiento posible.
+
+\paragraph{Transformer-XL (2019)}
+
+
+Una de las primeras propuestas realizadas es el Transformer-XL \cite{dai2019transformerxlattentivelanguagemodels}. Esta profundiza sobre el concepto de positional encoding relativo, reemplazando el esquema absoluto original por uno que codifica distancias relativas entre tokens. Esto no solo permite capturar mejor dependencias a largo plazo, sino que también hace posible extender el contexto más allá de la ventana de entrenamiento, reutilizando estados ocultos de segmentos previos y patrones locales.\\
+
+En series temporales, esta técnica tiene una gran relevancia en la detección de patrones estacionales, ya que nos permite encontrar patrones, donde el significado de la relación temporal radica sobre todo en dónde se ubica un evento concreto dentro del período estacional, y no tanto en su posición absoluta en la secuencia.
+
+\newpage
+\paragraph{LogTrans (2019)}
+
+La variante LogTrans\cite{NEURIPS2019_6775a063} se centra en reducir el coste computacional del cálculo de atenciones, proponiendo un mecanismo de atención diseñado para reducir el coste computacional del \textit{self-attention} tradicional, denominado \textit{log-sparse attention}. La idea busca su fundamento en secuencias de larga extensión, donde se argumenta que no todas las interacciones entre elementos son igualmente relevantes: mientras que ciertas posiciones requieren una atención densa hacia elementos cercanos, por razones como lazos locales estrechos, otras mantienen dependencias más espaciadas que solo necesitan ser consideradas de forma ocasional. Para lograrlo, el mecanismo \textit{log-sparse} selecciona las posiciones a las que cada token presta atención siguiendo una distribución logarítmica. Esto significa que las posiciones cercanas se incluyen de forma continua y densa, asegurando que las dependencias locales estén bien representadas, mientras que las posiciones más lejanas se muestrean con menor densidad, manteniendo aún así una cobertura global de la secuencia pero con un número significativamente reducido de interacciones.\\
+
+Empleando el muestreo, la complejidad se reduce de \(O(n^2)\) a aproximadamente \(O(n \log n)\), lo que permite manejar secuencias mucho más largas sin que el coste computacional o el consumo de memoria GPU se disparen. Sin embargo, esta estrategia tiene ciertos riesgos, sobre todo si lo aplicamos a series temporales: usar un patrón de muestreo conlleva el riesgo de perder información relevante, ya que dicha relación no está siendo recogida. Este problema puede resultar especialmente crítico en series temporales donde ciertas fluctuaciones clave puedan ser omitidas y provoquen una pérdida de rendimiento considerable, o bien, durante la búsqueda de anomalías en las series, tarea la cual está bastante vinculada también con la predicción.\\
+
+A pesar de esta limitación, \textit{log-sparse attention} demostró que es posible reducir el coste de la atención a cambio de un pequeño incremento del error en series, siendo más notable en series de larga extensión. De hecho, esta idea abrió la puerta a modelos como \textit{Informer}, uno de los modelos de \textit{forecasting} basados en Transformers más influyentes en el estado del arte,  en el que se adopta el enfoque probabilístico para seleccionar las claves más relevantes. Más adelante, examinaremos su funcionamiento en detalle, centrándonos en su aplicación específica a la predicción de series temporales.
+
+\paragraph{Reformer (2020)}
+
+Reformer \cite{kitaev2020reformerefficienttransformer} aborda otro de los cuellos de botella principales de los Transformer: el coste $O(n^2)$ del cálculo de atenciones. En secuencias muy largas, el orden cuadrático puede aumentar considerablemente los tiempos de ejecución, hasta el punto de que en datasets de gran tamaño, puede suponer un obstáculo de cara a poder ser ejecutado. Dicho orden de complejidad proviene de realizar el producto entre los diferentes tokens de entrada, pues se debe realizar el producto de cada elemento por el resto, y esto depende directamente del tamaño de los datos.\\
+
+
+Para tratar de reducir dicha complejidad, Reformer introduce varios conceptos fundamentales que mejoran la eficiencia sin sacrificar la calidad del aprendizaje.
+
+\begin{itemize}
+	\item \textbf{Locality-Sensitive Hashing (LSH):} Esta técnica permite aproximar el cálculo de la atención agrupando tokens similares mediante el uso de funciones hash, diseñadas para preservar la proximidad en el espacio vectorial. En lugar de calcular la atención entre todos los pares de tokens, el modelo solo la calcula dentro de unos grupos, llamados \textit{buckets}, que están formados por tokens cercanos en su representación (ver figura \ref{reformer}).
+	
+	Gracias a ello, podemos reducir el coste de \(O(n^2)\) a aproximadamente \(O(n \log n)\), al limitar las interacciones a subconjuntos relevantes. Además, LSH favorece que la atención se concentre en relaciones locales y semánticamente relevantes, lo cual favorece también colateralmente a su aplicación en series temporales y la detección de estacionalidad.
+	
+	\begin{figure}[!ht] %con el [H] le obligamos a situar aquí la figura
+		\centering
+		\includegraphics[scale=0.225]{img/reformer}
+		\caption{Reformer: funcionamiento del mecanismo de creación de \textit{buckets} \cite{kitaev2020reformerefficienttransformer}}
+		\label{reformer}
+	\end{figure}  	
+	
+	\item \textbf{Codificación reversible:} Continuando con las mejoras de eficiencia, Reformer modifica la arquitectura para emplear redes residuales reversibles que permiten reconstruir los estados intermedios de cada capa durante \textit{backpropagation}, en lugar de almacenarlos durante el \textit{forward}. Esto reduce drásticamente la memoria requerida para entrenar modelos profundos y secuencias largas. La invertibilidad de las capas permite recuperar el input de cada capa a partir de su output, lo que implica una compensación entre tiempo computacional (por el costo de recalcular estados) y memoria. Su impacto puede apreciar en mayor medida cuando el conjunto de entrada dispone miles o millones de instancias o pasos a analizar.
+	
+\end{itemize}
+
+Ambas mejoras nos permiten realizar un mejor aprovechamiento de la memoria de video, mejorando la reutilización de cálculos y permitiendo así usar conjuntos de datos de mayor tamaño, aunque debemos de tener en cuenta que agrupar por similaridad introduce errores numéricos en el cálculo de la atención.
+
+\subsubsection{Informer (2020)}
+
+El modelo Informer~\cite{zhou2021informerefficienttransformerlong} es una de las primeras propuestas que adapta de forma específica la arquitectura Transformer al dominio de las series temporales, tratando de modificar su funcionamiento para adaptarse a las limitaciones detectadas en el contexto de series temporales. Su diseño se orienta al problema de \textit{Long Sequence Time-Series Forecasting} (LSTF), para predecir horizontes temporales largos a partir de entradas igualmente extensas, lo que plantea dificultades de escalabilidad y eficiencia tanto en entrenamiento como en inferencia.\\
+
+En el uso directo de Transformers canónicos sobre series temporales, surgen tres problemas fundamentales, algunos de ellos ya estudiados en el apartado anterior:
+
+\begin{itemize}
+	\item \textbf{Alta complejidad computacional y de memoria}. La implementación estándar del mecanismo de atención presenta un coste de $O(L^2)$ en secuencias de longitud $L$, debido a la necesidad de calcular interacciones entre todos los pares de posiciones. Esto limita su uso en horizontes de predicción largos o datos de alta frecuencia, ya que limita su escalabilidad.
+	\item \textbf{Cuellos de botella con la memoria}. En arquitecturas encoder–decoder profundas, donde tenemos varias capas, podemos tener problemas con la complejidad espacial, ya que disponiendo de $J$ capas, la complejidad total será de $O(J \cdot L^2)$, limitando así la posibilidad de procesar largas series.
+	\item \textbf{Baja velocidad de inferencia}. En la inferencia original propuesta por Transformer, el decoding se realiza paso a paso, aumentando los tiempos de inferencia hasta el punto de ser tan lenta como los modelos basados en RNN. Por tanto, debemos de encontrar un nuevo mecanismo capaz de simplificar y adaptar este proceso.
+\end{itemize}
+
+Para mitigar estas limitaciones, Informer introduce tres innovaciones clave:
+
+\begin{enumerate}
+	\item \textbf{ProbSparse Self-Attention}. Se trata de un mecanismo de atención dispersa basado en la hipótesis de que, en muchas tareas de series temporales, solo unas pocas \textit{queries} concentran la mayor parte de la relevancia en la atención. Al muestrear y priorizar dichas \textit{queries}, se reduce el coste computacional de $O(L^2)$ a $O(L\log L)$ sin degradar la capacidad de modelar dependencias a largo plazo. Para ello, se emplea el mismo procesamiento visto en LogTrans \cite{NEURIPS2019_6775a063}.
+	\item \textbf{Self-Attention Distilling}. Se trata de una operación jerárquica que filtra las atenciones dominantes y reduce progresivamente la dimensión temporal entre capas. Este proceso actúa como una mecanismo de compresión, donde se preservan los patrones relevantes y disminuyendo el consumo de memoria, permitiendo que modelos más profundos procesen secuencias largas sin sobrecargar la GPU, logrando una complejidad reducida de $O( (2 - \epsilon) L \log L)$.
+	\item \textbf{Generative Decoder}. Para solucionar el problema de la inferencia paso a paso, se propone un decodificador capaz de generar toda la secuencia de salida en un único paso (\textit{one-forward}). Este enfoque no solo acelera la inferencia, sino que también reduce la acumulación de errores entre pasos, mejorando la estabilidad en horizontes de predicción extensos.
+\end{enumerate}
+
+En conjunto, estas mejoras convierten a \textbf{Informer} en un modelo especialmente interesante para escenarios de predicción multivariados y datos de gran volumen, manteniendo la capacidad de capturar tanto dependencias locales como globales reduciendo el impacto en memoria y mejorando la eficiencia.\\
+
+A continuación, haremos énfasis en cada una de estas 3 propuestas, y analizaremos por partes su arquitectura (ver figura \ref{informer}).
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.25]{img/informer.png}
+	\caption{Informer: arquitectura completa del modelo~\cite{zhou2021informerefficienttransformerlong}}
+	\label{informer}
+\end{figure}
+
+\paragraph{Mecanismo de atención}
+
+El mecanismo de \textit{self-attention} tradicional se definía como:
+\begin{equation}
+	A(Q,K,V) = \operatorname{Softmax}\!\left( \frac{QK^\top}{\sqrt{d}} \right) V,
+\end{equation}
+
+Donde la implementación canónica requiere computar todas las similitudes par a par \(QK^\top\), con coste temporal y de memoria \(O(L^2)\).
+
+Informer parte de la observación empírica de que la distribución de probabilidades de atención suele mostrar una \textit{cola larga}: pocas consultas concentran la mayor parte de la energía de atención, mientras que la mayoría producen señales débiles. Para aprovechar esta propiedad, se define una medida de ``dispersión de consulta'' que cuantifica la propensión de una consulta \(q_i\) a generar picos de atención:
+
+\begin{equation}
+	M(q_i,K) \;=\; \max_j \left\{ \frac{q_i k_j^\top}{\sqrt{d}} \right\} \;-\; \frac{1}{L_K} \sum_{j=1}^{L_K} \frac{q_i k_j^\top}{\sqrt{d}},
+\end{equation}
+
+donde \(L_K\) es el número de claves (en encoder–decoder \(L_Q\) y \(L_K\) pueden diferir). Intuitivamente, \(M(q_i,K)\) mide la diferencia entre el máximo score y el score medio: valores grandes indican consultas con picos pronunciados (es decir, consultas ``informativas'').
+
+Esencialmente, este mecanismo consta de dos fases:
+\begin{enumerate}
+	\item \textbf{Selección de consultas relevantes:} se estima \(M(q_i,K)\) mediante muestreo parcial de claves con LogSparse y se conservan solo las \(u = c \cdot \ln L_Q\) consultas con mayor valor.
+	Para ello, para cada consulta \(q_i\), se calcula una estimación de su medida de dispersión
+	\begin{equation}
+		\hat{M}(q_i, K) = \max_{j \in \mathcal{S}_i} \left\{ \frac{q_i k_j^\top}{\sqrt{d}} \right\} - \frac{1}{|\mathcal{S}_i|} \sum_{j \in \mathcal{S}_i} \frac{q_i k_j^\top}{\sqrt{d}},
+	\end{equation}
+	donde \(\mathcal{S}_i \subset \{1, \dots, L_K\}\) es un subconjunto de claves obtenido mediante muestreo \textit{log-sparse}, es decir, seleccionando índices de forma que la densidad de puntos crece logarítmicamente con la distancia temporal.  
+	Este muestreo permite aproximar \(M(q_i, K)\), tratando de mantener con alta probabilidad las claves más informativas. 
+	
+	Finalmente, se ordenan las consultas según \(\hat{M}(q_i, K)\) y se conservan solo las \(u = c \cdot \ln L_Q\) de mayor valor, donde \(c\) establece qué proporción seleccionar. A mayor valor, mayor precisión, pero mayor coste.
+	
+	\item \textbf{Cálculo selectivo de atención:} solo para esas \(u\) consultas se computa la atención completa frente a todas las claves, mientras que las no seleccionadas reciben una aproximación suave o interpolada. Esta podría ser un valor medio, ya calculado anteriormente al realizar la búsqueda de las instancias informativas.
+\end{enumerate}
+
+Con \(u = O(\log L)\), el coste se reduce de \(O(L^2)\) a \(O(L \log L)\) por cada head del modelo, consiguiendo una reducción considerable de la complejidad.
+
+\paragraph{Distilling}
+
+En el \textit{encoder} de Informer, la secuencia de entrada \(X^{en} \in \mathbb{R}^{L_x \times d_{model}}\) atraviesa múltiples capas de \textit{ProbSparse self-attention}, extrayendo dependencias relevantes entre los elementos temporales.\\
+
+Sin embargo, procesar de forma directa secuencias largas en todas las capas genera un elevado coste computacional y de memoria.  
+Para mitigar este problema, los autores introducen un bloque intermedio de \textit{distilling}, cuyo objetivo es reducir progresivamente la longitud temporal mientras se conservan las representaciones más relevantes.\\
+
+Tras cada capa de atención, se aplica el bloque de \textit{distilling}, compuesto por una convolución 1D, una activación no lineal ELU y un \textit{max pooling} con paso 2:
+
+\begin{equation}
+	X^{t}_{j+1} = \text{MaxPool} \left( \text{ELU} \left( \text{Conv1d}([X^t_j]_{AB}) \right) \right),
+\end{equation}
+
+donde \([X^t_j]_{AB}\) denota la salida del bloque de atención multi-cabeza \textit{ProbSparse} combinada con conexiones residuales y normalización por capas (ver figura \ref{distilling})
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.2]{img/distilling.png}
+	\caption{Informer: procesamiento seguido durante el distilling~\cite{zhou2021informerefficienttransformerlong}}
+	\label{distilling}
+\end{figure}
+Este proceso cumple dos funciones clave; por un lado, trata de filtrar las relaciones importantes. Al reducir la longitud temporal, se atenúan las interacciones menos relevantes, conservando únicamente las representaciones que concentran la mayor parte de la atención. Como se aplica un MaxPooling de 2,  la reducción de la secuencia a la mitad en cada paso disminuye el coste espacial hasta \(O((2 - \varepsilon) L \log L)\), reduciendo notablemente la complejjidad del encoder. \\
+
+Para mejorar aún más la capacidad de capturar relaciones en distintas escalas temporales, se utilizan réplicas de \textit{stacks} del encoder con diferentes longitudes de entrada (por ejemplo, en la figura \ref{distilling}, \(L\), \(L/2\) y \(L/4\)), cuyos resultados se concatenan antes de las etapas finales. Este enfoque multi-escala es especialmente útil para detectar patrones que se repiten en diferentes horizontes.
+
+\paragraph{Decodificación. Inferencia en un solo paso}
+
+El decoder de Informer, sin entrar en particularidades concretas de cada capa, cumple con la arquitectura de un \textit{Transformer decoder} vanilla, pues posee en su definición dos capas de atención multi-cabeza: la primera opera de forma enmascarada sobre la secuencia objetivo parcial y la segunda aplica atención cruzada sobre las salidas del encoder.\\
+
+Sin embargo, introduce una modificación crucial en el proceso de inferencia que lo diferencia de los enfoques autoregresivos tradicionales: en lugar de generar la salida paso a paso, acumulando potencialmente errores en cada predicción intermedia, el decoder de Informer adopta un esquema de inferencia en un solo paso, al estilo de los modelos generativos.\\
+
+Para ello, se insertan una serie de elementos que simplifican el proceso. Este comienza concatenando construyendo el formato de entrada del modelo, que consta de una sección de datos de entrada, una ventana de contexto conocida, el cual llamaremos token de contexto, de longitud $L_{\text{token}}$, con un bloque de posiciones objetivo inicialmente vacías $X_0$:
+
+\[
+X^{de} = \text{Concat}(X^{\text{token}}, X_0) \in \mathbb{R}^{(L_{\text{token}} + L_y) \times d_{\text{model}}},
+\]
+
+donde $L_y$ es la longitud de la secuencia que se desea predecir.  Lo que se persigue es que tras el token de contexto, dichos ceros se vean sustituidos por la predicción realizada por  el modelo.
+
+A través de los mecanismos de enmascaramiento, ya presentes en el Transformer original, el modelo solo podrá acceder a información presente en posiciones anteriores o del \textit{contexto inicial}, evitando el acceso a valores futuros.\\
+
+Tras el paso por las capas de atención y normalización, una capa totalmente conectada proyecta directamente toda la secuencia objetivo de salida en un único cálculo, eliminando así la necesidad de decodificación iterativa. De esta forma, conseguimos, por un lado, reducir el tiempo de inferencia, y por otro, mitigar la acumulación de errores típica de modelos autoregresivos, mejorando la estabilidad y la precisión en predicciones de horizontes largos.
+
+\paragraph{Análisis crítico y conclusiones}
+Tras analizar el funcionamiento de este modelo, podemos apreciar que los avances realizados en su publicación fueron clave para realizar una adaptación de los Transformers a series temporales. Gracias al mecanismo de distillation, podemos simplificar progresivamente la arquitectura y encontrar patrones en diferentes grados de escala, y el mecanismo de predicción e inferencia tiene mucho más sentido que el mecanismo autoregresivo original, ya que así conseguimos resolver el problema del error acumulado que ya encontramos cuando aplicamos modelos clásicos como ARIMA.\\
+
+Sin embargo, siendo críticos, podemos encontrar algunas decisiones controvertidas. En primer lugar, Informer no altera el proceso de codificación posicional de los Transformer de manera significativa, ya que por defecto, opera con la tradicional codificación sinusoidal, la cual es bastante rígida. Sólo depende de la longitud de la secuencia, pero no se adapta a su comportamiento o entorno, por lo que no estamos añadiendo información útil a nivel local de la serie, dificultando la detección de patrones estacionales o elementos de interés como  anomalías.\\
+
+Por otro lado, la selección de instancias mediante LogSparse para simplificar la complejidad del cálculo de atención puede ser problemática. Aunque la teoría propuesta tiene sentido, ya que se afirma que no todos los puntos tienen la misma importancia, y que la selección probabilística da como resultado un vector ordenado de elementos por importancia \textit{M}, realmente es una asunción demasiado fuerte. Es posible que, en series temporales medidas en cortos períodos, como segundos o minuitos, y duración extensa del fenómeno, como meses o años, los cambios apreciados en gran cantidad de puntos no sean especialmente relevantes, pues quizás la granularidad es demasiado pequeña. Pero en datasets que estudien fenómenos cortos y cambiantes, que ocurren a gran velocidad, como detección de fallos en tiempo real, o estudio de fenómenos como sistema de seguridad de centrales nucleares, (es decir, entornos industriales), puede que estemos eliminando puntos de interés.\\
+
+La selección aleatoria mediante una distribución logarítmica, si bien es útil e interesante desde el punto de vista de la complejidad computacional, a nivel semántico puede alejarse bastante del problema que se está estudiando. El muestreo aleatorio puede distanciar al modelo de la estructura real del problema, ignorando relaciones locales o patrones que podrían ser relevantes para nuestra tarea.\\
+
+Algo similar ocurre con los mecanismos de reducción temporal basados en \textit{Max Pooling}, en la etapa de \textit{distilling}. Reducir a la mitad la longitud de la secuencia en cada capa implica que, a la pérdida de información ya sufrida en el muestreo, se añade el riesgo de eliminar instancias que habían sido consideradas relevantes en pasos anteriores, y dar lugar a que ciertas posiciones del modelo mantengan valores por defecto o información incompleta y se desperdicie aún más información útil.
+
+\subsubsection{Autoformer (2021)}
+
+Tras la formulación del Transformer original, siguen surgiendo modelos y adaptaciones de Transformer para aplicar con series temporales. Uno de los siguientes es Autoformer~\cite{wu2022autoformerdecompositiontransformersautocorrelation}, el cual realiza un cambio de vista total con respecto a Informer. A diferencia de este último, que trataba de eliminar la autocorrelación por el riesgo de errores acumulativos en el decoder, Autoformer basa su funcionamiento esencial precisamente en la autocorrelación, y recuperando uno de los elementos característicos de los primeros algoritmos de procesamiento de series temporales: la descomposición.\\
+
+Continuando con la tarea de predicción LSTF, Autoformer trata de solucionar dos problemas particulares de esta tarea. En primer lugar, la dificultad para identificar dependencias fiables en horizontes extensos, donde los patrones temporales suelen estar entrelazados y la señal relevante tiende a diluirse entre ruido y fluctuaciones locales. Pero, también, persigue poner remedio a las limitaciones de eficiencia y aprovechamiento de la información asociadas a los mecanismos de \textit{self-attention} tradicionales, entre ellas, la anterior característica criticada de Informer, como lo era el muestreo de los tokens y la potencial pérdida de información para simplificar el producto de atención.\\
+
+Para abordar estas barreras, Autoformer introduce dos innovaciones principales:
+\begin{itemize}
+	\item \textbf{Arquitectura de descomposición progresiva}: no trata la descomposición de la serie como un preprocesamiento independiente, sino que la integra como un bloque interno del modelo (ver figura \ref{autformer}). De esta forma, las componentes estacionales y de tendencia se separan de manera iterativa a lo largo de todo el proceso de predicción, permitiendo un refinamiento progresivo.
+	\item \textbf{Mecanismo de autocorrelación} (\textit{Auto-Correlation}). En lugar de usar un mecanismo de atención, se explota la periodicidad presente implícitamente en las series para detectar dependencias y agregar información a nivel de subseries. Este enfoque no solo mejora la utilización de la información, sino que también reduce la complejidad computacional a $O(L \log L)$, favoreciendo la escalabilidad en secuencias extensas.
+\end{itemize}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.2]{img/autoformer.png}
+	\caption{Autoformer: arquitectura encoder-decoder del modelo~\cite{wu2022autoformerdecompositiontransformersautocorrelation}}
+	\label{autformer}
+\end{figure}
+
+A continuación, analizaremos brevemente ambas puntos diferenciales.
+
+\paragraph{Encoder. Descomposición y autocorrelación} 
+Para comprender el funcionamiento de los dos mecanismos, estudiaremos primero su funcionamiento desde el punto de vista del encoder. Este recibe la secuencia de entrada \(X^{en} \in \mathbb{R}^{L_x \times d_{\text{model}}}\) y procesa la señal mediante capas que combinan, en cada paso, una etapa de descomposición y otra de agregación basada en autocorrelación. \\
+
+En primer lugar, se produce la descomposición progresiva, que está constituida por un bloque interno realiza suavizado local a través de mecanismos como la media móvil para extraer la componente de tendencia y obtener el residuo estacional:
+\[
+X_t = \operatorname{MA}_w(X), \qquad X_s = X - X_t,
+\]
+donde \(\operatorname{MA}_w\) es una media móvil de ventana \(w\). Al aplicar este procedimiento iterativamente, las oscilaciones lentas se capturan en \(X_t\) y las variaciones rápidas permanecen en \(X_s\), reduciendo ruido y separando dinámicas.\\
+
+Tras la descomposición progresiva en tendencia y estacionalidad, Autoformer aplica el módulo de autocorrelación (figura \ref{autocorrelacion}) sobre la componente estacional, con el objetivo de identificar retardos (\textit{lags}) que representen dependencias temporales significativas.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.25]{img/autocorrelacion.png}
+	\caption{Autoformer: cálculo de la autocorrelación empleando FFT~\cite{wu2022autoformerdecompositiontransformersautocorrelation}}
+	\label{autocorrelacion}
+\end{figure}
+
+Sea $\mathbf{X} = \{x_t\}_{t=1}^L$ la secuencia de entrada, la autocorrelación se calcula como:
+\begin{equation}
+	R_{xx}(\tau) \;=\; \sum_{t} x_t \, x_{t+\tau},
+\end{equation}
+lo que en la práctica se implementa de forma eficiente mediante Transformada Rápida de Fourier (FFT) con complejidad $O(L \log L)$.
+
+A partir de $R_{xx}(\tau)$ se selecciona el conjunto $\mathcal{T}$ de retardos con mayor magnitud, y se construye la nueva representación agregada:
+\begin{equation}
+	\tilde{x}_t \;=\; \frac{1}{|\mathcal{T}|} \sum_{\tau \in \mathcal{T}} w_\tau \, x_{t-\tau},
+\end{equation}
+donde $w_\tau$ es un peso proporcional a la magnitud de correlación.\\
+
+A diferencia del \textit{self-attention} tradicional, que opera sobre puntos individuales, este mecanismo agrega información a nivel de subserie, reduciendo la sensibilidad al ruido y mejorando la captura de patrones periódicos de largo plazo.
+
+\paragraph{Decoder. Alineamiento mediante Cross-Correlation} 
+
+Una vez definido el encoder, podemos pasar a estudiar la estructura del decoder. En este módulo, se procede a realizar la inferencia de la secuencia objetivo, la cual se construye a partir de un \textit{contexto} formado por dos componentes iniciales: la tendencia inicial (\textit{trend init}) y la estacionalidad inicial (\textit{seasonal init}), otorgando al modelo así un token de contexto de forma similar a Informer. Pero a diferencia de este, no se está insertando información de entrada tal cual, sino que se está aprovechando información ya aprendida por el encoder; la tendencia inicial se obtiene extrapolando la componente de tendencia calculada en el último segmento observado por el encoder, proporcionando una base suave sobre la que se construirá la predicción. Y la estacionalidad inicial, se genera tomando el último patrón estacional estimado por el encoder. Estas dos señales conforman el punto de partida sobre el que se añadirá la información procedente de la autocorrelación cruzada.\\
+
+El contexto completo, compuesto por estas inicializaciones y el bloque correspondiente al horizonte de predicción vacío, se proyecta al espacio de trabajo mediante las mismas proyecciones lineales y codificaciones posicionales que en el encoder, garantizando una representación homogénea.\\
+
+Posteriormente, la representación de entrada se somete nuevamente al bloque de descomposición, separando sus componentes de tendencia y estacionalidad en cada capa. La tendencia se modela mediante extrapolación suave, mientras que la estacionalidad se reconstruye a partir de las periodicidades detectadas en la secuencia histórica procesada por el encoder. Para este proceso,  se sustituye la atención cruzada habitual por un mecanismo de cross-autocorrelation, que mide la correlación cruzada entre la estacionalidad generada en el \textit{decoder}, $s^{de}$, y la estacionalidad producida por el \textit{encoder}, $s^{en}$:
+\begin{equation}
+	R_{cross}(\tau) \;=\; \sum_{t} s^{de}_t \; s^{en}_{t+\tau}.
+\end{equation}
+
+De manera análoga al encoder, se emplea FFT para calcular las correlaciones con complejidad $O(L \log L)$ y se identifican los retardos $\tau$ con mayor magnitud. Con este conjunto de retardos relevantes $\mathcal{T}$, la reconstrucción de la estacionalidad en el \textit{decoder} se realiza agregando las posiciones correspondientes del \textit{encoder}:
+\begin{equation}
+	\tilde{s}^{de}_t \;=\; \frac{1}{|\mathcal{T}|} \sum_{\tau \in \mathcal{T}} w_\tau \; s^{en}_{t-\tau},
+\end{equation}
+donde $w_\tau$ pondera cada retardo según su magnitud de correlación.\\
+
+Gracias a este procedimiento, podemos alinear de forma precisa las posiciones objetivo con los patrones recurrentes identificados en los datos históricos, y empleando dicha información para realizar forecasting pero sin incurrir en el elevado coste computacional del \textit{cross-attention} convencional.
+
+\paragraph{Análisis crítico y conclusiones}
+
+Las mejoras propuestas por Autoformer suponen una gran mejora sobre los métodos existentes hasta ese momento, ya que permitió mejorar considerablemente los resultados ofrecidos por Informer y el resto de Transformers más referenciados del momento~\cite{wu2022autoformerdecompositiontransformersautocorrelation}.\\
+
+El mecanismo de descomposición, el cual puede parecer un mecanismo simple e intuitivo, permite al modelo centrarse en encontrar patrones ocultos más complejos dentro de la serie, y facilita el proceso de detección de patrones estacionales en una complejidad computacional equivalente a \(O(L \log L)\).\\
+
+En cuanto a la autocorrelación, esta se trata de una de las principales ventajas. Si bien se aleja como tal de lo podría ser considerado un Transformer canónico, en el que destacó su mecanismo de atención punto a punto, emplear autocorrelación a modo de mecanismo de ordenación ha ofrecido buenos resultados experimentales en los conjuntos probados. La mejora es evidente, principalmente, frente a cualquier método de atención basado en muestreo, ya que de esta forma no estamos sometidos a la probabilidad a la hora de realizar el muestreo (ver figura \ref{muestreo}). Hemos eliminado el riesgo de suprimir puntos de gran interés dentro de la serie temporal, ya que la autocorrelación nos permite encontrar patrones de manera bastante intuitiva, recurriendo a conceptos tradicionalmente empleados en este ámbito en los modelos AR. 
+	
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.25]{img/muestreo.png}
+	\caption{Autoformer: comparativa de autocorrelacion vs variantes de atención ~\cite{wu2022autoformerdecompositiontransformersautocorrelation}}
+	\label{muestreo}
+\end{figure}
+
+Además, de manera implícita, estamos agregando al modelo información espacial local del conjunto de datos, ya que la autocorrelación es capaz de encontrar información como patrones estaciones y anomalías de manera más directa que los mecanismos probabilísticos de atención vistos hasta ahora.\\
+
+Sin embargo, a modo de crítica, podemos insistir en la falta de desarrollo del positional encoding a la hora de construir el embedding. Si bien es cierto que el uso de autocorrelación mejora sensiblemente la incorporación de información local al modelo, un mejor encoding podría favorecer aún más su funcionamiento, dejando de lado el rígido encoding sinusoidal y empleando algún tipo de codificación más adaptada a los datos. Y, por último, aunque su arquitectura se asemeja bastante a un Transformer, de forma purista y matemática se aleja de lo que originalmente se definió en \textit{Attention is All You Need}~\cite{vaswani2023attentionneed} al no usarse un mecanismo de atención. Pero su arquitectura es lo suficientemente similar, teniendo a la autocorrelación como un sustituto sólido, por lo que es indiscutible que ofrece un buen rendimiento tomando una arquitectura similar.
+
+\subsubsection{FEDformer (2022)}
