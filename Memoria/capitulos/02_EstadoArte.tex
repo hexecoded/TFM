@@ -652,7 +652,7 @@ A lo largo de este trabajo, exploraremos esta línea de mejora como eje central 
 
 En el estado del arte, podemos encontrar multitud de modelos que proponen adaptaciones y soluciones alternativas al uso de Transformers para series temporales. Algunas, son soluciones propias de lenguaje natural adaptadas a su uso en series temporales, mientras que en otros casos tratan de basarse en conceptos básicos anteriormente explotados en series, como la descomposición o el uso de la autocorrelación, pero empleando Transformers como vía de aprendizaje.\\
 
-Concretamente, comenzaremos analizando variantes del modelo Transformer original que tuvieron un gran impacto en los modelos adaptados, como TransformerXL \cite{dai2019transformerxlattentivelanguagemodels}, Reformer \cite{kitaev2020reformerefficienttransformer} y LogTrans~\cite{NEURIPS2019_6775a063}, para posteriormente analizar el funcionamiento de Informer~\cite{zhou2021informerefficienttransformerlong}, Autoformer, FEDFormer, y modelos más recientes como PatchTST y TimesNet.
+Concretamente, comenzaremos analizando variantes del modelo Transformer original que tuvieron un gran impacto en los modelos adaptados, como TransformerXL \cite{dai2019transformerxlattentivelanguagemodels}, Reformer \cite{kitaev2020reformerefficienttransformer} y LogTrans~\cite{NEURIPS2019_6775a063}, para posteriormente analizar el funcionamiento de Informer~\cite{zhou2021informerefficienttransformerlong}, Autoformer~\cite{wu2022autoformerdecompositiontransformersautocorrelation}, FEDFormer, y modelos más recientes como PatchTST y TimesNet.
 
 \subsubsection{Variantes de Transformer y mejoras previas}
 
@@ -809,7 +809,7 @@ A través de los mecanismos de enmascaramiento, ya presentes en el Transformer o
 
 Tras el paso por las capas de atención y normalización, una capa totalmente conectada proyecta directamente toda la secuencia objetivo de salida en un único cálculo, eliminando así la necesidad de decodificación iterativa. De esta forma, conseguimos, por un lado, reducir el tiempo de inferencia, y por otro, mitigar la acumulación de errores típica de modelos autoregresivos, mejorando la estabilidad y la precisión en predicciones de horizontes largos.
 
-\paragraph{Conclusiones}
+\paragraph{Análisis crítico y conclusiones}
 Tras analizar el funcionamiento de este modelo, podemos apreciar que los avances realizados en su publicación fueron clave para realizar una adaptación de los Transformers a series temporales. Gracias al mecanismo de distillation, podemos simplificar progresivamente la arquitectura y encontrar patrones en diferentes grados de escala, y el mecanismo de predicción e inferencia tiene mucho más sentido que el mecanismo autoregresivo original, ya que así conseguimos resolver el problema del error acumulado que ya encontramos cuando aplicamos modelos clásicos como ARIMA.\\
 
 Sin embargo, siendo críticos, podemos encontrar algunas decisiones controvertidas. En primer lugar, Informer no altera el proceso de codificación posicional de los Transformer de manera significativa, ya que por defecto, opera con la tradicional codificación sinusoidal, la cual es bastante rígida. Sólo depende de la longitud de la secuencia, pero no se adapta a su comportamiento o entorno, por lo que no estamos añadiendo información útil a nivel local de la serie, dificultando la detección de patrones estacionales o elementos de interés como  anomalías.\\
@@ -819,3 +819,70 @@ Por otro lado, la selección de instancias mediante LogSparse para simplificar l
 La selección aleatoria mediante una distribución logarítmica, si bien es útil e interesante desde el punto de vista de la complejidad computacional, a nivel semántico puede alejarse bastante del problema que se está estudiando. El muestreo aleatorio puede distanciar al modelo de la estructura real del problema, ignorando relaciones locales o patrones que podrían ser relevantes para nuestra tarea.\\
 
 Algo similar ocurre con los mecanismos de reducción temporal basados en \textit{Max Pooling}, en la etapa de \textit{distilling}. Reducir a la mitad la longitud de la secuencia en cada capa implica que, a la pérdida de información ya sufrida en el muestreo, se añade el riesgo de eliminar instancias que habían sido consideradas relevantes en pasos anteriores, y dar lugar a que ciertas posiciones del modelo mantengan valores por defecto o información incompleta y se desperdicie aún más información útil.
+
+\subsubsection{Autoformer (2021)}
+
+Tras la formulación del Transformer original, siguen surgiendo modelos y adaptaciones de Transformer para aplicar con series temporales. Uno de los siguientes es Autoformer~\cite{wu2022autoformerdecompositiontransformersautocorrelation}, el cual realiza un cambio de vista total con respecto a Informer. A diferencia de este último, que trataba de eliminar la autocorrelación por el riesgo de errores acumulativos en el decoder, Autoformer basa su funcionamiento esencial precisamente en la autocorrelación, y recuperando uno de los elementos característicos de los primeros algoritmos de procesamiento de series temporales: la descomposición.\\
+
+Continuando con la tarea de predicción LSTF, Autoformer trata de solucionar dos problemas particulares de esta tarea. En primer lugar, la dificultad para identificar dependencias fiables en horizontes extensos, donde los patrones temporales suelen estar entrelazados y la señal relevante tiende a diluirse entre ruido y fluctuaciones locales. Pero, también, persigue poner remedio a las limitaciones de eficiencia y aprovechamiento de la información asociadas a los mecanismos de \textit{self-attention} tradicionales, entre ellas, la anterior característica criticada de Informer, como lo era el muestreo de los tokens y la potencial pérdida de información para simplificar el producto de atención.\\
+
+Para abordar estas barreras, Autoformer introduce dos innovaciones principales:
+\begin{itemize}
+	\item \textbf{Arquitectura de descomposición progresiva}: no trata la descomposición de la serie como un preprocesamiento independiente, sino que la integra como un bloque interno del modelo (ver figura \ref{autformer}). De esta forma, las componentes estacionales y de tendencia se separan de manera iterativa a lo largo de todo el proceso de predicción, permitiendo un refinamiento progresivo.
+	\item \textbf{Mecanismo de autocorrelación} (\textit{Auto-Correlation}). En lugar de usar un mecanismo de atención, se explota la periodicidad presente implícitamente en las series para detectar dependencias y agregar información a nivel de subseries. Este enfoque no solo mejora la utilización de la información, sino que también reduce la complejidad computacional a $O(L \log L)$, favoreciendo la escalabilidad en secuencias extensas.
+\end{itemize}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.2]{img/autoformer.png}
+	\caption{Autoformer: arquitectura encoder-decoder del modelo}
+	\label{autformer}
+\end{figure}
+
+A continuación, analizaremos brevemente ambas puntos diferenciales.
+
+\paragraph{Encoder. Descomposición y autocorrelación} 
+Para comprender el funcionamiento de los dos mecanismos, estudiaremos primero su funcionamiento desde el punto de vista del encoder. Este recibe la secuencia de entrada \(X^{en} \in \mathbb{R}^{L_x \times d_{\text{model}}}\) y procesa la señal mediante capas que combinan, en cada paso, una etapa de descomposición y otra de agregación basada en autocorrelación. \\
+
+En primer lugar, se produce la descomposición progresiva, que está constituida por un bloque interno realiza suavizado local a través de mecanismos como la media móvil para extraer la componente de tendencia y obtener el residuo estacional:
+\[
+X_t = \operatorname{MA}_w(X), \qquad X_s = X - X_t,
+\]
+donde \(\operatorname{MA}_w\) es una media móvil de ventana \(w\). Al aplicar este procedimiento iterativamente, las oscilaciones lentas se capturan en \(X_t\) y las variaciones rápidas permanecen en \(X_s\), reduciendo ruido y separando dinámicas.\\
+
+Tras la descomposición progresiva en tendencia y estacionalidad, Autoformer aplica el módulo de autocorrelación sobre la componente estacional, con el objetivo de identificar retardos (\textit{lags}) que representen dependencias temporales significativas.
+
+Sea $\mathbf{X} = \{x_t\}_{t=1}^L$ la secuencia de entrada, la autocorrelación se calcula como:
+\begin{equation}
+	R_{xx}(\tau) \;=\; \sum_{t} x_t \, x_{t+\tau},
+\end{equation}
+lo que en la práctica se implementa de forma eficiente mediante Transformada Rápida de Fourier (FFT) con complejidad $O(L \log L)$.
+
+A partir de $R_{xx}(\tau)$ se selecciona el conjunto $\mathcal{T}$ de retardos con mayor magnitud, y se construye la nueva representación agregada:
+\begin{equation}
+	\tilde{x}_t \;=\; \frac{1}{|\mathcal{T}|} \sum_{\tau \in \mathcal{T}} w_\tau \, x_{t-\tau},
+\end{equation}
+donde $w_\tau$ es un peso proporcional a la magnitud de correlación.\\
+
+A diferencia del \textit{self-attention} tradicional, que opera sobre puntos individuales, este mecanismo agrega información a nivel de subserie, reduciendo la sensibilidad al ruido y mejorando la captura de patrones periódicos de largo plazo.
+
+\paragraph{Decoder. Alineamiento mediante Cross-Correlation} 
+
+Una vez definido el encoder, podemos pasar a estudiar la estructura del decoder. En este módulo, se procede a realizar la inferencia de la secuencia objetivo, la cual se construye a partir de un \textit{contexto} formado por dos componentes iniciales: la tendencia inicial (\textit{trend init}) y la estacionalidad inicial (\textit{seasonal init}), otorgando al modelo así un token de contexto de forma similar a Informer. Pero a diferencia de este, no se está insertando información de entrada tal cual, sino que se está aprovechando información ya aprendida por el encoder; la tendencia inicial se obtiene extrapolando la componente de tendencia calculada en el último segmento observado por el encoder, proporcionando una base suave sobre la que se construirá la predicción. Y la estacionalidad inicial, se genera tomando el último patrón estacional estimado por el encoder. Estas dos señales conforman el punto de partida sobre el que se añadirá la información procedente de la autocorrelación cruzada.\\
+
+El contexto completo, compuesto por estas inicializaciones y el bloque correspondiente al horizonte de predicción vacío, se proyecta al espacio de trabajo mediante las mismas proyecciones lineales y codificaciones posicionales que en el encoder, garantizando una representación homogénea.\\
+
+Posteriormente, la representación de entrada se somete nuevamente al bloque de descomposición, separando sus componentes de tendencia y estacionalidad en cada capa. La tendencia se modela mediante extrapolación suave, mientras que la estacionalidad se reconstruye a partir de las periodicidades detectadas en la secuencia histórica procesada por el encoder. Para este proceso,  se sustituye la atención cruzada habitual por un mecanismo de \textbf{cross-autocorrelation}, que mide la correlación cruzada entre la estacionalidad generada en el \textit{decoder}, $s^{de}$, y la estacionalidad producida por el \textit{encoder}, $s^{en}$:
+\begin{equation}
+	R_{cross}(\tau) \;=\; \sum_{t} s^{de}_t \; s^{en}_{t+\tau}.
+\end{equation}
+
+De manera análoga al encoder, se emplea FFT para calcular las correlaciones con complejidad $O(L \log L)$ y se identifican los retardos $\tau$ con mayor magnitud. Con este conjunto de retardos relevantes $\mathcal{T}$, la reconstrucción de la estacionalidad en el \textit{decoder} se realiza agregando las posiciones correspondientes del \textit{encoder}:
+\begin{equation}
+	\tilde{s}^{de}_t \;=\; \frac{1}{|\mathcal{T}|} \sum_{\tau \in \mathcal{T}} w_\tau \; s^{en}_{t-\tau},
+\end{equation}
+donde $w_\tau$ pondera cada retardo según su magnitud de correlación.\\
+
+Gracias a este procedimiento, podemos alinear de forma precisa las posiciones objetivo con los patrones recurrentes identificados en los datos históricos, y empleando dicha información para realizar forecasting pero sin incurrir en el elevado coste computacional del \textit{cross-attention} convencional.
+
+\paragraph{Análisis crítico y conclusiones}
