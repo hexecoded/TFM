@@ -703,7 +703,7 @@ Ambas mejoras nos permiten realizar un mejor aprovechamiento de la memoria de vi
 
 \subsubsection{Informer (2020)}
 
-El modelo \textbf{Informer} es una de las primeras propuestas que adapta de forma específica la arquitectura Transformer al dominio de las series temporales, tratando de modificar su funcionamiento para adaptarse a las limitaciones detectadas en el contexto de series temporales. Su diseño se orienta al problema de \textit{Long Sequence Time-Series Forecasting} (LSTF), para predecir horizontes temporales largos a partir de entradas igualmente extensas, lo que plantea dificultades de escalabilidad y eficiencia tanto en entrenamiento como en inferencia.\\
+El modelo Informer~\cite{zhou2021informerefficienttransformerlong} es una de las primeras propuestas que adapta de forma específica la arquitectura Transformer al dominio de las series temporales, tratando de modificar su funcionamiento para adaptarse a las limitaciones detectadas en el contexto de series temporales. Su diseño se orienta al problema de \textit{Long Sequence Time-Series Forecasting} (LSTF), para predecir horizontes temporales largos a partir de entradas igualmente extensas, lo que plantea dificultades de escalabilidad y eficiencia tanto en entrenamiento como en inferencia.\\
 
 En el uso directo de Transformers canónicos sobre series temporales, surgen tres problemas fundamentales, algunos de ellos ya estudiados en el apartado anterior:
 
@@ -728,7 +728,7 @@ A continuación, haremos énfasis en cada una de estas 3 propuestas, y analizare
 \begin{figure}
 	\centering
 	\includegraphics[scale=0.25]{img/informer.png}
-	\caption{Informer: arquitectura completa del modelo}
+	\caption{Informer: arquitectura completa del modelo~\cite{zhou2021informerefficienttransformerlong}}
 	\label{informer}
 \end{figure}
 
@@ -784,7 +784,7 @@ donde \([X^t_j]_{AB}\) denota la salida del bloque de atención multi-cabeza \te
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[scale=0.2]{img/distilling.png}
-	\caption{Informer: procesamiento seguido durante el distilling}
+	\caption{Informer: procesamiento seguido durante el distilling~\cite{zhou2021informerefficienttransformerlong}}
 	\label{distilling}
 \end{figure}
 Este proceso cumple dos funciones clave; por un lado, trata de filtrar las relaciones importantes. Al reducir la longitud temporal, se atenúan las interacciones menos relevantes, conservando únicamente las representaciones que concentran la mayor parte de la atención. Como se aplica un MaxPooling de 2,  la reducción de la secuencia a la mitad en cada paso disminuye el coste espacial hasta \(O((2 - \varepsilon) L \log L)\), reduciendo notablemente la complejjidad del encoder. \\
@@ -835,7 +835,7 @@ Para abordar estas barreras, Autoformer introduce dos innovaciones principales:
 \begin{figure}[!ht]
 	\centering
 	\includegraphics[scale=0.2]{img/autoformer.png}
-	\caption{Autoformer: arquitectura encoder-decoder del modelo}
+	\caption{Autoformer: arquitectura encoder-decoder del modelo~\cite{wu2022autoformerdecompositiontransformersautocorrelation}}
 	\label{autformer}
 \end{figure}
 
@@ -850,7 +850,14 @@ X_t = \operatorname{MA}_w(X), \qquad X_s = X - X_t,
 \]
 donde \(\operatorname{MA}_w\) es una media móvil de ventana \(w\). Al aplicar este procedimiento iterativamente, las oscilaciones lentas se capturan en \(X_t\) y las variaciones rápidas permanecen en \(X_s\), reduciendo ruido y separando dinámicas.\\
 
-Tras la descomposición progresiva en tendencia y estacionalidad, Autoformer aplica el módulo de autocorrelación sobre la componente estacional, con el objetivo de identificar retardos (\textit{lags}) que representen dependencias temporales significativas.
+Tras la descomposición progresiva en tendencia y estacionalidad, Autoformer aplica el módulo de autocorrelación (figura \ref{autocorrelacion}) sobre la componente estacional, con el objetivo de identificar retardos (\textit{lags}) que representen dependencias temporales significativas.
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.25]{img/autocorrelacion.png}
+	\caption{Autoformer: cálculo de la autocorrelación empleando FFT~\cite{wu2022autoformerdecompositiontransformersautocorrelation}}
+	\label{autocorrelacion}
+\end{figure}
 
 Sea $\mathbf{X} = \{x_t\}_{t=1}^L$ la secuencia de entrada, la autocorrelación se calcula como:
 \begin{equation}
@@ -872,7 +879,7 @@ Una vez definido el encoder, podemos pasar a estudiar la estructura del decoder.
 
 El contexto completo, compuesto por estas inicializaciones y el bloque correspondiente al horizonte de predicción vacío, se proyecta al espacio de trabajo mediante las mismas proyecciones lineales y codificaciones posicionales que en el encoder, garantizando una representación homogénea.\\
 
-Posteriormente, la representación de entrada se somete nuevamente al bloque de descomposición, separando sus componentes de tendencia y estacionalidad en cada capa. La tendencia se modela mediante extrapolación suave, mientras que la estacionalidad se reconstruye a partir de las periodicidades detectadas en la secuencia histórica procesada por el encoder. Para este proceso,  se sustituye la atención cruzada habitual por un mecanismo de \textbf{cross-autocorrelation}, que mide la correlación cruzada entre la estacionalidad generada en el \textit{decoder}, $s^{de}$, y la estacionalidad producida por el \textit{encoder}, $s^{en}$:
+Posteriormente, la representación de entrada se somete nuevamente al bloque de descomposición, separando sus componentes de tendencia y estacionalidad en cada capa. La tendencia se modela mediante extrapolación suave, mientras que la estacionalidad se reconstruye a partir de las periodicidades detectadas en la secuencia histórica procesada por el encoder. Para este proceso,  se sustituye la atención cruzada habitual por un mecanismo de cross-autocorrelation, que mide la correlación cruzada entre la estacionalidad generada en el \textit{decoder}, $s^{de}$, y la estacionalidad producida por el \textit{encoder}, $s^{en}$:
 \begin{equation}
 	R_{cross}(\tau) \;=\; \sum_{t} s^{de}_t \; s^{en}_{t+\tau}.
 \end{equation}
@@ -886,3 +893,22 @@ donde $w_\tau$ pondera cada retardo según su magnitud de correlación.\\
 Gracias a este procedimiento, podemos alinear de forma precisa las posiciones objetivo con los patrones recurrentes identificados en los datos históricos, y empleando dicha información para realizar forecasting pero sin incurrir en el elevado coste computacional del \textit{cross-attention} convencional.
 
 \paragraph{Análisis crítico y conclusiones}
+
+Las mejoras propuestas por Autoformer suponen una gran mejora sobre los métodos existentes hasta ese momento, ya que permitió mejorar considerablemente los resultados ofrecidos por Informer y el resto de Transformers más referenciados del momento~\cite{wu2022autoformerdecompositiontransformersautocorrelation}.\\
+
+El mecanismo de descomposición, el cual puede parecer un mecanismo simple e intuitivo, permite al modelo centrarse en encontrar patrones ocultos más complejos dentro de la serie, y facilita el proceso de detección de patrones estacionales en una complejidad computacional equivalente a \(O(L \log L)\).\\
+
+En cuanto a la autocorrelación, esta se trata de una de las principales ventajas. Si bien se aleja como tal de lo podría ser considerado un Transformer canónico, en el que destacó su mecanismo de atención punto a punto, emplear autocorrelación a modo de mecanismo de ordenación ha ofrecido buenos resultados experimentales en los conjuntos probados. La mejora es evidente, principalmente, frente a cualquier método de atención basado en muestreo, ya que de esta forma no estamos sometidos a la probabilidad a la hora de realizar el muestreo (ver figura \ref{muestreo}). Hemos eliminado el riesgo de suprimir puntos de gran interés dentro de la serie temporal, ya que la autocorrelación nos permite encontrar patrones de manera bastante intuitiva, recurriendo a conceptos tradicionalmente empleados en este ámbito en los modelos AR. 
+	
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.25]{img/muestreo.png}
+	\caption{Autoformer: comparativa de autocorrelacion vs variantes de atención ~\cite{wu2022autoformerdecompositiontransformersautocorrelation}}
+	\label{muestreo}
+\end{figure}
+
+Además, de manera implícita, estamos agregando al modelo información espacial local del conjunto de datos, ya que la autocorrelación es capaz de encontrar información como patrones estaciones y anomalías de manera más directa que los mecanismos probabilísticos de atención vistos hasta ahora.\\
+
+Sin embargo, a modo de crítica, podemos insistir en la falta de desarrollo del positional encoding a la hora de construir el embedding. Si bien es cierto que el uso de autocorrelación mejora sensiblemente la incorporación de información local al modelo, un mejor encoding podría favorecer aún más su funcionamiento, dejando de lado el rígido encoding sinusoidal y empleando algún tipo de codificación más adaptada a los datos. Y, por último, aunque su arquitectura se asemeja bastante a un Transformer, de forma purista y matemática se aleja de lo que originalmente se definió en \textit{Attention is All You Need}~\cite{vaswani2023attentionneed} al no usarse un mecanismo de atención. Pero su arquitectura es lo suficientemente similar, teniendo a la autocorrelación como un sustituto sólido, por lo que es indiscutible que ofrece un buen rendimiento tomando una arquitectura similar.
+
+\subsubsection{FEDformer (2022)}
