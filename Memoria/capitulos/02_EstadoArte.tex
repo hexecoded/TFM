@@ -652,15 +652,15 @@ A lo largo de este trabajo, exploraremos esta línea de mejora como eje central 
 
 En el estado del arte, podemos encontrar multitud de modelos que proponen adaptaciones y soluciones alternativas al uso de Transformers para series temporales. Algunas, son soluciones propias de lenguaje natural adaptadas a su uso en series temporales, mientras que en otros casos tratan de basarse en conceptos básicos anteriormente explotados en series, como la descomposición o el uso de la autocorrelación, pero empleando Transformers como vía de aprendizaje.\\
 
-Concretamente, comenzaremos analizando variantes del modelo Transformer original que tuvieron un gran impacto en los modelos adaptados, como TransformerXL \cite{dai2019transformerxlattentivelanguagemodels}, Reformer \cite{kitaev2020reformerefficienttransformer} y LogTrans\cite{NEURIPS2019_6775a063}, para posteriormente analizar el funcionamiento de Informer, Reformer, Autoformer, FEDFormer, y modelos más recientes como PatchTST y TimesNet.
+Concretamente, comenzaremos analizando variantes del modelo Transformer original que tuvieron un gran impacto en los modelos adaptados, como TransformerXL \cite{dai2019transformerxlattentivelanguagemodels}, Reformer \cite{kitaev2020reformerefficienttransformer} y LogTrans~\cite{NEURIPS2019_6775a063}, para posteriormente analizar el funcionamiento de Informer~\cite{zhou2021informerefficienttransformerlong}, Autoformer, FEDFormer, y modelos más recientes como PatchTST y TimesNet.
 
-\subsubsection{Modelos y mejoras previas}
+\subsubsection{Variantes de Transformer y mejoras previas}
 
 El modelo original de Transformer propuesto en \textit{Attention is All You Need} \cite{vaswani2023attentionneed} ha sido objetivo de muchas investigaciones que han buscado optimizar tanto la capacidad de modelado como la eficiencia computacional. Si bien su principal campo de aplicación siguió siendo el lenguaje natural, dichas innovaciones han permitido posteriores mejoras a las aplicaciones de Transformers en series temporales.\\
 
 De entre las características deseables, se han buscado continuamente mejoras de rendimiento para dominios de larga secuencia, relaciones de dependencia a múltiples escalas y mejoras a nivel computacional, tratando de reducir la complejidad de ejecución pero sacrificando el mínimo rendimiento posible.
 
-\paragraph{\textbf{Transformer-XL (2019)}}
+\paragraph{Transformer-XL (2019)}
 
 
 Una de las primeras propuestas realizadas es el Transformer-XL \cite{dai2019transformerxlattentivelanguagemodels}. Esta profundiza sobre el concepto de positional encoding relativo, reemplazando el esquema absoluto original por uno que codifica distancias relativas entre tokens. Esto no solo permite capturar mejor dependencias a largo plazo, sino que también hace posible extender el contexto más allá de la ventana de entrenamiento, reutilizando estados ocultos de segmentos previos y patrones locales.\\
@@ -676,7 +676,7 @@ Empleando el muestreo, la complejidad se reduce de \(O(n^2)\) a aproximadamente 
 
 A pesar de esta limitación, \textit{log-sparse attention} demostró que es posible reducir el coste de la atención a cambio de un pequeño incremento del error en series, siendo más notable en series de larga extensión. De hecho, esta idea abrió la puerta a modelos como \textit{Informer}, uno de los modelos de \textit{forecasting} basados en Transformers más influyentes en el estado del arte,  en el que se adopta el enfoque probabilístico para seleccionar las claves más relevantes. Más adelante, examinaremos su funcionamiento en detalle, centrándonos en su aplicación específica a la predicción de series temporales.
 
-\paragraph{\textbf{Reformer (2020)}}
+\paragraph{Reformer (2020)}
 
 Reformer \cite{kitaev2020reformerefficienttransformer} aborda otro de los cuellos de botella principales de los Transformer: el coste $O(n^2)$ del cálculo de atenciones. En secuencias muy largas, el orden cuadrático puede aumentar considerablemente los tiempos de ejecución, hasta el punto de que en datasets de gran tamaño, puede suponer un obstáculo de cara a poder ser ejecutado. Dicho orden de complejidad proviene de realizar el producto entre los diferentes tokens de entrada, pues se debe realizar el producto de cada elemento por el resto, y esto depende directamente del tamaño de los datos.\\
 
@@ -700,3 +700,69 @@ Para tratar de reducir dicha complejidad, Reformer introduce varios conceptos fu
 \end{itemize}
 
 Ambas mejoras nos permiten realizar un mejor aprovechamiento de la memoria de video, mejorando la reutilización de cálculos y permitiendo así usar conjuntos de datos de mayor tamaño, aunque debemos de tener en cuenta que agrupar por similaridad introduce errores numéricos en el cálculo de la atención.
+
+\subsubsection{Informer (2020)}
+
+El modelo \textbf{Informer} es una de las primeras propuestas que adapta de forma específica la arquitectura Transformer al dominio de las series temporales, tratando de modificar su funcionamiento para adaptarse a las limitaciones detectadas en el contexto de series temporales. Su diseño se orienta al problema de \textit{Long Sequence Time-Series Forecasting} (LSTF), para predecir horizontes temporales largos a partir de entradas igualmente extensas, lo que plantea dificultades de escalabilidad y eficiencia tanto en entrenamiento como en inferencia.\\
+
+En el uso directo de Transformers canónicos sobre series temporales, surgen tres problemas fundamentales, algunos de ellos ya estudiados en el apartado anterior:
+
+\begin{itemize}
+	\item \textbf{Alta complejidad computacional y de memoria}. La implementación estándar del mecanismo de atención presenta un coste de $O(L^2)$ en secuencias de longitud $L$, debido a la necesidad de calcular interacciones entre todos los pares de posiciones. Esto limita su uso en horizontes de predicción largos o datos de alta frecuencia, ya que limita su escalabilidad.
+	\item \textbf{Cuellos de botella con la memoria}. En arquitecturas encoder–decoder profundas, donde tenemos varias capas, podemos tener problemas con la complejidad espacial, ya que disponiendo de $J$ capas, la complejidad total será de $O(J \cdot L^2)$, limitando así la posibilidad de procesar largas series.
+	\item \textbf{Baja velocidad de inferencia}. En la inferencia original propuesta por Transformer, el decoding se realiza paso a paso, aumentando los tiempos de inferencia hasta el punto de ser tan lenta como los modelos basados en RNN. Por tanto, debemos de encontrar un nuevo mecanismo capaz de simplificar y adaptar este proceso.
+\end{itemize}
+
+Para mitigar estas limitaciones, Informer introduce tres innovaciones clave:
+
+\begin{enumerate}
+	\item \textbf{ProbSparse Self-Attention}. Se trata de un mecanismo de atención dispersa basado en la hipótesis de que, en muchas tareas de series temporales, solo unas pocas \textit{queries} concentran la mayor parte de la relevancia en la atención. Al muestrear y priorizar dichas \textit{queries}, se reduce el coste computacional de $O(L^2)$ a $O(L\log L)$ sin degradar la capacidad de modelar dependencias a largo plazo. Para ello, se emplea el mismo procesamiento visto en LogTrans \cite{NEURIPS2019_6775a063}.
+	\item \textbf{Self-Attention Distilling}. Se trata de una operación jerárquica que filtra las atenciones dominantes y reduce progresivamente la dimensión temporal entre capas. Este proceso actúa como una mecanismo de compresión, donde se preservan los patrones relevantes y disminuyendo el consumo de memoria, permitiendo que modelos más profundos procesen secuencias largas sin sobrecargar la GPU, logrando una complejidad reducida de $O( (2 - \epsilon) L \log L)$.
+	\item \textbf{Generative Decoder}. Para solucionar el problema de la inferencia paso a paso, se propone un decodificador capaz de generar toda la secuencia de salida en un único paso (\textit{one-forward}). Este enfoque no solo acelera la inferencia, sino que también reduce la acumulación de errores entre pasos, mejorando la estabilidad en horizontes de predicción extensos.
+\end{enumerate}
+
+En conjunto, estas mejoras convierten a \textbf{Informer} en un modelo especialmente interesante para escenarios de predicción multivariados y datos de gran volumen, manteniendo la capacidad de capturar tanto dependencias locales como globales reduciendo el impacto en memoria y mejorando la eficiencia.\\
+
+A continuación, haremos énfasis en cada una de estas 3 propuestas, y analizaremos por partes su arquitectura (ver figura \ref{informer}).
+
+\begin{figure}
+	\centering
+	\includegraphics[scale=0.25]{img/informer.png}
+	\caption{Informer: arquitectura completa del modelo}
+	\label{informer}
+\end{figure}
+
+
+\paragraph{Mecanismo de atención}
+
+El mecanismo de \textit{self-attention} tradicional se definía como:
+\begin{equation}
+	A(Q,K,V) = \operatorname{Softmax}\!\left( \frac{QK^\top}{\sqrt{d}} \right) V,
+\end{equation}
+
+Donde la implementación canónica requiere computar todas las similitudes par a par \(QK^\top\), con coste temporal y de memoria \(O(L^2)\).
+
+Informer parte de la observación empírica de que la distribución de probabilidades de atención suele mostrar una \textit{cola larga}: pocas consultas concentran la mayor parte de la energía de atención, mientras que la mayoría producen señales débiles. Para aprovechar esta propiedad, se define una medida de ``dispersión de consulta'' que cuantifica la propensión de una consulta \(q_i\) a generar picos de atención:
+
+\begin{equation}
+	M(q_i,K) \;=\; \max_j \left\{ \frac{q_i k_j^\top}{\sqrt{d}} \right\} \;-\; \frac{1}{L_K} \sum_{j=1}^{L_K} \frac{q_i k_j^\top}{\sqrt{d}},
+\end{equation}
+
+donde \(L_K\) es el número de claves (en encoder–decoder \(L_Q\) y \(L_K\) pueden diferir). Intuitivamente, \(M(q_i,K)\) mide la diferencia entre el máximo score y el score medio: valores grandes indican consultas con picos pronunciados (es decir, consultas ``informativas'').
+
+Esencialmente, este mecanismo consta de dos fases:
+\begin{enumerate}
+	\item \textbf{Selección de consultas relevantes:} se estima \(M(q_i,K)\) mediante muestreo parcial de claves con LogSparse y se conservan solo las \(u = c \cdot \ln L_Q\) consultas con mayor valor.
+	Para ello, para cada consulta \(q_i\), se calcula una estimación de su medida de dispersión
+	\begin{equation}
+		\hat{M}(q_i, K) = \max_{j \in \mathcal{S}_i} \left\{ \frac{q_i k_j^\top}{\sqrt{d}} \right\} - \frac{1}{|\mathcal{S}_i|} \sum_{j \in \mathcal{S}_i} \frac{q_i k_j^\top}{\sqrt{d}},
+	\end{equation}
+	donde \(\mathcal{S}_i \subset \{1, \dots, L_K\}\) es un subconjunto de claves obtenido mediante muestreo \textit{log-sparse}, es decir, seleccionando índices de forma que la densidad de puntos crece logarítmicamente con la distancia temporal.  
+	Este muestreo permite aproximar \(M(q_i, K)\), tratando de mantener con alta probabilidad las claves más informativas. 
+	
+	Finalmente, se ordenan las consultas según \(\hat{M}(q_i, K)\) y se conservan solo las \(u = c \cdot \ln L_Q\) de mayor valor, donde \(c\) establece qué proporción seleccionar. A mayor valor, mayor precisión, pero mayor coste.
+	
+	\item \textbf{Cálculo selectivo de atención:} solo para esas \(u\) consultas se computa la atención completa frente a todas las claves, mientras que las no seleccionadas reciben una aproximación suave o interpolada. Esta podría ser un valor medio, ya calculado anteriormente al realizar la búsqueda de las instancias informativas.
+\end{enumerate}
+
+Con \(u = O(\log L)\), el coste se reduce de \(O(L^2)\) a \(O(L \log L)\) por cada head del modelo, consiguiendo una reducción considerable de la complejidad.

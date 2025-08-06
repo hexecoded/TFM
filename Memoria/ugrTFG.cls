@@ -147,7 +147,6 @@
 \usepackage{array}
 \usepackage[table]{xcolor}
 
-
 % Redefinir \paragraph
 \makeatletter
 \renewcommand\paragraph[1]{%
