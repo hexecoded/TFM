@@ -732,7 +732,6 @@ A continuación, haremos énfasis en cada una de estas 3 propuestas, y analizare
 	\label{informer}
 \end{figure}
 
-
 \paragraph{Mecanismo de atención}
 
 El mecanismo de \textit{self-attention} tradicional se definía como:
@@ -766,3 +765,57 @@ Esencialmente, este mecanismo consta de dos fases:
 \end{enumerate}
 
 Con \(u = O(\log L)\), el coste se reduce de \(O(L^2)\) a \(O(L \log L)\) por cada head del modelo, consiguiendo una reducción considerable de la complejidad.
+
+\paragraph{Distilling}
+
+En el \textit{encoder} de Informer, la secuencia de entrada \(X^{en} \in \mathbb{R}^{L_x \times d_{model}}\) atraviesa múltiples capas de \textit{ProbSparse self-attention}, extrayendo dependencias relevantes entre los elementos temporales.\\
+
+Sin embargo, procesar de forma directa secuencias largas en todas las capas genera un elevado coste computacional y de memoria.  
+Para mitigar este problema, los autores introducen un bloque intermedio de \textit{distilling}, cuyo objetivo es reducir progresivamente la longitud temporal mientras se conservan las representaciones más relevantes.\\
+
+Tras cada capa de atención, se aplica el bloque de \textit{distilling}, compuesto por una convolución 1D, una activación no lineal ELU y un \textit{max pooling} con paso 2:
+
+\begin{equation}
+	X^{t}_{j+1} = \text{MaxPool} \left( \text{ELU} \left( \text{Conv1d}([X^t_j]_{AB}) \right) \right),
+\end{equation}
+
+donde \([X^t_j]_{AB}\) denota la salida del bloque de atención multi-cabeza \textit{ProbSparse} combinada con conexiones residuales y normalización por capas (ver figura \ref{distilling})
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.2]{img/distilling.png}
+	\caption{Informer: procesamiento seguido durante el distilling}
+	\label{distilling}
+\end{figure}
+Este proceso cumple dos funciones clave; por un lado, trata de filtrar las relaciones importantes. Al reducir la longitud temporal, se atenúan las interacciones menos relevantes, conservando únicamente las representaciones que concentran la mayor parte de la atención. Como se aplica un MaxPooling de 2,  la reducción de la secuencia a la mitad en cada paso disminuye el coste espacial hasta \(O((2 - \varepsilon) L \log L)\), reduciendo notablemente la complejjidad del encoder. \\
+
+Para mejorar aún más la capacidad de capturar relaciones en distintas escalas temporales, se utilizan réplicas de \textit{stacks} del encoder con diferentes longitudes de entrada (por ejemplo, en la figura \ref{distilling}, \(L\), \(L/2\) y \(L/4\)), cuyos resultados se concatenan antes de las etapas finales. Este enfoque multi-escala es especialmente útil para detectar patrones que se repiten en diferentes horizontes.
+
+\paragraph{Decodificación. Inferencia en un solo paso}
+
+El decoder de Informer, sin entrar en particularidades concretas de cada capa, cumple con la arquitectura de un \textit{Transformer decoder} vanilla, pues posee en su definición dos capas de atención multi-cabeza: la primera opera de forma enmascarada sobre la secuencia objetivo parcial y la segunda aplica atención cruzada sobre las salidas del encoder.\\
+
+Sin embargo, introduce una modificación crucial en el proceso de inferencia que lo diferencia de los enfoques autoregresivos tradicionales: en lugar de generar la salida paso a paso, acumulando potencialmente errores en cada predicción intermedia, el decoder de Informer adopta un esquema de inferencia en un solo paso, al estilo de los modelos generativos.\\
+
+Para ello, se insertan una serie de elementos que simplifican el proceso. Este comienza concatenando construyendo el formato de entrada del modelo, que consta de una sección de datos de entrada, una ventana de contexto conocida, el cual llamaremos token de contexto, de longitud $L_{\text{token}}$, con un bloque de posiciones objetivo inicialmente vacías $X_0$:
+
+\[
+X^{de} = \text{Concat}(X^{\text{token}}, X_0) \in \mathbb{R}^{(L_{\text{token}} + L_y) \times d_{\text{model}}},
+\]
+
+donde $L_y$ es la longitud de la secuencia que se desea predecir.  Lo que se persigue es que tras el token de contexto, dichos ceros se vean sustituidos por la predicción realizada por  el modelo.
+
+A través de los mecanismos de enmascaramiento, ya presentes en el Transformer original, el modelo solo podrá acceder a información presente en posiciones anteriores o del \textit{contexto inicial}, evitando el acceso a valores futuros.\\
+
+Tras el paso por las capas de atención y normalización, una capa totalmente conectada proyecta directamente toda la secuencia objetivo de salida en un único cálculo, eliminando así la necesidad de decodificación iterativa. De esta forma, conseguimos, por un lado, reducir el tiempo de inferencia, y por otro, mitigar la acumulación de errores típica de modelos autoregresivos, mejorando la estabilidad y la precisión en predicciones de horizontes largos.
+
+\paragraph{Conclusiones}
+Tras analizar el funcionamiento de este modelo, podemos apreciar que los avances realizados en su publicación fueron clave para realizar una adaptación de los Transformers a series temporales. Gracias al mecanismo de distillation, podemos simplificar progresivamente la arquitectura y encontrar patrones en diferentes grados de escala, y el mecanismo de predicción e inferencia tiene mucho más sentido que el mecanismo autoregresivo original, ya que así conseguimos resolver el problema del error acumulado que ya encontramos cuando aplicamos modelos clásicos como ARIMA.\\
+
+Sin embargo, siendo críticos, podemos encontrar algunas decisiones controvertidas. En primer lugar, Informer no altera el proceso de codificación posicional de los Transformer de manera significativa, ya que por defecto, opera con la tradicional codificación sinusoidal, la cual es bastante rígida. Sólo depende de la longitud de la secuencia, pero no se adapta a su comportamiento o entorno, por lo que no estamos añadiendo información útil a nivel local de la serie, dificultando la detección de patrones estacionales o elementos de interés como  anomalías.\\
+
+Por otro lado, la selección de instancias mediante LogSparse para simplificar la complejidad del cálculo de atención puede ser problemática. Aunque la teoría propuesta tiene sentido, ya que se afirma que no todos los puntos tienen la misma importancia, y que la selección probabilística da como resultado un vector ordenado de elementos por importancia \textit{M}, realmente es una asunción demasiado fuerte. Es posible que, en series temporales medidas en cortos períodos, como segundos o minuitos, y duración extensa del fenómeno, como meses o años, los cambios apreciados en gran cantidad de puntos no sean especialmente relevantes, pues quizás la granularidad es demasiado pequeña. Pero en datasets que estudien fenómenos cortos y cambiantes, que ocurren a gran velocidad, como detección de fallos en tiempo real, o estudio de fenómenos como sistema de seguridad de centrales nucleares, (es decir, entornos industriales), puede que estemos eliminando puntos de interés.\\
+
+La selección aleatoria mediante una distribución logarítmica, si bien es útil e interesante desde el punto de vista de la complejidad computacional, a nivel semántico puede alejarse bastante del problema que se está estudiando. El muestreo aleatorio puede distanciar al modelo de la estructura real del problema, ignorando relaciones locales o patrones que podrían ser relevantes para nuestra tarea.\\
+
+Algo similar ocurre con los mecanismos de reducción temporal basados en \textit{Max Pooling}, en la etapa de \textit{distilling}. Reducir a la mitad la longitud de la secuencia en cada capa implica que, a la pérdida de información ya sufrida en el muestreo, se añade el riesgo de eliminar instancias que habían sido consideradas relevantes en pasos anteriores, y dar lugar a que ciertas posiciones del modelo mantengan valores por defecto o información incompleta y se desperdicie aún más información útil.
