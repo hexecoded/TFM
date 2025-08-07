@@ -652,7 +652,7 @@ A lo largo de este trabajo, exploraremos esta línea de mejora como eje central 
 
 En el estado del arte, podemos encontrar multitud de modelos que proponen adaptaciones y soluciones alternativas al uso de Transformers para series temporales. Algunas, son soluciones propias de lenguaje natural adaptadas a su uso en series temporales, mientras que en otros casos tratan de basarse en conceptos básicos anteriormente explotados en series, como la descomposición o el uso de la autocorrelación, pero empleando Transformers como vía de aprendizaje.\\
 
-Concretamente, comenzaremos analizando variantes del modelo Transformer original que tuvieron un gran impacto en los modelos adaptados, como TransformerXL \cite{dai2019transformerxlattentivelanguagemodels}, Reformer \cite{kitaev2020reformerefficienttransformer} y LogTrans~\cite{NEURIPS2019_6775a063}, para posteriormente analizar el funcionamiento de Informer~\cite{zhou2021informerefficienttransformerlong}, Autoformer~\cite{wu2022autoformerdecompositiontransformersautocorrelation}, FEDFormer, y modelos más recientes como PatchTST y TimesNet.
+Concretamente, comenzaremos analizando variantes del modelo Transformer original que tuvieron un gran impacto en los modelos adaptados, como TransformerXL \cite{dai2019transformerxlattentivelanguagemodels}, Reformer \cite{kitaev2020reformerefficienttransformer} y LogTrans~\cite{NEURIPS2019_6775a063}, para posteriormente analizar el funcionamiento de Informer~\cite{zhou2021informerefficienttransformerlong}, Autoformer~\cite{wu2022autoformerdecompositiontransformersautocorrelation}, FEDFormer~\cite{zhou2022fedformerfrequencyenhanceddecomposed}, y modelos más recientes como PatchTST~\cite{nie2023timeseriesworth64} y TimesNet~\cite{wu2023timesnettemporal2dvariationmodeling}.
 
 \subsubsection{Variantes de Transformer y mejoras previas}
 
@@ -814,7 +814,7 @@ Tras analizar el funcionamiento de este modelo, podemos apreciar que los avances
 
 Sin embargo, siendo críticos, podemos encontrar algunas decisiones controvertidas. En primer lugar, Informer no altera el proceso de codificación posicional de los Transformer de manera significativa, ya que por defecto, opera con la tradicional codificación sinusoidal, la cual es bastante rígida. Sólo depende de la longitud de la secuencia, pero no se adapta a su comportamiento o entorno, por lo que no estamos añadiendo información útil a nivel local de la serie, dificultando la detección de patrones estacionales o elementos de interés como  anomalías.\\
 
-Por otro lado, la selección de instancias mediante LogSparse para simplificar la complejidad del cálculo de atención puede ser problemática. Aunque la teoría propuesta tiene sentido, ya que se afirma que no todos los puntos tienen la misma importancia, y que la selección probabilística da como resultado un vector ordenado de elementos por importancia \textit{M}, realmente es una asunción demasiado fuerte. Es posible que, en series temporales medidas en cortos períodos, como segundos o minuitos, y duración extensa del fenómeno, como meses o años, los cambios apreciados en gran cantidad de puntos no sean especialmente relevantes, pues quizás la granularidad es demasiado pequeña. Pero en datasets que estudien fenómenos cortos y cambiantes, que ocurren a gran velocidad, como detección de fallos en tiempo real, o estudio de fenómenos como sistema de seguridad de centrales nucleares, (es decir, entornos industriales), puede que estemos eliminando puntos de interés.\\
+Por otro lado, la selección de instancias mediante LogSparse para simplificar la complejidad del cálculo de atención puede ser problemática. Aunque la teoría propuesta tiene sentido, ya que se afirma que no todos los puntos tienen la misma importancia, y que la selección probabilística da como resultado un vector ordenado de elementos por importancia \textit{M}, realmente es una asunción demasiado fuerte. Es posible que, en series temporales medidas en cortos períodos, como segundos o minutos, y duración extensa del fenómeno, como meses o años, los cambios apreciados en gran cantidad de puntos no sean especialmente relevantes, pues quizás la granularidad es demasiado pequeña. Pero en datasets que estudien fenómenos cortos y cambiantes, que ocurren a gran velocidad, como detección de fallos en tiempo real, o estudio de fenómenos como sistema de seguridad de centrales nucleares, (es decir, entornos industriales), puede que estemos eliminando puntos de interés.\\
 
 La selección aleatoria mediante una distribución logarítmica, si bien es útil e interesante desde el punto de vista de la complejidad computacional, a nivel semántico puede alejarse bastante del problema que se está estudiando. El muestreo aleatorio puede distanciar al modelo de la estructura real del problema, ignorando relaciones locales o patrones que podrían ser relevantes para nuestra tarea.\\
 
@@ -894,9 +894,9 @@ Gracias a este procedimiento, podemos alinear de forma precisa las posiciones ob
 
 \paragraph{Análisis crítico y conclusiones}
 
-Las mejoras propuestas por Autoformer suponen una gran mejora sobre los métodos existentes hasta ese momento, ya que permitió mejorar considerablemente los resultados ofrecidos por Informer y el resto de Transformers más referenciados del momento~\cite{wu2022autoformerdecompositiontransformersautocorrelation}.\\
+Las mejoras propuestas por Autoformer suponen un salto considerable sobre los métodos existentes hasta ese momento, ya que permitió mejorar considerablemente los resultados ofrecidos por Informer y el resto de Transformers más referenciados aquel tiempo~\cite{wu2022autoformerdecompositiontransformersautocorrelation}.\\
 
-El mecanismo de descomposición, el cual puede parecer un mecanismo simple e intuitivo, permite al modelo centrarse en encontrar patrones ocultos más complejos dentro de la serie, y facilita el proceso de detección de patrones estacionales en una complejidad computacional equivalente a \(O(L \log L)\).\\
+El mecanismo de descomposición, el cual puede parecer simple e intuitivo, permite al modelo centrarse en encontrar patrones ocultos más complejos dentro de la serie, y facilita el proceso de detección de patrones estacionales en una complejidad computacional equivalente a \(O(L \log L)\).\\
 
 En cuanto a la autocorrelación, esta se trata de una de las principales ventajas. Si bien se aleja como tal de lo podría ser considerado un Transformer canónico, en el que destacó su mecanismo de atención punto a punto, emplear autocorrelación a modo de mecanismo de ordenación ha ofrecido buenos resultados experimentales en los conjuntos probados. La mejora es evidente, principalmente, frente a cualquier método de atención basado en muestreo, ya que de esta forma no estamos sometidos a la probabilidad a la hora de realizar el muestreo (ver figura \ref{muestreo}). Hemos eliminado el riesgo de suprimir puntos de gran interés dentro de la serie temporal, ya que la autocorrelación nos permite encontrar patrones de manera bastante intuitiva, recurriendo a conceptos tradicionalmente empleados en este ámbito en los modelos AR. 
 	
@@ -912,3 +912,130 @@ Además, de manera implícita, estamos agregando al modelo información espacial
 Sin embargo, a modo de crítica, podemos insistir en la falta de desarrollo del positional encoding a la hora de construir el embedding. Si bien es cierto que el uso de autocorrelación mejora sensiblemente la incorporación de información local al modelo, un mejor encoding podría favorecer aún más su funcionamiento, dejando de lado el rígido encoding sinusoidal y empleando algún tipo de codificación más adaptada a los datos. Y, por último, aunque su arquitectura se asemeja bastante a un Transformer, de forma purista y matemática se aleja de lo que originalmente se definió en \textit{Attention is All You Need}~\cite{vaswani2023attentionneed} al no usarse un mecanismo de atención. Pero su arquitectura es lo suficientemente similar, teniendo a la autocorrelación como un sustituto sólido, por lo que es indiscutible que ofrece un buen rendimiento tomando una arquitectura similar.
 
 \subsubsection{FEDformer (2022)}
+
+Otro de los modelos que más citados que adaptan los Transformer para su uso en series temporales es FEDformer~\cite{zhou2022fedformerfrequencyenhanceddecomposed}, cuyo nombre proviene de \textit{Frequency Enhanced Decomposition Transformer}. Este modelo, al igual que Autoformer, trata de descomponer la serie temporal para ser capaz de estudiar con mayor precisión su comportamiento. Parte de algunos de los principios de este último, pero, en lugar de basarse en la descomposición típica aditiva, emplea las transformadas de Fourier y Wavelet para ir más allá del dominio temporal.\\
+
+Para ello, propone la agregación de resultados de un modelo compuesto por caminos bien diferenciados capaces de procesar la serie siguiendo los dos enfoques propuestos. La utilidad de introducir ambos caminos se ve justificada por la necesidad de modelar la red como un procedimiento secuencia a secuencia, pero añadiendo solo los detalles con la granularidad deseada. Filtrar demasiado la red podría suprimir detalles de alta frecuencia de interés que podrían ser claves, pero realizarlo de manera demasiado detallada podría introducir ruido; así como en el caso contrario, usar solo frecuencias bajas podría crear un modelo demasiado genérico y pobre, que únicamente sirva para modelar la tendencia.\\
+
+ Este refinamiento a nivel estructural puede conseguirse a través de Fourier, ya que permite seleccionar un número de componentes concretas a calcular para limitar el nivel de granularidad de los datos y conseguir así un nivel de precisión equilibrado.\\
+ 
+ Por otro lado, la descomposición Wavelet nos permite realizar un análisis multiescalar de la serie, logrando asi obtener detalles estructurales de la misma a diferente nivel, y permitiendo mejorar la identificación de patrones cíclicos en los datos.\\
+ 
+ \begin{figure}[!ht]
+ 	\centering
+ 	\includegraphics[scale=0.25]{img/fedformer.png}
+ 	\caption{FEDformer: arquitectura del modelo \cite{zhou2022fedformerfrequencyenhanceddecomposed}}
+ 	\label{fedformer}
+ \end{figure}
+ 
+ 
+ A continuación, examinaremos en mayor detalle la arquitectura, la cual incluye la incorporación de 4 nuevos módulos, sustitutos de los módulos de atención y autocorrelación, y que trabajan de manera independiente mediante Fourier y Wavelet para posteriormente combinarse para el resultado final, dando lugar a lo que sus autores consideran un procedimiento de ``hibridación de expertos''~\cite{zhou2022fedformerfrequencyenhanceddecomposed} (ver figura \ref{fedformer}).
+ 
+ 
+\paragraph{Módulo Fourier}
+
+El módulo de Fourier reemplaza parcialmente la atención tradicional, utilizando las transformadas para operar en el dominio de la frecuencia. La idea central es que muchas dependencias temporales, pero especialmente las de largo plazo, se manifiestan como componentes periódicas o cíclicas que resultan más fáciles de identificar y procesar cuando la señal se transforma mediante una {transformada de Fourier.\\
+
+El proceso comienza aplicando la transformada discreta de Fourier (DFT) sobre la componente estacional de la serie, por lo que ya se parte de una red previamente descompuesta, al estilo de lo que vimos en Autoformer. Luego, en lugar de trabajar con todas las frecuencias, se seleccionan solo las más significativas, es decir, que posean una mayor magnitud espectral, y de esta forma, se realiza un fase de filtrado que suprime el ruido y enfoca el modelo en patrones relevantes. Se estima que, fijando un número concreto de componentes, el modelo es capaz de ejecutarse en un orden de complejidad equivalente a $O(n)$, por lo que se trata de un comportamiento más eficiente que si se seleccionan todas ellas, lo cual conllevaría $O(n^2)$.\\
+
+Una vez seleccionadas, estas frecuencias se procesan mediante un módulo de atención espectral, que evalúa dependencias entre fases y magnitudes para identificar relaciones relevantes entre distintos momentos temporales. Finalmente, se aplica la transformada inversa para volver al dominio temporal, obteniendo una versión enriquecida y más estructurada de la serie original.\\
+
+Para explotar esta estructura, el modelo introduce dos módulos que trabajan de manera conjunta sobre la entrada relacionados: el \textit{Frequency Enhanced Attention de Fourier} (FEA-f) y el \textit{Frequency Enhanced Block de Fourier} (FEB-f).
+
+\begin{itemize}
+	\item El módulo \textbf{FEA-f}(figura \ref{feaf}) es el encargado de transformar las representaciones estacionales al dominio espectral utilizando la transformada rápida de Fourier (FFT), seleccionando las \textit{K} frecuencias con mayor magnitud. Sobre este conjunto reducido de componentes se aplica un mecanismo de atención espectral que, en lugar de evaluar similitudes entre posiciones temporales, compara directamente las frecuencias seleccionadas. Esta atención se ejecuta sobre un número pequeño y fijo de entradas, como 64 o 128, por lo trata de acotarse así su complejidad. Tras esta operación, se deshacen los cambios de la FFT para volver al dominio temporal.
+	
+	 \begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.225]{img/feaf.png}
+		\caption{FEDformer: arquitectura del módulo FEA-f \cite{zhou2022fedformerfrequencyenhanceddecomposed}}
+		\label{feaf}
+	\end{figure}
+	
+	\item El bloque \textbf{FEB-f} encapsula el proceso anterior dentro de una arquitectura residual completa, incorporando normalización, proyecciones lineales y conexiones residuales, y se emplea como unidad básica tanto en el encoder como en el decoder. Aunque introduce capas adicionales, su complejidad sigue dominada por el coste de la FFT y su inversa, $O(n \cdot \log{n})$, pero a pesar de ello, sigue siendo más eficiente que la atención clásica.
+	
+	\begin{figure}[!ht]
+		\centering
+		\includegraphics[scale=0.225]{img/febf.png}
+		\caption{FEDformer: arquitectura del modulo FEB-f \cite{zhou2022fedformerfrequencyenhanceddecomposed}}
+		\label{febf}
+	\end{figure}
+\end{itemize}
+
+\paragraph{Módulo Wavelet}
+
+El módulo basado en \textit{wavelets} busca realizar un procedimiento similar en estructura al de Fourier. Mientras que esta última se ocupa de procesar y detectar patrones estacionales a lo largo de toda la secuencia, la transformada discreta wavelet (DWT) permite descomponer la señal en distintas escalas de frecuencia conservando su localización temporal, siendo una propiedad resulta clave para modelar estructuras no estacionarias presentes en series reales.\\
+
+Aplicando la DWT sobre la componente estacional, se obtiene una representación jerárquica que separa componentes de baja y alta frecuencia, permitiendo escoger de manera equilibrada entre ambos mediante selección de coeficientes. Al igual que en el módulo anterior, se tratarán de escoger los más informativos y se procesan mediante un mecanismo de atención adaptado, que comparará las relaciones entre escalas y fases en lugar de posiciones temporales, para finalizar reconvirtiendo al espacio temporal mediante la transformada inversa (IDWT).\\
+
+Para articular esta lógica dentro del modelo, se adaptan los módulos FEA y FEB a su uso con Wavelet (ver figura \ref{wavelet}):
+
+\begin{itemize}
+	\item El módulo \textbf{FEA-w} (\textit{Frequency Enhanced Attention - wavelet}) se encarga de transformar la representación estacional al dominio wavelet mediante DWT, seleccionar un subconjunto reducido de coeficientes relevantes y aplicar una atención jerárquica sobre estas componentes, todo ello acotando la complejidad computacional, y la localidad temporal.
+	
+	\item El bloque \textbf{FEB-w} (\textit{Frequency Enhanced Block - wavelet}) encapsula el módulo FEA-w dentro de una arquitectura residual completa, integrando normalización por capas, proyecciones lineales y conexiones residuales, y se emplea tanto en el encoder como en el decoder, replicando el diseño general de la versión Fourier pero adaptado al dominio wavelet. La complejidad global del módulo viene dominada por las operaciones de DWT e IDWT, cuyo coste práctico se aproxima a $O(n)$, lo que permite escalar el modelo a horizontes largos pero con alta eficiencia computacional.
+\end{itemize}
+
+	\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.35]{img/wavelet.png}
+	\caption{FEDformer: Izquieda: Etapa FEB. Arriba a la derecha: Etapa de reconstrucción de bloques de wavelets (compartida por FEB-w y FEA-w). Abajo: Etapa de descomposición de cross-attention de wavelets en el decoder. \cite{zhou2022fedformerfrequencyenhanceddecomposed}}
+	\label{wavelet}
+\end{figure}
+
+\paragraph{Análisis crítico y conclusiones finales}
+
+Tras estudiar FEDformer, hemos podido entender con mayor profundidad los cambios introducidos en la arquitectura, y su impacto con respecto a los modelos anteriores. Tomando como referencia a Autoformer para su definición, el modelo ha desarrollado mucho más el pipeline de procesado de los datos, empleando la descomposición, pero aprovechando las diferentes componentes para estudiarlas en el dominio de la frecuencia a través de Fourier y Wavelet. Los resultados obtenidos son positivos~\cite{zhou2022fedformerfrequencyenhanceddecomposed}, superando Autoformer en rendimiento para los datasets evaluados, aunque con menor diferencial al existente entre Informer y Autoformer.\\
+
+Sin embargo, aunque apreciemos mejoras, es importante profundizar para entender realmente lo que se ha conseguido, y el impacto real. Al aplicar Fourier, realmente, estamos usando una transformación de funciones trigonométricas basadas en senos y cosenos, que de manera profunda, están bastante relacionados con la codificación ya vista en Transformer vanilla, donde se emplean como positional encoding. Por tanto, más que el propio uso de la FFT, lo que beneficia al modelo es el filtrado realizado al escoger solo el subconjunto de coeficientes más significativo, reduciendo el ruido.\\
+
+En cuanto a la aplicación de Wavelet, nuevamente, se está aplicando cierto proceso de filtrado o suavizado al escoger un subconjunto de los coeficientes, pero en este caso, la transformación puede llegar a ser más interesante desde el punto de vista teórico, ya que se trata de buscar patrones en diferentes granularidades de la serie temporal. Pero, en el ablation study cubierto por la publicación original \cite{zhou2022fedformerfrequencyenhanceddecomposed}, los resultados son más estables numéricamente cuando se emplea la variante de Fourier, por lo que su viabilidad práctica parece limitada posiblemente a un subconjunto de casos a determinar.\\
+
+En lo que respecta a la estructura, se vuelve a tomar una tendencia más cercana al Transformer original, ya que se recupera de nuevo el concepto de atención propiamente dicho. Y, a pesar de que el uso de caminos múltiples de aprendizaje pueda dificultar la implementación, dicho enfoque le agrega variedad y riqueza a los resultados obtenidos, por lo que podría ser una vía interesante de expansión.
+
+\subsection{Otros modelos actuales}
+
+En los últimos dos años, podemos encontrar nuevos modelos que siguieron alejándose dela estructura del Transformer, con el objetivo de mejorar el procesamiento de la entrada, centrándose en la descomposición por patches, o alterando el mecanismo de atención para acercarse en mayor medida a la semántica del problema:
+
+\begin{itemize}
+	\item \textbf{PatchTST} (2023)~\cite{nie2023timeseriesworth64}. Toma inspiración en los Vision Transformers, y su principal innovación consiste en representar la señal mediante \textit{patches} temporales,en lugar de procesar cada instante individualmente. Esta estrategia permite capturar contexto local de forma más eficiente y reduce la longitud efectiva de la secuencia.
+	
+	El modelo aplica self-attention entre parches completos, lo que favorece la detección de dependencias de largo alcance. Para preservar la información temporal se utilizan \textit{embeddings posicionales}, y en el caso de series multivariantes, se adopta una estrategia \textit{channel-independent} que procesa cada variable por separado para modelarlas.
+	
+	Curiosamente, prescinde de decoder, debido al uso de una capa lineal proyectada directamente desde la salida del encoder, evitando así arquitecturas y mejorando el rendimiento gracias al no operar la salida punto a punto, sino como secuencia completa.
+	
+	\item \textbf{TimeNet} (2023)~\cite{wu2023timesnettemporal2dvariationmodeling}. Este modelo sigue un enfoque más distante de los Transformers, a los que considera en su publicación realmente limitados para el procesado de señales multiescala o multiperiódicas.  Para ello, reemplaza la atención por operaciones convolucionales 2D aplicadas sobre una representación estructurada de la señal. Su punto de partida consiste en transformar la secuencia original en un conjunto de \textit{tensores 2D}, donde las columnas agrupan observaciones dentro de un mismo periodo (\textit{intra-period}) y las filas corresponden a fases similares a lo largo de distintos periodos (\textit{inter-period}), para así capturar explícitamente la estacionalidad. De esta forma, no solo podemos emplear arquitecturas ya conocidas como Inception, sino también eliminar todas las dependencias recurrentes, que son de las más costosas de este tipo de modelos.
+	
+	Para poder adaptar los datos se propone el \texttt{TimesBlock}, que realiza varias tareas. Primero, se identifican automáticamente los periodos dominantes en la serie mediante FFT; a partir de ellos, la secuencia se reorganiza en matrices que reflejan su estructura periódica, y a posteriormente, se procesan con arquitecturas convolucionales conocidas como la mencionada Inception. Finalmente, las salidas se fusionan adaptativamente en una única representación unidimensional, ponderando cada periodo según su importancia.
+		
+\end{itemize}
+
+\subsection{Resumen comparativo}
+
+Tras haber explorado algunas soluciones alternativas que vuelven a alejarse del Transformer tal y como lo conocemos, hemos finalizado la revisión de los principales modelos de procesado del estado del arte, partiendo de los algoritmos básicos y finalizando con complejas derivaciones del concepto original de atención.\\
+
+Cada uno de estos métodos posee sus ventajas e incovenientes, y es crítico saber cuál de ellos emplear en cada caso. Los primeros modelos, como Informer, pueden ser a veces problemáticos si buscamos detalles de granularidad fina; Autoformer o FEDformer pueden funcionar mejor en ese aspecto, y facilitar la detección de patrones estacionales. Pero, por contra, se alejan un poco más de los mecanismos habitualmente usados en Transformers, y no podremos experimentar el impacto de diferentes encoding posicionales, que es el objetivo que estamos tratando. \\
+
+A modo de resumen, se muestra la tabla \ref{resumenmodelos}, donde se pueden apreciar las diferentes características de cada modelo.
+
+\begin{table}[H]
+	\centering
+	\begingroup
+	\renewcommand{\arraystretch}{1.15}
+	\begin{tabular}{P{2.25cm} | P{2cm} P{2cm} P{3cm} P{3.2cm}}
+		\toprule
+		\textbf{Modelo} & \textbf{Positional Encoding} & \textbf{¿Captura periodicidad?} & \textbf{Mecanismo principal} & \textbf{Uso destacado} \\
+		\midrule
+		Transformer & Sinusoidal / Aprendido  & Limitado & Atención completa & Modelo base, generalista para secuencias \\
+		Transformer-XL & Aprendido relativo & No explícitamente & Atención recursiva con segmentación & Maneja dependencias a muy largo plazo con estado recurrente \\
+		Reformer & Sinusoidal  & No explícitamente & Atención local + hashing & Escalabilidad para secuencias muy largas \\
+		LogTrans & Sinusoidal & No explícitamente & Atención logarítmica & Mejor manejo de dependencias a largo plazo \\
+		Informer & Sinusoidal  & No explícitamente & Atención ProbSparse & Eficiencia computacional para secuencias largas \\
+		Autoformer & Implícito (autocorrelación)  & Sí & Autocorrelación & Captura explícita de patrones periódicos \\
+		FEDformer & Implícito (FFT)  & Sí & Atención + FFT & Buena capacidad de captura de patrones y eficiencia \\
+		\bottomrule
+	\end{tabular}
+	\caption{Comparativa entre modelos Transformer para series temporales}
+	\label{resumenmodelos}
+	\endgroup
+\end{table}
