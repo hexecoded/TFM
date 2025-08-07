@@ -652,7 +652,7 @@ A lo largo de este trabajo, exploraremos esta línea de mejora como eje central 
 
 En el estado del arte, podemos encontrar multitud de modelos que proponen adaptaciones y soluciones alternativas al uso de Transformers para series temporales. Algunas, son soluciones propias de lenguaje natural adaptadas a su uso en series temporales, mientras que en otros casos tratan de basarse en conceptos básicos anteriormente explotados en series, como la descomposición o el uso de la autocorrelación, pero empleando Transformers como vía de aprendizaje.\\
 
-Concretamente, comenzaremos analizando variantes del modelo Transformer original que tuvieron un gran impacto en los modelos adaptados, como TransformerXL \cite{dai2019transformerxlattentivelanguagemodels}, Reformer \cite{kitaev2020reformerefficienttransformer} y LogTrans~\cite{NEURIPS2019_6775a063}, para posteriormente analizar el funcionamiento de Informer~\cite{zhou2021informerefficienttransformerlong}, Autoformer~\cite{wu2022autoformerdecompositiontransformersautocorrelation}, FEDFormer~\cite{zhou2022fedformerfrequencyenhanceddecomposed}, y modelos más recientes como PatchTST y TimesNet.
+Concretamente, comenzaremos analizando variantes del modelo Transformer original que tuvieron un gran impacto en los modelos adaptados, como TransformerXL \cite{dai2019transformerxlattentivelanguagemodels}, Reformer \cite{kitaev2020reformerefficienttransformer} y LogTrans~\cite{NEURIPS2019_6775a063}, para posteriormente analizar el funcionamiento de Informer~\cite{zhou2021informerefficienttransformerlong}, Autoformer~\cite{wu2022autoformerdecompositiontransformersautocorrelation}, FEDFormer~\cite{zhou2022fedformerfrequencyenhanceddecomposed}, y modelos más recientes como PatchTST~\cite{nie2023timeseriesworth64} y TimesNet~\cite{wu2023timesnettemporal2dvariationmodeling}.
 
 \subsubsection{Variantes de Transformer y mejoras previas}
 
@@ -992,3 +992,50 @@ Sin embargo, aunque apreciemos mejoras, es importante profundizar para entender 
 En cuanto a la aplicación de Wavelet, nuevamente, se está aplicando cierto proceso de filtrado o suavizado al escoger un subconjunto de los coeficientes, pero en este caso, la transformación puede llegar a ser más interesante desde el punto de vista teórico, ya que se trata de buscar patrones en diferentes granularidades de la serie temporal. Pero, en el ablation study cubierto por la publicación original \cite{zhou2022fedformerfrequencyenhanceddecomposed}, los resultados son más estables numéricamente cuando se emplea la variante de Fourier, por lo que su viabilidad práctica parece limitada posiblemente a un subconjunto de casos a determinar.\\
 
 En lo que respecta a la estructura, se vuelve a tomar una tendencia más cercana al Transformer original, ya que se recupera de nuevo el concepto de atención propiamente dicho. Y, a pesar de que el uso de caminos múltiples de aprendizaje pueda dificultar la implementación, dicho enfoque le agrega variedad y riqueza a los resultados obtenidos, por lo que podría ser una vía interesante de expansión.
+
+\subsection{Otros modelos actuales}
+
+En los últimos dos años, podemos encontrar nuevos modelos que siguieron alejándose dela estructura del Transformer, con el objetivo de mejorar el procesamiento de la entrada, centrándose en la descomposición por patches, o alterando el mecanismo de atención para acercarse en mayor medida a la semántica del problema:
+
+\begin{itemize}
+	\item \textbf{PatchTST} (2023)~\cite{nie2023timeseriesworth64}. Toma inspiración en los Vision Transformers, y su principal innovación consiste en representar la señal mediante \textit{patches} temporales,en lugar de procesar cada instante individualmente. Esta estrategia permite capturar contexto local de forma más eficiente y reduce la longitud efectiva de la secuencia.
+	
+	El modelo aplica self-attention entre parches completos, lo que favorece la detección de dependencias de largo alcance. Para preservar la información temporal se utilizan \textit{embeddings posicionales}, y en el caso de series multivariantes, se adopta una estrategia \textit{channel-independent} que procesa cada variable por separado para modelarlas.
+	
+	Curiosamente, prescinde de decoder, debido al uso de una capa lineal proyectada directamente desde la salida del encoder, evitando así arquitecturas y mejorando el rendimiento gracias al no operar la salida punto a punto, sino como secuencia completa.
+	
+	\item \textbf{TimeNet} (2023)~\cite{wu2023timesnettemporal2dvariationmodeling}. Este modelo sigue un enfoque más distante de los Transformers, a los que considera en su publicación realmente limitados para el procesado de señales multiescala o multiperiódicas.  Para ello, reemplaza la atención por operaciones convolucionales 2D aplicadas sobre una representación estructurada de la señal. Su punto de partida consiste en transformar la secuencia original en un conjunto de \textit{tensores 2D}, donde las columnas agrupan observaciones dentro de un mismo periodo (\textit{intra-period}) y las filas corresponden a fases similares a lo largo de distintos periodos (\textit{inter-period}), para así capturar explícitamente la estacionalidad. De esta forma, no solo podemos emplear arquitecturas ya conocidas como Inception, sino también eliminar todas las dependencias recurrentes, que son de las más costosas de este tipo de modelos.
+	
+	Para poder adaptar los datos se propone el \texttt{TimesBlock}, que realiza varias tareas. Primero, se identifican automáticamente los periodos dominantes en la serie mediante FFT; a partir de ellos, la secuencia se reorganiza en matrices que reflejan su estructura periódica, y a posteriormente, se procesan con arquitecturas convolucionales conocidas como la mencionada Inception. Finalmente, las salidas se fusionan adaptativamente en una única representación unidimensional, ponderando cada periodo según su importancia.
+		
+\end{itemize}
+
+\subsection{Resumen comparativo}
+
+Tras haber explorado algunas soluciones alternativas que vuelven a alejarse del Transformer tal y como lo conocemos, hemos finalizado la revisión de los principales modelos de procesado del estado del arte, partiendo de los algoritmos básicos y finalizando con complejas derivaciones del concepto original de atención.\\
+
+Cada uno de estos métodos posee sus ventajas e incovenientes, y es crítico saber cuál de ellos emplear en cada caso. Los primeros modelos, como Informer, pueden ser a veces problemáticos si buscamos detalles de granularidad fina; Autoformer o FEDformer pueden funcionar mejor en ese aspecto, y facilitar la detección de patrones estacionales. Pero, por contra, se alejan un poco más de los mecanismos habitualmente usados en Transformers, y no podremos experimentar el impacto de diferentes encoding posicionales, que es el objetivo que estamos tratando. \\
+
+A modo de resumen, se muestra la tabla \ref{resumenmodelos}, donde se pueden apreciar las diferentes características de cada modelo.
+
+\begin{table}[H]
+	\centering
+	\begingroup
+	\renewcommand{\arraystretch}{1.15}
+	\begin{tabular}{P{2.25cm} | P{2cm} P{2cm} P{3cm} P{3.2cm}}
+		\toprule
+		\textbf{Modelo} & \textbf{Positional Encoding} & \textbf{¿Captura periodicidad?} & \textbf{Mecanismo principal} & \textbf{Uso destacado} \\
+		\midrule
+		Transformer & Sinusoidal / Aprendido  & Limitado & Atención completa & Modelo base, generalista para secuencias \\
+		Transformer-XL & Aprendido relativo & No explícitamente & Atención recursiva con segmentación & Maneja dependencias a muy largo plazo con estado recurrente \\
+		Reformer & Sinusoidal  & No explícitamente & Atención local + hashing & Escalabilidad para secuencias muy largas \\
+		LogTrans & Sinusoidal & No explícitamente & Atención logarítmica & Mejor manejo de dependencias a largo plazo \\
+		Informer & Sinusoidal  & No explícitamente & Atención ProbSparse & Eficiencia computacional para secuencias largas \\
+		Autoformer & Implícito (autocorrelación)  & Sí & Autocorrelación & Captura explícita de patrones periódicos \\
+		FEDformer & Implícito (FFT)  & Sí & Atención + FFT & Buena capacidad de captura de patrones y eficiencia \\
+		\bottomrule
+	\end{tabular}
+	\caption{Comparativa entre modelos Transformer para series temporales}
+	\label{resumenmodelos}
+	\endgroup
+\end{table}
