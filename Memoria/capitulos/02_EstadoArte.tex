@@ -894,9 +894,9 @@ Gracias a este procedimiento, podemos alinear de forma precisa las posiciones ob
 
 \paragraph{Análisis crítico y conclusiones}
 
-Las mejoras propuestas por Autoformer suponen una gran mejora sobre los métodos existentes hasta ese momento, ya que permitió mejorar considerablemente los resultados ofrecidos por Informer y el resto de Transformers más referenciados del momento~\cite{wu2022autoformerdecompositiontransformersautocorrelation}.\\
+Las mejoras propuestas por Autoformer suponen un salto considerable sobre los métodos existentes hasta ese momento, ya que permitió mejorar considerablemente los resultados ofrecidos por Informer y el resto de Transformers más referenciados aquel tiempo~\cite{wu2022autoformerdecompositiontransformersautocorrelation}.\\
 
-El mecanismo de descomposición, el cual puede parecer un mecanismo simple e intuitivo, permite al modelo centrarse en encontrar patrones ocultos más complejos dentro de la serie, y facilita el proceso de detección de patrones estacionales en una complejidad computacional equivalente a \(O(L \log L)\).\\
+El mecanismo de descomposición, el cual puede parecer simple e intuitivo, permite al modelo centrarse en encontrar patrones ocultos más complejos dentro de la serie, y facilita el proceso de detección de patrones estacionales en una complejidad computacional equivalente a \(O(L \log L)\).\\
 
 En cuanto a la autocorrelación, esta se trata de una de las principales ventajas. Si bien se aleja como tal de lo podría ser considerado un Transformer canónico, en el que destacó su mecanismo de atención punto a punto, emplear autocorrelación a modo de mecanismo de ordenación ha ofrecido buenos resultados experimentales en los conjuntos probados. La mejora es evidente, principalmente, frente a cualquier método de atención basado en muestreo, ya que de esta forma no estamos sometidos a la probabilidad a la hora de realizar el muestreo (ver figura \ref{muestreo}). Hemos eliminado el riesgo de suprimir puntos de gran interés dentro de la serie temporal, ya que la autocorrelación nos permite encontrar patrones de manera bastante intuitiva, recurriendo a conceptos tradicionalmente empleados en este ámbito en los modelos AR. 
 	
@@ -978,9 +978,17 @@ Para articular esta lógica dentro del modelo, se adaptan los módulos FEA y FEB
 
 	\begin{figure}[!ht]
 	\centering
-	\includegraphics[scale=0.225]{img/febf.png}
+	\includegraphics[scale=0.35]{img/wavelet.png}
 	\caption{FEDformer: Izquieda: Etapa FEB. Arriba a la derecha: Etapa de reconstrucción de bloques de wavelets (compartida por FEB-w y FEA-w). Abajo: Etapa de descomposición de cross-attention de wavelets en el decoder. \cite{zhou2022fedformerfrequencyenhanceddecomposed}}
 	\label{wavelet}
 \end{figure}
 
 \paragraph{Análisis crítico y conclusiones finales}
+
+Tras estudiar FEDformer, hemos podido entender con mayor profundidad los cambios introducidos en la arquitectura, y su impacto con respecto a los modelos anteriores. Tomando como referencia a Autoformer para su definición, el modelo ha desarrollado mucho más el pipeline de procesado de los datos, empleando la descomposición, pero aprovechando las diferentes componentes para estudiarlas en el dominio de la frecuencia a través de Fourier y Wavelet. Los resultados obtenidos son positivos~\cite{zhou2022fedformerfrequencyenhanceddecomposed}, superando Autoformer en rendimiento para los datasets evaluados, aunque con menor diferencial al existente entre Informer y Autoformer.\\
+
+Sin embargo, aunque apreciemos mejoras, es importante profundizar para entender realmente lo que se ha conseguido, y el impacto real. Al aplicar Fourier, realmente, estamos usando una transformación de funciones trigonométricas basadas en senos y cosenos, que de manera profunda, están bastante relacionados con la codificación ya vista en Transformer vanilla, donde se emplean como positional encoding. Por tanto, más que el propio uso de la FFT, lo que beneficia al modelo es el filtrado realizado al escoger solo el subconjunto de coeficientes más significativo, reduciendo el ruido.\\
+
+En cuanto a la aplicación de Wavelet, nuevamente, se está aplicando cierto proceso de filtrado o suavizado al escoger un subconjunto de los coeficientes, pero en este caso, la transformación puede llegar a ser más interesante desde el punto de vista teórico, ya que se trata de buscar patrones en diferentes granularidades de la serie temporal. Pero, en el ablation study cubierto por la publicación original \cite{zhou2022fedformerfrequencyenhanceddecomposed}, los resultados son más estables numéricamente cuando se emplea la variante de Fourier, por lo que su viabilidad práctica parece limitada posiblemente a un subconjunto de casos a determinar.\\
+
+En lo que respecta a la estructura, se vuelve a tomar una tendencia más cercana al Transformer original, ya que se recupera de nuevo el concepto de atención propiamente dicho. Y, a pesar de que el uso de caminos múltiples de aprendizaje pueda dificultar la implementación, dicho enfoque le agrega variedad y riqueza a los resultados obtenidos, por lo que podría ser una vía interesante de expansión.
