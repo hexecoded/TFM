@@ -41,7 +41,7 @@ Frecuentemente, podemos encontrar 3 comportamientos, los cuales son fácilmente 
 
     Podemos encontrar este comportamiento, por ejemplo, en los desplazamientos realizados durante las épocas vacionales: podremos observar un patrón de crecimiento en estas en Navidad y las vacaciones de verano, principalmente julio y agosto; y en el resto de meses el comportamiento será a la baja. Y eso ocurrirá con un período anual, ya que dichas fechas se ubican siempre en el mismo lugar. Diferente caso sería con Semana Santa, ya que su fecha no es coincidente todos los años y no cumple al 100\% de estacionalidad como las otras dos, ya que aunque es acotable en calendario, no es exactamente coincidente anualmente.
 
-    En el caso del dataset anterior, se puede observar esta estacioalidad claramente (figura \ref{season})
+    En el caso del dataset anterior, se puede observar esta estacionalidad claramente (figura \ref{season})
 
     \begin{figure}[h] %con el [H] le obligamos a situar aquí la figura
         \centering
@@ -50,7 +50,7 @@ Frecuentemente, podemos encontrar 3 comportamientos, los cuales son fácilmente 
         \label{season}
     \end{figure}
 
-    \item \textbf{Ciclo}. Son también fluctuaciones de la serie temporal, pero, a diferencia de ser regulares, siguen un período irregular de logitud fija. Normalmente, está vinculado a eventos que no están especialmente vinculados a fenómenos de calendario. El ejemplo más representativo podría ser la tendencia de crecimiento económico de un país, o el comportamiento de las acciones en bolsa de una sociedad anónima.
+    \item \textbf{Ciclo}. Son también fluctuaciones de la serie temporal, pero, a diferencia de ser regulares, siguen un período irregular de longitud fija; normalmente, está vinculado a eventos que no siguen de manera estricta un período de calendario definido. Tienen tanto tramos de crecimiento como decrecimiento, pero sin una duración regular. El ejemplo más representativo podría ser la tendencia de crecimiento económico de un país, o el comportamiento de las acciones en bolsa de una sociedad anónima.
 
     En la figura \ref{ciclo} podemos un ejemplo de este comportamiento con los permisos concedidos para la construcción de viviendas en EEUU \cite{techcharts2012housing}, donde no podemos encontrar patrones claros como en Air Passengers.
 
@@ -63,10 +63,10 @@ Frecuentemente, podemos encontrar 3 comportamientos, los cuales son fácilmente 
 
 \end{itemize}
 
-Una vez comprendidos estos conceptos, podremos utilizar su información para decidir qué modelo se adapta mejor a nuestro problema y además tratar de modelar la tendencia y la estacionalidad. Anteriormente, mencionamos la gran utilidad de modelos como ARIMA, que funciona bajo este concepto. Pero no se trata del único modelo existente bajo este paradigma, sino uno de los más utilizados. En función del mecanismo de agregación de la solución, podemos clasificar las técnicas en dos grupos:
+Una vez comprendidos estos conceptos, podremos utilizar su información para decidir qué modelo se adapta mejor a nuestro problema y además tratar de modelar la tendencia y la estacionalidad. Anteriormente, mencionamos la gran utilidad de modelos como ARIMA, que funciona bajo este concepto. Pero no se trata del único modelo existente bajo este paradigma, sino uno de los más utilizados, perteneciente al conjunto de algoritmos basados en descomposición. En función del mecanismo de agregación de la solución, podemos clasificar estas técnicas en dos grupos:
 
 \begin{itemize}
-    \item \textbf{Descomposición aditiva}. Realiza una separación de la serie temporal varias componentes, las cuales son modeladas por separado y sumadas entre si para dar lugar a la función predicha final (ecuación \ref{sum}). Es la más sencilla de usar en casos simples. Es indicada cuando las fluctuaciones estacionales por las variaciones entorno a la tendencia no varían con el valor de la serie temporal, es decir, pueden prácticamente mantenerse entre a lo largo de toda la serie sin apenas cambios. En general, se usa cuando los elementos no depende los unos de otros.
+    \item \textbf{Descomposición aditiva}. Realiza una separación de la serie temporal varias componentes, las cuales son modeladas por separado y sumadas entre si para dar lugar a la función predicha final (ecuación \ref{sum}). Es la más sencilla de usar en casos simple, e indicada cuando las fluctuaciones estacionales por las variaciones entorno a la tendencia no varían con el valor de la serie temporal. Es decir, dichas variaciones prácticamente no se vean afectadas por los cambios de tendencia a lo largo de toda la serie. A modo de caso ideal de uso, se usa cuando los elementos no depende los unos de otros.
 
     \begin{equation}
         y(t) = T(t) + S(t) + C(t) + E(t)
@@ -82,7 +82,7 @@ Una vez comprendidos estos conceptos, podremos utilizar su información para dec
 
 \end{itemize}
 
-Donde, en ambos casos:
+La notación para cada componente es compartida entre ambos métodos:
 
 \begin{itemize}
     \item \textit{T(t)}: Componente de la tendencia
@@ -94,9 +94,7 @@ Donde, en ambos casos:
     \item \textit{E(t)}: Componente aleatoria y error
 \end{itemize}
 
-La elección de cada método depende, por tanto, de los datos, y nos beneficiaremos, como ya hemos visto a lo largo de la definición, de una adecuada visualización de los mismos cuando sea posible.
-
-A continuación, definiremos en mayor detalle 3 de los algoritmos basados en descomposición más usados: STL \cite{cleveland1990stl}, ARIMA \cite{box1970time} y Prophet \cite{taylor2018prophet}.
+En resumen, la elección de cada método depende de los datos, y nos beneficiaremos, como ya hemos visto a lo largo de la definición, de una adecuada visualización de los mismos cuando sea posible. Para entender más a fondo el funcionamiento y los principios seguidos por los algoritmos de descomposición, estudiaremos continuación tres de los algoritmos de descomposición más utilizados: STL \cite{cleveland1990stl}, ARIMA \cite{box1970time} y Prophet \cite{taylor2018prophet}.
 
 \subsubsection{STL}
 
@@ -162,28 +160,28 @@ STL supuso una buena base para modelos posteriores, pero esta forma de modelado 
     \item Es costoso computacionalmente en caso de series de larga duración, ya que el cálculo de aplicar el kernel se hace para cada punto en cada iteración sobre el conjunto de datos, tanto para encontrar la tendencia como para luego generalizar la estacionalidad.
 \end{itemize}
 
-Pero, sin lugar a dudas, la principal desventaja de este método es que no consigue por sí solo lo que deseamos resolver en este trabajo: predecir, sobre todo, a largo plazo. STL es un procedimiento muy útil que nos permite entender el comportamiento de los datos, y descomponerlo para comprender el funcionamiento de cada componente, pero no es posible por sí solo realizar predicciones. Dependemos del apoyo de otros procedimientos que nos permitan estimar , basándonos en este historial, la progresión de las componentes extraídas como la tendencia (modelable por regresión), y la estacional, la cual podría ser evaluada de manera simplificada por su valor medio histórico por intervalo.\\
+Pero, sin lugar a dudas, la principal desventaja de este método es que no consigue por sí solo lo que deseamos resolver en este trabajo: obtener modelos para \textit{forecasting}. STL es un procedimiento muy útil que nos permite entender el comportamiento de los datos, y descomponerlo para comprender el funcionamiento de cada componente, pero no tiene el potencial por sí solo realizar predicciones. Dependemos del apoyo de otros procedimientos que nos permitan estimar, basándonos en este historial, la progresión de las componentes extraídas como la tendencia (modelable por regresión), y la estacional, la cual podría ser evaluada de manera simplificada por su valor medio histórico por intervalo.\\
 
 Esto lo hace en un método interesante desde el punto de vista de análisis, y que permite dar lugar a modelos que sí son capaces de estimar predicciones futuras, pero no es una herramienta por sí sola que nos permita resolver la tarea que nos concierne en este trabajo.
 
 \subsubsection{ARIMA}
 
-Basándonos de nuevo en el método de descomposición de series, podemos encontrar el modelo \textbf{ARIMA} (\textit{AutoRegressive Integrated Moving Average}) una técnica estadística ampliamente utilizada para el modelado de series temporales univariantes. Como ya adelantamos en la introducción del proyecto, su estructura se basa en la combinación de tres componentes principales: una parte autoregresiva (AR), una parte integrada (I) y una parte de media móvil (MA). Cada una de estas partes permite capturar diferentes aspectos del comportamiento temporal de los datos.
+Basándonos de nuevo en el método de descomposición de series, podemos encontrar el modelo ARIMA (\textit{AutoRegressive Integrated Moving Average}), la técnica usada por excelencia para el modelado de series temporales univariantes. Como ya adelantamos en la introducción del proyecto, su estructura se basa en la combinación de tres componentes principales: una parte autoregresiva (AR), una parte integrada (I) y una parte de media móvil (MA). Cada una de estas partes permite capturar diferentes aspectos del comportamiento temporal de los datos, y que analizaremos de manera independiente a continuación.
 
 \paragraph{Componente de Integración}
 
 
-Por integración, entendemos el número de veces que es necesario integrar la serie temporal original para que esta se vuelva estacionaria. De manera resumida, una serie estacionaria es aquella cuyas propiedades estadísticas, como la media, la varianza y la autocorrelación entre valores, se mantienen constantes a lo largo del tiempo,  como ya vimos en la definición de los modelos aditivos.\\
+Se trata del primer paso a aplicar del algoritmo,y nos facilita la construcción del resto de componentes restantes. En este paso, se busca integrar. el número de veces que sea necesario, la serie temporal original para que esta se vuelva estacionaria. De manera resumida, una serie es estacionaria cuando la media, la varianza y la autocorrelación entre valores se mantienen constantes a lo largo del tiempo.\\
 
-La diferenciación nos permite eliminar tendencias o patrones sistemáticos de crecimiento o decrecimiento, facilitando el modelado de las componentes autoregresivas (AR) y de media móvil (MA). A pesar de que su nombre nos pueda insinuar un proceso complejo de integración analítica, al realizarse sobre valores numéricos, no es más que una diferencia de valores:
+La diferenciación nos permite eliminar tendencias o patrones sistemáticos de crecimiento o decrecimiento, facilitando el modelado de las componentes autorregresivas (AR) y de media móvil (MA). A pesar de que su nombre nos pueda insinuar un proceso complejo de integración analítica, al realizarse sobre valores numéricos, no es más que una diferencia de valores:
 
 \[
     y'_t = y_t - y_{t-1}
 \]
 
-Este proceso puede aplicarse tantas veces como sea necesario para lograr estacionariedad. Dicho número de repeticiones viene controlado por el valor de orden \( d \), que indica el número de veces que se ha diferenciado la serie. En general, el modelo ARIMA supone que tras aplicar \( d \) diferencias, la serie resultante \( y^{(d)} \) puede ser modelada por un proceso estacionario ARMA(\(p,q\)). Por tanto, el componente \textit{I} de ARIMA es un procesamiento indispensable de la serie cuando no se cumpla el requisito de estacionariedad, y permitirá calcular sobre la serie resultante las componentes AR y MA con mayor facilidad. \\
+Este proceso puede repetirse tantas veces como sea necesario. El orden \( d \) indica cuántas diferencias se aplican para obtener una serie estacionaria \( y^{(d)} \), la cual puede modelarse mediante un proceso ARMA(\(p,q\)).
 
-Para saber cuando deja de ser necesario aplicar el proceso iterativo de integración, podemos hacer uso de dos posibles mecanismos: uno gráfico, basado en el gráfico de autocorrelación de valores, y otro estadístico, basado en el test de Dickey-Fuller aumentado (ADF).
+Por tanto, es esencial de aplicarlo en casos no estacionarios, pero sin pasarse para evitar pérdida de información. Para saber cuando deja de ser necesario aplicar el proceso iterativo de integración, podemos hacer uso de dos posibles mecanismos: uno gráfico, basado en el gráfico de autocorrelación de valores, y otro estadístico, basado en el test de Dickey-Fuller aumentado (ADF).
 
 \begin{itemize}
     \item El análisis gráfico consiste en observar el comportamiento de la función de autocorrelación (ACF) tras aplicar una o varias diferenciaciones. Si la serie es no estacionaria, las valores siguientes de autocorrelación decaen lentamente, indicando que queda información relevante en dichas componentes. Por el contrario, si la serie es estacionaria, la ACF suele caer rápidamente a cero, estableciendo que no es necesario continuar diferenciando (ver figura \ref{acf}).
@@ -524,11 +522,11 @@ A modo de conclusión, aunque las LSTM representaron un avance fundamental en el
 
 Los Transformes son una de las mayores invenciones de los últimos años en el tratamiento de datos secuenciales, como el lenguaje natural, y en series temporales. Su estructura (ver figura \ref{trans}), la cual propone el uso de mecanismos basados en atención, ha permitido prescindir de los algoritmos basados en recurrencia, y simplificar el proceso complejo de aprendizaje que teníamos debido a los problemas con la propagación y los gradientes.\\
 
-A diferencia de las redes RNN o LSTM, que procesan la información de forma secuencial y requieren mantener estados ocultos a lo largo del tiempo, los Transformers permiten procesar todas las posiciones de la secuencia en paralelo, lo que mejora drásticamente la eficiencia computacional y la capacidad de modelar relaciones a largo plazo. Esto nos permite también aprovechar arquitecturas de computación con gran capacidad para la paralelización, como el uso de GPUs, y así reducir tiempos de ejecución, o bien, aprovechar la capacidad extra de paralelización para enfrentarnos a problemas mucho más complejos, con mayor número de parámetros y dependencias a largo plazo.
+A diferencia de las redes RNN o LSTM, que procesan la información de forma secuencial y requieren mantener estados ocultos a lo largo del tiempo, los Transformers permiten procesar todas las posiciones de la secuencia en paralelo, lo que mejora drásticamente la eficiencia computacional y la capacidad de modelar relaciones a largo plazo. Esto nos permite también aprovechar arquitecturas de computación con gran capacidad para la paralelización, como el uso de GPUs, y así reducir tiempos de ejecución, o bien, aprovechar la capacidad extra de paralelización para enfrentarnos a problemas mucho más complejos, con mayor número de parámetros y dependencias a largo plazo.\\
 
 \begin{figure}[!ht] %con el [H] le obligamos a situar aquí la figura
     \centering
-    \includegraphics[scale=0.2]{img/attention_research_1}
+    \includegraphics[scale=0.18]{img/attention_research_1}
     \caption{Transformer: modelo de arquitectura encoder-decoder \cite{vaswani2023attentionneed}}
     \label{trans}
 \end{figure}
@@ -598,13 +596,15 @@ La atención entre posiciones se calcula como una similitud entre queries y keys
 
 Es frecuente encontrar en el denominador el término $\sqrt{d_k}$, ya que su principal función es evitar que los productos escalares sean excesivamente grandes, y actúa a modo de normalización para evitar problemas con los gradientes.\\
 
-De por sí solo, este mecanismo es el principal elemento en el funcionamiento de los transformers. Pero podemos mejorar su potencial si lo paralelizamos. Es aquí cuando entra en acción el mecanismo de \textit{multi-head attention}, donde se realizan múltiples operaciones de atención en paralelo, cada una con sus propias proyecciones aprendidas, permitiendo al modelo aprender distintas relaciones entre tokens en diferentes subespacios de representación.
+De por sí solo, este mecanismo es el principal elemento en el funcionamiento de los Transformers. Pero podemos mejorar su potencial si lo paralelizamos, y es aquí cuando entra en acción el mecanismo de \textit{multi-head attention}: realizar múltiples operaciones de atención en paralelo, cada una con sus propias proyecciones aprendidas, permitiendo al modelo aprender distintas relaciones entre tokens en diferentes subespacios de representación.
 
 \begin{equation}
     \text{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h)W^O
 \end{equation}
 
-Posteriormente, estos valores se concatenan, y podemos obtener el resultado que buscábamos de manera paralela.
+Posteriormente, estos valores se concatenan, y podemos obtener el resultado que buscábamos de manera paralela.\\
+
+En multitud de publicaciones, podemos encontrar propuestas para modificar este proceso, ya que se trata de la fase más costosa del aprendizaje del model. Esto se debe a que se trata de un producto de orden cuadrático y de gran tamaño, donde todos los valores son multiplicados por todos, y reducir dicho número puede lograr grandes mejoras de rendimiento. Normalmente, para conseguirlo, se emplean técnicas de muestreado, y se buscan mecanismos para lograr un compromiso entre precisión y coste computacional. Posteriormente, cuando analicemos los principales modelos del estado del arte, podremos apreciar este tipo de estrategia.
 
 \subsection{Importancia del Positional Encoding}
 
@@ -641,7 +641,7 @@ Un ejemplo sencillo podría ser la estimación del consumo eléctrico. En una se
 
 Además, en muchos contextos, los eventos relevantes están más determinados por la posición relativa y el entorno local inmediato que por una posición absoluta dentro de la secuencia. La falta de mecanismos que conecten directamente el significado de los datos con su ubicación limita el poder expresivo de la red y su capacidad para realizar generalizaciones útiles. Esta problemática refuerza la necesidad de proponer codificaciones posicionales con mayor semántica, más contextualizadas, que integren explícitamente el contenido de los datos y su estructura temporal.\\
 
-En el apartado siguiente, estudiaremos los modelos más relevantes del estado del arte, y analizaremos en qué característica clave se basa cada uno de ellos. Además, prestaremos atención a qué tipo de codificación emplea cada uno, de cara a obtener conclusiones sobre la importancia general que se le da a este aspecto.
+En el apartado siguiente, estudiaremos los modelos más relevantes del estado del arte, y analizaremos en qué característica clave se basa cada uno de ellos. Además, prestaremos atención a qué tipo de codificación emplea cada uno, de cara a obtener conclusiones sobre la importancia que se le da a este aspecto.
 
 \subsection{Modelos aplicados al forecasting de series temporales}
 

@@ -332,7 +332,7 @@
 
     \miNombre \textit{\miTitulo}.
 
-    Trabajo de fin de Grado. Curso académico \miCurso.
+    Trabajo de fin de Máster. Curso académico \miCurso.
     \bigskip
 
 \begin{minipage}[t]{0.25\textwidth}
