@@ -503,9 +503,7 @@ Cada compuerta dentro de una celda LSTM desempeña una función específica en l
 
 Además, la entrada candidata de la celda, denotada como $g_t$, representa nueva información que podría añadirse al estado de la celda tras ser modulada por la compuerta de entrada.\\
 
-Gracias a estos mecanismos de control, las redes LSTM pueden decidir dinámicamente qué información conservar o descartar en cada momento, lo que les permite gestionar dependencias temporales a largo plazo de manera mucho más eficaz que las RNN convencionales. En esta arquitectura, la recurrencia se mantienen a través del estado de la celda $c_t$, que actúa como una cinta transportadora que permite el traspaso continuo de información entre pasos temporales. Este flujo sostenido de memoria facilita la conservación de patrones relevantes a lo largo de secuencias de larga extensión. \\
-
-Las multiplicaciones elemento a elemento entre compuertas y vectores asociados aseguran una interacción eficiente entre componentes, posibilitando transformaciones complejas sin comprometer la estabilidad durante el entrenamiento. En conjunto, las LSTM mantienen un equilibrio entre flexibilidad, memoria y estabilidad en el aprendizaje.\\
+Gracias a estos mecanismos de control, las redes LSTM pueden decidir dinámicamente qué información conservar o descartar en cada momento, lo que les permite gestionar dependencias temporales a largo plazo de manera mucho más eficaz que las RNN convencionales. La recurrencia se mantiene a través del estado de la celda $c_t$, que permite el traspaso continuo de información entre pasos temporales. Este flujo sostenido de memoria facilita la conservación de patrones relevantes a lo largo de secuencias de larga extensión. Por otro lado, las multiplicaciones elemento a elemento entre compuertas y vectores asociados aseguran una interacción eficiente entre componentes y posibilitan transformaciones complejas sin comprometer la estabilidad durante el entrenamiento. En conjunto, gracias a todos estos elementos, las LSTM mantienen un equilibrio entre flexibilidad, memoria y estabilidad en el aprendizaje.\\
 
 Sin embargo, no suponen la solución definitiva a los problemas, pues, si bien conseguimos solucionar el problema de los gradientes, hemos incorporado complejidad adicional al modelo que puede afectar en diferentes aspectos:
 
@@ -639,14 +637,13 @@ Esto plantea un desafío fundamental: la necesidad de diseñar o adaptar mecanis
 
 Aunque se han logrado mejoras y avances sobre la definición vanilla del encoding posicional gracias a estas propuestas, la mayoría de estas aproximaciones comparten una limitación estructural: la escasa vinculación semántica y local entre los datos de entrada y su codificación posicional.\\
 
-De manera más detallada,frecuentemente los vectores que representan la posición suelen ser generados de forma independiente al contenido real de la secuencia. Esto significa que dos tokens o timestamp con significado similar pero ubicados en posiciones diferentes reciben representaciones posicionales completamente distintas, sin ningún tipo de correspondencia semántica entre ellas. En series temporales, puede suponer un grave problema: encontrar patrones como la estacionalidad pueden ser claves en el modelado, y con este enfoque, este tipo de ciclos sería prácticamente imposible de detectar.\\
+De manera más detallada, frecuentemente los vectores que representan la posición suelen ser generados de forma independiente al contenido real de la secuencia. Esto significa que dos tokens o timestamp con significado similar pero ubicados en posiciones diferentes reciben representaciones posicionales completamente distintas, sin ningún tipo de correspondencia semántica entre ellas. En series temporales, puede suponer un grave problema: encontrar patrones como la estacionalidad pueden ser claves en el modelado, y con este enfoque, este tipo de ciclos sería prácticamente imposible de detectar.\\
 
 Un ejemplo sencillo podría ser la estimación del consumo eléctrico. En una serie que recoge datos meteorológicos diarios durante varios años, los valores correspondientes a una hora concreta de diferentes días podrían compartir patrones similares; es habitual encontrar por ejemplo consumos superiores en las horas cercanas al almuerzo o la cena, y de menor uso en altas horas de la madrugada. Pero, si la codificación posicional no reconoce esta regularidad por tratarse de posiciones globalmente distintas en la secuencia, el modelo no podrá aprovechar dicha repetición estructural, limitando su capacidad de modelado.\\
 
 Además, en muchos contextos, los eventos relevantes están más determinados por la posición relativa y el entorno local inmediato que por una posición absoluta dentro de la secuencia. La falta de mecanismos que conecten directamente el significado de los datos con su ubicación limita el poder expresivo de la red y su capacidad para realizar generalizaciones útiles. Esta problemática refuerza la necesidad de proponer codificaciones posicionales con mayor semántica, más contextualizadas, que integren explícitamente el contenido de los datos y su estructura temporal.\\
 
-A lo largo de este trabajo, exploraremos esta línea de mejora como eje central de nuestra nueva metodología de codificación.
-
+En el apartado siguiente, estudiaremos los modelos más relevantes del estado del arte, y analizaremos en qué característica clave se basa cada uno de ellos. Además, prestaremos atención a qué tipo de codificación emplea cada uno, de cara a obtener conclusiones sobre la importancia general que se le da a este aspecto.
 
 \subsection{Modelos aplicados al forecasting de series temporales}
 
@@ -1039,3 +1036,7 @@ A modo de resumen, se muestra la tabla \ref{resumenmodelos}, donde se pueden apr
 	\label{resumenmodelos}
 	\endgroup
 \end{table}
+
+Tal y como ya adelantábamos en los análisis realizados tras estudiar cada modelo, podemos ver que la codificación posicional ha sido un aspecto no especialmente atendido en la formulación de cada modelo. Si bien modelos como Autoformer y FEDformer tratan de compensar esto mediante sus propios mecanismos de atención o equivalentes más elaborados, la construcción del embedding permanece igual a prácticamente como se realizaba en los Transformer vanilla. Por tanto, esto justifica y muestra la necesidad de probar una nueva vía de investigación que trate de verificar si, incluso empleando modelos de aprendizaje más sencillos, como lo es el Transformer original o Informer, se pueden obtener buenos resultados de por sí trabajando con la codificación posicional.\\
+
+En el próximo capítulo, nos centraremos en el contexto teórico que rodea este concepto, analizando en detalle las propuestas más recientes aplicadas a series temporales \cite{irani2025positionalencodingtransformerbasedtime}, y a partir de ello, formularemos y compararemos distintas variantes, con el objetivo de extraer conclusiones relevantes sobre su eficacia y aplicabilidad.
