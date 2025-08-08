@@ -332,25 +332,36 @@
 
     \miNombre \textit{\miTitulo}.
 
-    Trabajo de fin de Grado. Curso académico \miCurso.
+    Trabajo de fin de Máster. Curso académico \miCurso.
     \bigskip
 
-    \begin{minipage}[t]{0.25\textwidth}
-      \flushleft
-      \textbf{Responsable de tutorización}
-    \end{minipage}
-    \begin{minipage}[t]{0.45\textwidth}
-      \flushleft
-      \miTutor
-    \end{minipage}
-    \begin{minipage}[t]{0.30\textwidth}
-      \flushright
-      \miGrado
-      \medskip
+\begin{minipage}[t]{0.25\textwidth}
+	\flushleft
+	\textbf{Responsable de tutorización}
+\end{minipage}
+\begin{minipage}[t]{0.45\textwidth}
+	\flushleft
+	\miTutor
+\end{minipage}
+\begin{minipage}[t]{0.30\textwidth}
+	\flushright
+	\miGrado
+	\medskip
+	
+	\miFacultad
+	\medskip
+	
+	\miUniversidad
+\end{minipage}
 
-      \miFacultad
-      \medskip
+\vspace{0.5cm} % Espacio vertical entre secciones
 
-      \miUniversidad
-    \end{minipage}
+\begin{minipage}[t]{0.25\textwidth}
+	\flushleft
+	\textbf{Mentores}
+\end{minipage}
+\begin{minipage}[t]{0.75\textwidth}
+	\flushleft
+	\miMentor
+\end{minipage}
   }
