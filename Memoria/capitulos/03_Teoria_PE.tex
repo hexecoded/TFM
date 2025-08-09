@@ -223,7 +223,54 @@ donde \(\bar{Q}_d\) y \(\bar{K}_d\) son las representaciones convolucionales nor
 Sobre el papel, presenta varias ventajas. En primer lugar, captura relaciones relativas sin requerir atención cuadrática, gracias a la estimación realizada que es de orden lineal, facilitando su escalabilidad. Además, es más robusta ante sobreajuste por su componente estocástico. Sin embargo, aunque en principio pueda parecer más eficiente, modificar el mecanismo de atención puede ser delicado y su rendimiento depende mucho del conjunto de datos utilizado. De hecho, sus creadores señalan que este enfoque es más adecuado para tareas de clasificación de series temporales que para tareas de predicción, por lo que su aplicabilidad se aleja del contexto de este trabajo.
 
 \section{Propuestas}
+
+Una vez analizadas todas las propuestas más destacadas a fecha de 2025 \cite{irani2025positionalencodingtransformerbasedtime}, es momento de formular nuestras propias alternativas que sean capaces de aprovechar los conceptos vistos hasta el momento, pero, aporten un nuevo enfoque que nos permita obtener buenos resultados. En este apartado, analizaremos los diferentes pilares que compondrán nuestras alternativas, que serán examinadas y evaluadas para verificar si cumplen con los estándares mínimos de rendimiento.
+
 \subsection{Criterios de partida}
+
+Para comenzar, estableceremos los criterios que vamos a seguir en la formulación de las alternativas, y la justificación de la toma de decisiones.\\
+
+La primera cuestión que nos puede emerger es el tipo de encoding que parece más conveniente: un encoding aditivo, más sencillo e intuitivo de formular, o bien, un encoding basado en modificar el mecanismo de atención. Con la experiencia recogida de los ejemplos vistos en subapartado anterior, responder a esta pregunta es sencillo; los mecanismos de modificación de la atención parecen una mejora razonable sobre el papel, pero el overhead introducido sobre el tiempo de entrenamiento puede ser excesivo, ralentizando en exceso los experimentos dados los recursos disponibles para realizar este proyecto. Además, hemos podido verificar que prácticamente todos los métodos recogidos en el survey funcionan especialmente mejor para tareas de clasificación, lo cual es un problema totalmente diferente frente a nuestro propósito de realizar forecasting. En definitiva, si bien ejecutaremos alguna prueba puntual con este tipo de algoritmos para verificar su eficiencia y rendimiento, no será nuestro camino a seguir.\\
+
+En su lugar, optaremos por modelos que modifiquen únicamente el embedding de entrada, pero no alteren la arquitectura del Transformer propiamente dicha, centrándonos en un objetivo clave: mejorar la semántica de los datos, empleando para ello la información local de los propios datos. A excepción de LPE y la parte semántica de T-PE, la mayoría de modelos de encoding son agnósticos al contenido del conjunto de entrenamiento, y debemos tratar de solucionar este problema. Para ello, podemos tomar inspiración de los primeros modelos de cálculo, como ARIMA y STL, y recuperar uno de los conceptos no empleados hasta ahora: el uso de ventanas. Pero no desde el punto de vista de troceado del conjunto de datos, sino como herramienta para construir localidad espacial.\\
+
+Podemos lograr que entornos locales de similares características tengan una codificación también muy parecida, y la propia arquitectura del Transformer sea capaz de identificar dichas entradas similares para construir patrones de estacionalidad y puntos de interés. Para ello, un modelo aditivo puro podría dificultar la percepción de qué información es la de contexto de entrada, y cual es la información posicional. Por tanto, a diferencia de lo visto hasta ahora, podemos plantear una solución alternativa: concatenar esta información al embedding de entrada, aumentando su dimensionalidad en cuanto a número de características, pero facilitando dicha separación.\\
+
+Como contenido a añadir, la idea más simple consiste en utilizar estadísticos básicos: medidas fácilmente paralelizables y sencillas en cómputo que, evaluadas entorno a una ventana para cada valor, nos pueda ofrecer nuevas características. Pueden ser desde métricas básicas de dispersión y valores extremos, hasta diferencias entre el valor central $x$ y el lag de orden n, $x_n$. De esta forma, potenciamos el modelado de la información alrededor de cada punto, y es potencialmente probable que dos valores $x$ separados en la serie, con un mismo contexto de valores locales concatenados, realmente se encuentren en las mismas posiciones relativas a un período de una estación.\\
+
+Pero, esta idea no tiene por qué entrar en conflicto con el resto de codificaciones existentes; podemos beneficiarnos de un modelo de PE combinado entre el método de concatenación de valores provenientes de ventanas y las formas de codificación aditivas clásicas vistas ahora, de manera que nuestro método no se excluyen, y se beneficie de estas otras codificaciones. Esta idea ya se menciona en \cite{irani2025positionalencodingtransformerbasedtime} en relación a compatibilizar el uso de métodos aditivos y modificadores de atención (figura \ref{hybridpaper}), pero podemos adoptarlo para inspirarnos en un concepto similar: la combinación de método propuesto de concatenación, fruto de operaciones en la ventana, con un conjunto ponderado de PE aditivos de los ya vistos.\\
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.35]{img/hybridpaper.png}
+	\caption{Codificación híbrida: métodos aditivos + atención \cite{irani2025positionalencodingtransformerbasedtime}}
+	\label{hybridpaper}
+\end{figure}
+
+
+Proponemos así dotar a cada encoding aditivo de un peso aprendible para que el modelo seleccione automáticamente cuáles contribuyen más al embedding final. Si el peso de un encoding se aproxima a 0, ese encoding queda efectivamente suprimido de la ecuación, permitiendo que prevalezcan los métodos que realmente aportan información al embedding final. No obstante, esta propuesta requiere especial cuidado: sin restricciones, algunos pesos pueden crecer de forma desproporcionada (o bien desvanecerse), impidiendo la convergencia, y por tanto, la cercanía a soluciones óptimas. Una solución simple es aplicar un mecanismo de normalización de pesos, comoforzar que los pesos sumen 1. Esto lo podemos conseguir de forma sencilla mediante Softmax, que actúa como regularizador y estabiliza la ponderación entre encodings. Adicionalmente, podría ser interesante combinarlo con inicializaciones acotadas, con valores pequeños.\\
+
+Sea \(\mathbf{e}_0\in\mathbb{R}^d\) el embedding de partida, con la información adicional de ventana ya concatenada y \(\{\mathbf{pe}_k\}_{k=1}^K \subset \mathbb{R}^d\) los encodings que deseamos añadir. Para su ponderación, introducimos pesos aprendibles escalares \(w_k\in\mathbb{R}\), que normalizamos con Softmax:
+\[
+\alpha_k \;=\; \frac{\exp(w_k)}{\sum_{m=1}^{K}\exp(w_m)} \qquad (k=1,\dots,K).
+\]
+El embedding final es
+\[
+\mathbf{e}_{\mathrm{final}} \;=\; \mathbf{e}_0 \;+\; \sum_{k=1}^{K} \alpha_k\,\mathbf{pe}_k.
+\]
+
+
+De este modo, si \(\alpha_k \approx 0\) el encoding correspondiente queda suprimido. Y de forma algorítmica, quedaría de la siguiente forma:
+\begin{itemize}
+	\item Inicializar \(w_k\) con valores pequeños.
+	\item Opcionalmente, usar clipping de gradientes o normalización/weight-normalization.
+	\item Entrenar el modelo mientras se cumpla el número de épocas establecido o se llegue a una condición de parada.
+\end{itemize}
+
+
+Para evaluar la utilidad de esta estrategia, diseñaremos una serie de modelos de encoding que cumplan las propiedades descritas, organizados de forma incremental en complejidad. Es decir, cada nivel incorporará nuevas características, comenzando por propuestas basadas en la correspondencia de puntos mediante estadísticos en ventana, continuando con la adición de \textit{lags} y, finalmente, hibridando con modelos más elaborados del estado del arte revisados previamente, y empleando la técnica de ponderado. Esta construcción gradual nos permitirá realizar de forma directa un \textit{ablation study} que identifique la contribución específica de cada componente, y así ver en qué puntos la estrategia no es correcta para descartarla.
+
+
 \subsection{PE basado en ventana de estadísticos}
 \subsection{PE basado en ventana de estadísticos y lags}
 \subsection{PE combinado flexible}
