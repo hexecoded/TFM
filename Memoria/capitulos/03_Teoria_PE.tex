@@ -111,6 +111,33 @@ La principal fortaleza de este método reside en su capacidad de adaptación. A 
 No obstante, esta flexibilidad tiene un precio. Al añadir un vector de parámetros por cada posición, el tamaño del modelo crece linealmente dependiendo del parámetro de longitud \textit{L}, lo que incrementa tanto el coste de almacenamiento como el de entrenamiento. Además, la codificación aprendida queda estrechamente ligada al conjunto de datos utilizado para ajustarla; esto implica que, ante un cambio de dominio o de distribución de las secuencias, incluso si la longitud se mantiene, es necesario volver a entrenar los embeddings posicionales desde cero para preservar su utilidad. En contraste con tAPE, que conserva su aplicabilidad en distintos contextos gracias a su formulación fija, LPE sacrifica generalidad en favor de especialización.
 
 
+\subsubsection{Temporal Positional Encoding (T-PE)}
+
+Por último, nos centraremos en el encoding posicional temporal (T-PE), un enfoque híbrido que combina información posicional global y dependiente del contenido para enriquecer la representación. Por un lado, emplea la codificación geométrica sinusoidal clásica para la parte absoluta, para dotar al modelo de información posicional estable y determinista. Por otro lado, T-PE integra una componente semántica basada en similitud entre embeddings de los datos, que añade un sesgo contextual para capturar relaciones entre posiciones no solo por su índice temporal, sino también por su contenido o características. Esto se consigue mediante una función de suavizado gaussiano que mide la proximidad en el espacio de características entre cada par de posiciones. De esta forma, aportamos la visión semántica, elemento que principalmente queda infrarrepresentado en modelos fijos.\\
+
+Formalmente, el modelo basa su componente geométrica mediante:
+
+\begin{equation}
+	PE_{i, 2k} = \sin\left(\frac{i}{10000^{\frac{2k}{d}}}\right), \quad
+	PE_{i, 2k+1} = \cos\left(\frac{i}{10000^{\frac{2k}{d}}}\right)
+\end{equation}
+
+Y la componente semántica, que mide la similitud local entre embeddings, se define como:
+
+$$S(i, j) = \exp\left( -\frac{\|x_i - x_j\|^2}{2\sigma^2} \right)$$
+
+Añadiéndose al encoding final de manera aditiva:
+
+$$T\text{-}PE(i) = PE(i) + S(i, j)$$
+
+
+La principal fortaleza de este enfoque, por tanto, radica en la combinación de un anclaje posicional absoluto con una componente semántica adaptativa, lo que le permite capturar, de forma natural y simultánea, tanto las relaciones temporales globales como las similitudes entre elementos, integrando información global y local en una única representación.\\
+
+Pero su implementación puede inducir problemas para la escalabilidad. La gaussiana entre todas las posiciones implica un coste cuadrático $O(L^2)$.- Además, su rendimiento está fuertemente condicionado por el grado de integración entre las dos componentes, ya que un desbalance podría anular las ventajas buscadas.\\
+
+En resumen, T-PE propone un enfoque híbrido bastante interesante, capaz de emplear las ventajas del contenido estructural y el semántico.
+
+
 \subsection{Métodos que manipulan la atención}
 
 Hasta ahora, hemos explorado tres métodos de codificación posicional que comparten un rasgo común: todos operan mediante una simple suma dentro del embedding de entrada. Sin embargo, existe otra vía para mejorar el desempeño de los modelos Transformer que va más allá de la manipulación directa del embedding: intervenir directamente en el mecanismo de atención.\\
@@ -173,7 +200,7 @@ Debemos tener especial cuidado al usar este método en conjuntos de datos peque�
 
 \subsubsection{Convolutional Stochastic Positional Encoding (Conv-SPE)}
 
-El método Conv-SPE, como indica su nombre, en lugar de usar codificaciones fijas o vectores aprendibles asociados a posiciones, utiliza convoluciones para capturar patrones locales y dependencias espaciales en la codificación posicional. Este enfoque se proponer a priori por ser más flexible y adaptativo, permitiendo modelar relaciones complejas a distintas escalas, incorporando un sesgo inductivo beneficioso para series temporales y mejorando la eficiencia y robustez en la captura de dependencias posicionales. \\
+Para cerrar el grupo de métodos que modifican la atención, tenemos Conv-SPE. Como indica su nombre, en lugar de usar codificaciones fijas o vectores aprendibles asociados a posiciones, utiliza convoluciones para capturar patrones locales y dependencias espaciales en la codificación posicional. Este enfoque se proponer a priori por ser más flexible y adaptativo, permitiendo modelar relaciones complejas a distintas escalas, incorporando un sesgo inductivo beneficioso para series temporales y mejorando la eficiencia y robustez en la captura de dependencias posicionales. \\
 
 Su formulación comienza generando una matriz aleatoria \( Z_d \in \mathbb{R}^{M \times R} \) cuyos elementos siguen una distribución gaussiana estándar independiente e idénticamente distribuida (i.i.d.). Sobre esta matriz, se aplican filtros convolucionales aprendibles \(\Phi^Q\) y \(\Phi^K\) para transformar la información posicional en representaciones útiles para la atención:
 
@@ -194,25 +221,6 @@ Además, cuando el parámetro \(R\) es suficientemente grande, la matriz resulta
 donde \(\bar{Q}_d\) y \(\bar{K}_d\) son las representaciones convolucionales normalizadas.\\
 
 Sobre el papel, presenta varias ventajas. En primer lugar, captura relaciones relativas sin requerir atención cuadrática, gracias a la estimación realizada que es de orden lineal, facilitando su escalabilidad. Además, es más robusta ante sobreajuste por su componente estocástico. Sin embargo, aunque en principio pueda parecer más eficiente, modificar el mecanismo de atención puede ser delicado y su rendimiento depende mucho del conjunto de datos utilizado. De hecho, sus creadores señalan que este enfoque es más adecuado para tareas de clasificación de series temporales que para tareas de predicción, por lo que su aplicabilidad se aleja del contexto de este trabajo.
-
-
-\subsubsection{Temporal Positional Encoding (t-PE)}
-
-
-
-$$
-PE_{i, 2k} = \sin\left(\frac{i}{10000^{\frac{2k}{d}}}\right), \quad
-PE_{i, 2k+1} = \cos\left(\frac{i}{10000^{\frac{2k}{d}}}\right)
-$$
-
-Y para la información local:
-
-$$S(i, j) = \exp\left( -\frac{\|x_i - x_j\|^2}{2\sigma^2} \right)$$
-
-Añadiéndose al encoding final de manera aditiva:
-
-$$T\text{-}PE(i) = PE(i) + S(i, j)$$
-
 
 \section{Propuestas}
 \subsection{Criterios de partida}
