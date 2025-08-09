@@ -1,0 +1,120 @@
+\chapter{Estudio teórico. Propuestas en Positional Encoding}
+
+En el capítulo anterior, presentamos los principales modelos de aprendizaje para series temporales, y así analizar las soluciones propuestas por cada uno. Al hacerlo, pudimos identificar un problema clave: la codificación posicional no recibe la atención necesaria, y en la mayoría de casos se usa la formulación original, con adaptaciones mínimas, o bien, es suprimido a favor de otras alternativas incorporadas en la propia arquitectura.\\
+
+En este capítulo, teniendo presente los tipos anteriormente descritos de codificaciones (fijo, aprendible, adición de variables temporales, transformaciones), retomaremos esa clasificación para profundizar en las propuestas más recientes orientadas específicamente a series temporales, analizando su motivación, diseño y posibles ventajas frente a las formulaciones clásicas.\\
+
+Partiremos del esquema tradicional de codificación posicional heredado del Transformer original y examinaremos cómo distintos trabajos recientes han intentado superar sus limitaciones mediante adaptaciones de carácter local o dependientes del contenido. Nuestro objetivo será identificar las ventajas concretas que aporta cada enfoque, extraer de ellos la inspiración necesaria y, a partir de ahí, diseñar nuevos experimentos de codificación posicional que integren ideas capaces de mejorar el rendimiento del modelo.
+
+\section{Análisis de propuestas existentes}
+
+Durante el análisis de los modelos más destacados del estado del arte, hemos podido ver en uso, principalmente, el mecanismo tradicional de atención basado en senos y cosenos, así como el basado en las transformadas de Fourier y Wavelet, en el caso de FEDformer. Sin embargo, dejando al margen estos enfoques, no hemos apreciado ninguna otra alternativa intuitiva que trate de mejorar el positional encoding más allá, ya que en otros casos, directamente se opta por su supresión o compensación por otro mecanismo.\\
+
+Para poder profundizar más en este aspecto, podemos adentrarnos en surveys como el publicado por \textit{Habib Irani y Vangelis Metsis}~\cite{irani2025positionalencodingtransformerbasedtime}, donde se recogen multitud de variantes de encoding, aplicados a series temporales, pero provenientes de diferentes ámbitos. Tomando como referencia su estructura, a continuación clasificaremos las codificaciones en dos tipos: aquellas que se suman directamente al embedding y aquellas que influyen directamente en el cálculo de la atención.
+
+\subsection{Métodos aditivos}
+
+Comenzaremos el análisis por el positional encoding aditivo. Esta vertiente toma como referencia el mecanismo de adición de información empleado por el enfoque sinusoidal original, ya que todas estas codificaciones se añaden al embedding mediante suma, de forma que no es necesario realizar modificaciones adicionales a la arquitectura neural que los procesará, y facilita el uso de modelos preentrenados con el fin de ahorrar recursos de cómputo.\\
+
+En mayor detalle, estos métodos construyen un vector posicional $(P \in \mathbb{R}^{L \times d})$ y lo se suma directamente a los embeddings de entrada (X), obteniendo:
+
+$$ X' = X + P $$
+
+donde (L) es la longitud de la secuencia y (d) la dimensión del embedding.\\
+
+Suponen una ventaja desde el punto de vista de la usabilidad, ya que modificar excesivamente los mecanismos de atención puede dificultar su comprensión y provocar efectos adversos indeseados si no se realiza con el rigor necesario. A continuación, destacaremos algunos de los mecanismos existentes con estas características, y analizaremos la utilidad ofrecida por cada uno.
+
+\subsubsection{ Sinusoidal Positional Encoding (PE)}
+
+Se trata del encoding original propuesto originalmente por Vaswani et al. (2017)~\cite{vaswani2023attentionneed}, a modo de recordatorio. Como ya vimos, utiliza funciones sinusoidales para representar la posición:
+
+$$
+PE_{(pos, 2i)} = \sin\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)
+$$
+
+$$
+PE_{(pos, 2i+1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)
+$$
+
+Donde cada variable indica:
+
+\begin{itemize}
+	\item \textbf{pos}: índice temporal (posición).
+	\item \textbf{i}: dimensión del componente del embedding.
+	\item \textbf{d}: dimensión total del embedding.
+\end{itemize}
+
+Basándonos simplemente en su formulación, fuimos capaces de distinguir ya sus ventajas y desventajas; como ventaja, podemos ver que se trata de una codificación no entrenable, por lo que para unas mismas dimensiones de entrada de datos, el resultado será siempre el mismo, y sus valores no se deben entrenar época a época de manera independiente. Esto lo hace más sencillo de usar, y más eficiente al no requerir parámetros adicionales. Sin embargo, como principal desventaja, estimamos que no permite modelar con suficiente adaptabilidad los períodos no estacionales de datos o con mayor número de irregularidades y valores anómalos.\\
+
+Su forma sencilla de acoplar al conjunto de datos de entrada nos sirve de inspiración para la creación de nuevas variantes que traten de incorporar más contexto semántico de los datos.
+
+\subsubsection{Time Absolute Positional Encoding (tAPE)}
+
+tAPE propone una solución que, aunque sigue perteneciendo a la familia de codificaciones fijas, incorpora información estructural propia de la secuencia de entrada, en particular su longitud real $L$. La idea central es ajustar la escala de las frecuencias empleadas en la codificación sinusoidal en función de esa longitud, de forma que la representación posicional conserve una propiedad conocida como \textit{distance-awareness}.\\
+
+Por \textit{distance-awareness} entendemos la capacidad de la codificación para reflejar, de manera coherente y diferenciada, la distancia relativa entre posiciones, y así complementar a la información global. En una codificación con buena distance-awareness, dos posiciones cercanas deben tener representaciones más similares entre sí que respecto a posiciones muy alejadas, y esta relación se mantiene de forma proporcional a lo largo de toda la secuencia. Es algo que no logramos cosneguir en codificaciones sinusoidales estándar, sobre todo cuando la dimensión del embedding es baja, ya que las frecuencias asignadas no siempre proporcionan suficiente resolución para representar distancias cortas.\\
+
+Para mitigar este problema, tAPE redefine las frecuencias como:
+
+\begin{equation}
+	\centering
+	\omega^{new}_k = k \cdot \frac{d_{model}}{L}
+\end{equation}
+
+Adaptando así su espectro al tamaño real de la secuencia y adecuándose incluso a casos de entrada de corta longitud. Esta nueva frecuencia simplemente se incorpora como parámetro a la codificación sinusoidal estándar:
+
+\begin{equation}
+	\begin{aligned}
+		\text{PE}_{(pos,2i)} &= \sin\!\left( pos \cdot \omega^{new}_i \right) \\
+		\text{PE}_{(pos,2i+1)} &= \cos\!\left( pos \cdot \omega^{new}_i \right)
+	\end{aligned}
+\end{equation}
+
+
+Donde:
+
+\begin{itemize}
+	\item \textit{d} representa la dimensión del embedding utilizada por el modelo Transformer; este valor determina el número de componentes de la codificación posicional y, por tanto, el rango de frecuencias disponibles para representar las posiciones.
+	\item \textit{L} corresponde a la longitud real de la secuencia.
+	\item \textit{k} es el índice de la dimensión o de la frecuencia dentro del embedding; al recorrer k desde valores bajos a altos, obtenemos frecuencias cada vez más elevadas en las funciones seno y coseno, lo que permite representar tanto variaciones lentas (baja frecuencia) como rápidas (alta frecuencia) a lo largo de la secuencia.
+\end{itemize} 
+
+La principal virtud de tAPE es su capacidad para mantener la distance-awareness incluso en contextos con embeddings de baja dimensión, algo que no siempre se logra con la codificación sinusoidal estándar. Al incorporar la longitud real \textit{L} en el cálculo de las frecuencias, se evita que la escala sea excesivamente grande o pequeña para la secuencia procesada, lo que redunda en una representación posicional más ajustada y fiel a las distancias relativas. Esta adaptación es especialmente útil en series temporales de corta o media duración, donde las relaciones locales y su correcta discriminación son fundamentales.\\
+
+Sin embargo, sigue teniendo limitaciones evidentes. Para empezar, su dependencia explícita de \textit{L} puede suponer un problema si, durante la inferencia, trabajamos con secuencias de longitud muy distinta a la usada en el entrenamiento, aunque normalmente, se deberían seguir distribuciones similares. Además, tAPE es un método de codificación fijo y no incorpora parámetros aprendibles, lo que si bien simplifica su uso y evita sobreajuste, también le impide adaptarse dinámicamente a patrones posicionales más complejos o irregulares presentes en diferentes dominios o conjuntos de datos.
+
+\subsubsection{Learnable Positional Encoding (LPE)}
+
+En el método sinusoidal tradicional, la codificación posicional se realizaba de forma fija e invariante, dependiendo únicamente de las dimensiones de los datos de entrada. Sin embargo, esto no favorece a la localización de estructuras y detalles propios de los datos de entrada, por lo que surge así el encoding posicional aprendible. Su filosofía se basa en dejar que el modelo sea quien entrene los valores de la codificación posicional a la vez que el resto de la arquitectura se refina:
+
+$$
+PE_{\text{learnable}}(pos) = W_{pos}, \quad W_{pos} \in \mathbb{R}^d
+$$
+
+Esta codificación aprendida se incorpora al embedding de entrada de manera aditiva como hasta ahora:
+
+
+$$
+X' = X + PE_{\text{learnable}}[pos]
+$$
+
+La principal ventaja  es su capacidad de adaptación: en lugar de imponer un patrón predefinido, permite que el modelo encuentre la representación posicional que mejor se ajuste a los datos. Esto puede traducirse en una mejor captura de relaciones temporales o estructurales propias del dominio de trabajo.\\
+
+La principal fortaleza de este método reside en su capacidad de adaptación. A diferencia de métodos como el PE sinusoidal o tAPE, que imponen un patrón posicional fijo, LPE permite que el modelo aprenda directamente, a partir de los datos, la representación posicional que mejor captura las relaciones temporales y estructurales relevantes para la tarea. Esta flexibilidad puede traducirse en una mayor precisión, especialmente en dominios donde las dependencias posicionales no siguen un patrón excesivamente regular, o cuando la información contextual es altamente específica del conjunto de datos y es compleja de detectar de manera intuitiva.\\
+
+No obstante, esta flexibilidad tiene un precio. Al añadir un vector de parámetros por cada posición, el tamaño del modelo crece linealmente dependiendo del parámetro de longitud \textit{L}, lo que incrementa tanto el coste de almacenamiento como el de entrenamiento. Además, la codificación aprendida queda estrechamente ligada al conjunto de datos utilizado para ajustarla; esto implica que, ante un cambio de dominio o de distribución de las secuencias, incluso si la longitud se mantiene, es necesario volver a entrenar los embeddings posicionales desde cero para preservar su utilidad. En contraste con tAPE, que conserva su aplicabilidad en distintos contextos gracias a su formulación fija, LPE sacrifica generalidad en favor de especialización.
+
+
+\subsection{Métodos que manipulan la atención}
+
+
+
+\section{Propuestas}
+\subsection{Criterios de partida}
+\subsection{PE basado en ventana de estadísticos}
+\subsection{PE basado en ventana de estadísticos y lags}
+\subsection{PE combinado flexible}
+\subsection{PE combinado con TPE}
+\subsection{PE combinado con SPE}
+
+
