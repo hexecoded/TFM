@@ -248,7 +248,14 @@ Pero, esta idea no tiene por qué entrar en conflicto con el resto de codificaci
 \end{figure}
 
 
-Proponemos así dotar a cada encoding aditivo de un peso aprendible para que el modelo seleccione automáticamente cuáles contribuyen más al embedding final. Si el peso de un encoding se aproxima a 0, ese encoding queda efectivamente suprimido de la ecuación, permitiendo que prevalezcan los métodos que realmente aportan información al embedding final. No obstante, esta propuesta requiere especial cuidado: sin restricciones, algunos pesos pueden crecer de forma desproporcionada (o bien desvanecerse), impidiendo la convergencia, y por tanto, la cercanía a soluciones óptimas. Una solución simple es aplicar un mecanismo de normalización de pesos, comoforzar que los pesos sumen 1. Esto lo podemos conseguir de forma sencilla mediante Softmax, que actúa como regularizador y estabiliza la ponderación entre encodings. Adicionalmente, podría ser interesante combinarlo con inicializaciones acotadas, con valores pequeños.\\
+Proponemos así dotar a cada encoding aditivo de un peso aprendible para que el modelo seleccione automáticamente cuáles contribuyen más al embedding final. Si el peso de un encoding se aproxima a 0, ese encoding queda efectivamente suprimido de la ecuación, permitiendo que prevalezcan los métodos que realmente aportan información al embedding final. No obstante, esta propuesta requiere especial cuidado: sin restricciones, algunos pesos pueden crecer de forma desproporcionada (o bien desvanecerse), impidiendo la convergencia, y por tanto, la cercanía a soluciones óptimas. Una solución simple es aplicar un mecanismo de normalización de pesos, como forzar que los pesos sumen 1. Esto lo podemos conseguir de forma sencilla mediante Softmax, que actúa como regularizador y estabiliza la ponderación entre encodings. Adicionalmente, podría ser interesante combinarlo con inicializaciones acotadas, con valores pequeños. Su definición puede apeciarse gráficamente en la figura \ref{enhancedhybrid}.\\
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.6]{img/enhancedhybrid.png}
+	\caption{Propuesta: ponderación de métodos aditivos e información de ventana concatenada}
+	\label{enhancedhybrid}
+\end{figure}
 
 Sea \(\mathbf{e}_0\in\mathbb{R}^d\) el embedding de partida, con la información adicional de ventana ya concatenada y \(\{\mathbf{pe}_k\}_{k=1}^K \subset \mathbb{R}^d\) los encodings que deseamos añadir. Para su ponderación, introducimos pesos aprendibles escalares \(w_k\in\mathbb{R}\), que normalizamos con Softmax:
 \[
