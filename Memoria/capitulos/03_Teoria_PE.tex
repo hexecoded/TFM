@@ -584,7 +584,7 @@ Manteniendo esta combinación ponderada, que sigue siendo de 4 elementos, seguim
 
 \subsubsection{Definición formal}
 
-La definición de este método tiene como base la salida de WinStatLag. Por tanto, para no repetir dicha sección ya conocida, suponemos como entrada al conjunto de datos $\tilde{X}$, con un tensor perteneciente a $\mathbb{R}^{d + 4 + p}$, fruto de la concatenación de estadísticos, lags e información base proporcionada por $X  \in \mathbb{R}^4$.\\
+La definición de este método tiene como base la salida de WinStatLag. Por tanto, para no repetir dicha sección ya conocida, sea $\tilde{X}$, con un tensor perteneciente a $\mathbb{R}^{d + 4 + p}$, fruto de la concatenación de estadísticos, lags e información base proporcionada por $X  \in \mathbb{R}^4$, el conjunto de datos de entrada.\\
 
 Supuesta la entrada, se aplican sobre ella los 3 encodings escogidos: PE, LPE y T-PE. Para cada instante pos:
 
@@ -667,6 +667,69 @@ A nivel de algoritmo, basta con tomar la base modular creada para WinStatFlex y 
 Obteniendo de esta forma el embedding ponderado final, listo para ser introducido al Transformer para ser refinado y aprendido.
 
 
-\subsection{PE combinado con SPE}
+\subsection{WinStatSPE}
+
+Hasta ahora, los métodos vistos empleaban la información proporcionada por la ventana y los lags, o bien, métodos aditivos basados en codificación absoluta, o bien híbrida mediante T-PE. Sin embargo, los métodos basados en modificación de la atención no se habían empleado. Por ello, como último modelo formulado, proponemos un enfoque hibrído completo, que toma como referencia la metodología de WinStatFlex, y añade a su cálculo la modificación SPE de la atención.
+
+\subsubsection{Funcionamiento}
+
+El propósito de esta última forma de codificación va más allá del propio embedding, y trata de evaluar la aportación realizada por la variante de atención propuesta por SPE. Si recordamos, la segunda variante de métodos de incorporación de información posicional es la basada en modificaciones directas sobre la matriz de atención. SPE, para lograr mejorar la semántica de la serie, y poder observar valores a diferente escala, recurría al uso de operaciones de convolución, que de alguna manera, logra realizar el mismo efecto que cuando aplicamos la ventana: obtener localidad de los patrones, y resumir la información para así facilitar la correspondencia entre valores.\\
+
+El motivo de no incorporarlo en otras propuestas de encoding se debe a que, aunque los resultados son positivos, el tipo de problema más efectivo para este tipo de codificaciones es clasificación según \cite{irani2025positionalencodingtransformerbasedtime}. Aún así, no se indica que sea incompatible con tareas de forecasting, por lo que aunque no sea su foco de diseño, podría funcionar. Para evaluar su desempeño en predicción, podemos integrarlo en nuestro modelo WinStatFlex, modificando el mecanismo de atención y permitiendo que el entrenamiento determine la ponderación óptima en combinación con SPE. Si alguna codificación resulta incompatible, su peso asociado tenderá a cero; en cambio, si mejora el rendimiento, su contribución se potenciará en la suma final, por lo que de manera activa iremos ajustando las diferentes codificaciones para ver cuál trabaja mejor en sintonía con SPE.\\
+
+A continuación, definiremos formalmente el modelo, teniendo como base los modelos anteriormente ya definidos.
 
 
+\subsubsection{Definición formal}
+
+La definición de este método tiene como base la salida de WinStatFlex. Por tanto, para no repetir dicha sección ya conocida, sea la entrada al modelo un conjunto de datos $\tilde{X}$, con un tensor perteneciente a $\mathbb{R}^{d + 4 + p}$, fruto de la concatenación de estadísticos, lags e información base proporcionada por $X  \in \mathbb{R}^4$.
+
+Supuesta la entrada, se aplican sobre ella los 3 encodings escogidos: PE, LPE y TAPE. Para cada instante pos:
+
+\begin{enumerate}
+	\item PE
+
+	$$
+	X_{PE} = \tilde{x}_t + PE[pos]
+	$$
+	\item LPE:
+	
+
+	$$
+	X_{LPE} = \tilde{x}_t + LPE[pos]
+	$$
+	
+	\item TAPE:
+	
+	$$
+	X_{TAPE} = \tilde{x}_t + TAPE[pos]
+	$$
+	
+\end{enumerate}
+
+
+Siendo su salida una ponderación como hasta ahora:
+
+$$
+X_{\text{final}} = w_0 \tilde{X} + w_1 X_{PE} + w_2 X_{LPE} + w_3 X_{TPE}, \quad \text{con} \quad \sum_{i=0}^3 w_i = 1.
+$$
+
+Posteriormente, dentro de la arquitectura Transformer que utilizaremos (y que recibe \(X_{\text{final}}\) como entrada), sustituiremos el producto original de atención por el nuevo mecanismo aportado por SPE.\\
+
+Sea \(Z_d \in \mathbb{R}^{M \times R}\) una matriz aleatoria cuyos elementos son independientes y distribuidos según una gaussiana estándar. Sobre esta matriz se aplican los filtros convolucionales aprendibles \(\Phi^Q\) y \(\Phi^K\), que transforman la información posicional en representaciones útiles para el cálculo de atención:
+
+\[
+Q_d = Z_d \otimes \Phi^Q, \quad K_d = Z_d \otimes \Phi^K,
+\]
+
+Los filtros \(\Phi^Q\) y \(\Phi^K\) son ajustados durante el entrenamiento para extraer patrones temporales y espaciales relevantes. De esta forma, y usando el parámetro R de entrada, podemos aproximar la nueva atención como:
+
+\[
+P_d \approx \frac{\bar{Q}_d \bar{K}_d^\top}{R},
+\]
+
+donde \(\bar{Q}_d\) y \(\bar{K}_d\) son las representaciones normalizadas.\\
+
+En este caso, no detallaremos un pseudocódigo, ya que este sería igual en la parte del embedding que el ya mostrado en WinStatFlex (ver pseudocódigo \ref{winstatflex}).\\
+
+En resumen, con esta estrategia combinaremos la flexibilidad de los métodos basados en kernels con la eficiencia computacional de la convolución, y teniendo además como entrada un conjunto de tokens enriquecidos mediante diferentes técnicas, y ver si el funcionamiento combinado de estas alternativas ofrece resultados competitivos.
