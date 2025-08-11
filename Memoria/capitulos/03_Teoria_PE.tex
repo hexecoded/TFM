@@ -275,11 +275,108 @@ De este modo, si \(\alpha_k \approx 0\) el encoding correspondiente queda suprim
 \end{itemize}
 
 
-Para evaluar la utilidad de esta estrategia, diseñaremos una serie de modelos de encoding que cumplan las propiedades descritas, organizados de forma incremental en complejidad. Es decir, cada nivel incorporará nuevas características, comenzando por propuestas basadas en la correspondencia de puntos mediante estadísticos en ventana, continuando con la adición de \textit{lags} y, finalmente, hibridando con modelos más elaborados del estado del arte revisados previamente, y empleando la técnica de ponderado. Esta construcción gradual nos permitirá realizar de forma directa un \textit{ablation study} que identifique la contribución específica de cada componente, y así ver en qué puntos la estrategia no es correcta para descartarla.
+Para evaluar la utilidad de esta estrategia, diseñaremos una serie de modelos de encoding que cumplan las propiedades descritas, organizados de forma incremental en complejidad. Es decir, cada nivel incorporará nuevas características, comenzando por propuestas basadas en la correspondencia de puntos mediante estadísticos en ventana, continuando con la adición de \textit{lags} y, finalmente, hibridando con modelos más elaborados del estado del arte revisados previamente, y empleando la técnica de ponderado. Esta construcción gradual nos permitirá realizar de forma directa un \textit{ablation study} que identifique la contribución específica de cada componente, y así ver en qué puntos la estrategia no es correcta para descartarla.\\
+
+Por tanto, el camino seguido para evaluar las diferentes alternativas, quedaría resumida de la siguiente forma:
+
+\begin{enumerate}
+	\item \textbf{WinStat}. Se trata de un modelo que usará el método de ventana deslizante para adjuntar valores estadísticos a los datos de entrada. Adjuntará media, std, y extremos, por lo que aumenta en 4 dimensiones el embedding resultante.
+	\item \textbf{WinStatLag}. Consiste en añadir, a la propuesta anterior, información acerca de un conjunto de lags anteriores, de manera que se calculan las diferencias y se agregan como una nueva característica a cada punto. De nuevo, se aumenta el tamaño del embedding, y depende del número de lags a incorporar.
+	\item \textbf{WinStatFlex}. Consiste en combinar el método anterior de WinStatLag con una ponderación de los diferentes postional encoding de tipo aditivo vistos, a excepción de TPE, que se trata de un método híbrido. Para ello, se emplea la arquitectura vista en la figura \ref{enhancedhybrid}.
+	\item \textbf{WinStatTPE}. Realiza la ponderación de los métodos aditivos con TPE, pero suprimiendo TAPE, cuya codificación podría incorporar demasiada redundancia.
+	\item \textbf{WinStatSPE}. Prueba la utilidad de un modelo combinado con encodings aditivos, valores estadísticos y un mecanismo de atención modificado, concretamente SPE, que es el que mejores resultados mostró en \cite{irani2025positionalencodingtransformerbasedtime}. 
+\end{enumerate}
+
+En los siguientes puntos, examinaremos con detalle cada alternativa, atendiendo a la formulación propia de cada una de ellas.
+
+\subsection{WinStat}
+
+Este método introduce nueva información al conjunto de datos para cada posición de este, empleando para ello el cálculo de valores estadísticos que permitan ampliar el contexto de cada punto usando para ello una ventana W de tamaño definido. A diferencia de otros encodings vistos anteriormente, WinStat busca añadir información contextual de forma explícita en el conjunto de datos, a diferencia de los modelos aditivos, que de alguna manera añaden dicha información de manera implícita en los datos.
+
+\subsubsection{Funcionamiento}
+
+La justificación de realizar este procedimiento proviene de la falta de semántica que frecuentemente apreciamos a la hora de crear un embedding. Parte de este contexto viene dado por el entorno en el que se encuentra cada punto, ya que cuanto estudiamos el significado de la estacionalidad, vimos que existían períodos repetidos (con mayor o menor diferencia), y que es interesante saber en qué lugar de dicho período se encuentra un punto para corresponderlo con otro.\\
+
+Con el uso de valores estadísticos extraídos de esta ventana, como la media, la desviación típica y los extremos máximo y mínimo, estamos añadiendo al conjunto de entrada explícitamente redundancia semántica acerca de la variabilidad local de los datos, de manera que la arquitectura encuentra dicha correspondencia entre puntos de manera más sencilla y explícita. Formalmente hablando, esto puede interpretarse como la introducción de un \textit{sesgo inductivo local}: el modelo recibe de forma explícita información que de otro modo tendría que inferir a partir de múltiples capas de atención.\\
+
+En términos de complejidad, el coste adicional es $O(L \cdot w)$, siendo $w$ el tamaño de ventana, lo que resulta asumible para secuencias de larga duración.\\
+
+Su idea, por tanto, es sencilla: se basa en la generación de un vector estadístico $s_t$ que recoge el contexto local en la ventana entorno al instante $t$. Al concatenar $s_t$ con el embedding original $x_t$, obtenemos $\tilde{x}_t$, un vector enriquecido que combina la representación de partida del token, junto a una codificación explícita de su contexto cercano dentro de W.
+
+\subsubsection{Definición formal}
+
+Supongamos $X = [x_1, x_2, \dots, x_L] \in \mathbb{R}^{L \times d}$ la secuencia de entrada, donde $L$ es la longitud de la secuencia y $d$ la dimensión del embedding original en cada posición. Definimos como ventana deslizante de tamaño $w \in \mathbb{N}$ centrada en cada posición $t$ de la siguiente forma:
+
+\[
+\mathcal{W}_t = \{ x_j \mid j \in [t - \lfloor w/2 \rfloor,\, t + \lfloor w/2 \rfloor] \cap [1, L] \}
+\]
+
+Donde tenemos especial cuidado para evitar problemas de desbordamiento en los extremos del embedding (primera y última posición). Para cada ventana $\mathcal{W}_t$, calculamos los estadísticos, considerando que las operaciones se aplican elemento a elemento sobre las $d$ dimensiones del embedding:
+
+\begin{enumerate}
+	\item \textit{Media}:
+	\[
+	\mu_t = \frac{1}{|\mathcal{W}_t|} \sum_{x \in \mathcal{W}_t} x
+	\]
+	\item \textit{Desviación estándar}:
+	\[
+	\sigma_t = \sqrt{ \frac{1}{|\mathcal{W}_t|} \sum_{x \in \mathcal{W}_t} (x - \mu_t)^2 }
+	\]
+	\item \textit{Mínimo}:
+	\[
+	m^{\min}_t = \min_{x \in \mathcal{W}_t} x
+	\]
+	\item \textit{Máximo}:
+	\[
+	m^{\max}_t = \max_{x \in \mathcal{W}_t} x
+	\]
+\end{enumerate}
+
+Posteriormente, definimos el vector estadístico asociado a la posición $t$ como:
+
+\[
+s_t = [\,\mu_t,\, \sigma_t,\, m^{\min}_t,\, m^{\max}_t\,] \in \mathbb{R}^{4}
+\]
+
+Y, finalmente, el embedding enriquecido de la posición $t$ es:
+
+\[
+\tilde{x}_t = [\,x_t \, \| \, s_t\,] \in \mathbb{R}^{d+4}
+\]
+
+donde $\|$ denota la concatenación de vectores, en este caso, el del embedding de base y la nueva información contextual. El resultado global es la secuencia:
+
+\[
+\tilde{X} = [\,\tilde{x}_1, \tilde{x}_2, \dots, \tilde{x}_L\,] \in \mathbb{R}^{L \times (d+4)}
+\]
+
+que será la entrada de nuestro modelo de Transformer seleccionado.\\
+
+De manera algorítmica, su implementación es bastante sencilla (ver pseudocódigo \ref{winstat}). Al usar herramientas del lenguaje de programación que permitan cálculo en paralelo, las operaciones son fácilmente vectorizables, reduciendo así el tiempo necesario para la creación del vector.
 
 
-\subsection{PE basado en ventana de estadísticos}
-\subsection{PE basado en ventana de estadísticos y lags}
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE $X \in \mathbb{R}^{L \times d}$ (matriz de entrada), $w \in \mathbb{N}$ (tamaño de ventana)
+		\ENSURE $\tilde{X} \in \mathbb{R}^{L \times (d+4)}$ (matriz enriquecida)
+		\FOR{$t = 1$ \TO $L$}
+		\STATE $W_t \gets X[\max(1, t - \lfloor w/2 \rfloor) : \min(L, t + \lfloor w/2 \rfloor)]$
+		\STATE $\mu_t \gets \text{mean}(W_t)$
+		\STATE $\sigma_t \gets \text{std}(W_t)$
+		\STATE $m^{\min}_t \gets \min(W_t)$
+		\STATE $m^{\max}_t \gets \max(W_t)$
+		\STATE $s_t \gets [\mu_t, \sigma_t, m^{\min}_t, m^{\max}_t]$
+		\STATE $\tilde{x}_t \gets \text{concat}(x_t, s_t)$
+		\STATE $\tilde{X}[t] \gets \tilde{x}_t$
+		\ENDFOR
+		\RETURN $\tilde{X}$
+	\end{algorithmic}
+	\caption{WinStat: funcionamiento algorítmico del método basado en ventana de estadísticos}
+	\label{winstat}
+\end{algorithm}
+
+\subsection{WinStatLag}
 \subsection{PE combinado flexible}
 \subsection{PE combinado con TPE}
 \subsection{PE combinado con SPE}

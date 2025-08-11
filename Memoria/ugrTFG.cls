@@ -146,6 +146,9 @@
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage[table]{xcolor}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
 
 % Redefinir \paragraph
 \makeatletter
