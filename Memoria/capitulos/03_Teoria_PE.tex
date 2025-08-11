@@ -359,7 +359,7 @@ De manera algorítmica, su implementación es bastante sencilla (ver pseudocódi
 \begin{algorithm}[H]
 	\begin{algorithmic}[1]
 		\REQUIRE $X \in \mathbb{R}^{L \times d}$ (matriz de entrada), $w \in \mathbb{N}$ (tamaño de ventana)
-		\ENSURE $\tilde{X} \in \mathbb{R}^{L \times (d+4)}$ (matriz enriquecida)
+		\ENSURE $\tilde{X} \in \mathbb{R}^{L \times (d+4)}$
 		\FOR{$t = 1$ \TO $L$}
 		\STATE $W_t \gets X[\max(1, t - \lfloor w/2 \rfloor) : \min(L, t + \lfloor w/2 \rfloor)]$
 		\STATE $\mu_t \gets \text{mean}(W_t)$
@@ -377,7 +377,88 @@ De manera algorítmica, su implementación es bastante sencilla (ver pseudocódi
 \end{algorithm}
 
 \subsection{WinStatLag}
-\subsection{PE combinado flexible}
+
+Teniendo como base WinStat, este método puede verse como una ampliación. Conservando los valores estadísticos calculados para cada posición, este método introduce información proporcionada de lags anteriores, de manera que se evalúa la diferencia entre el valor actual y tantos valores anteriores como se desee. El objetivo sigue siendo el mismo: mejorar la semántica a través del contexto local.
+
+\subsubsection{Funcionamiento}
+
+El método WinStatLag amplía el enfoque de WinStat incorporando, además de la estadística local de cada posición, información explícita sobre la evolución temporal a través de diferencias con lags. Este mecanismo permite capturar no solo el estado local de la señal, sino también sus variaciones a corto, medio o largo plazo, según los retardos elegidos.\\
+
+La inclusión de retardos añade una dimensión temporal explícita al embedding; mientras que los valores estadísticos resumen el vecindario inmediato mediante métricas agregadas (media, desviación estándar, mínimo y máximo), los lags añaden gradientes temporales que pueden ser críticos para identificar tendencias, oscilaciones o cambios abruptos. Esto es especialmente relevante en series temporales donde la dinámica entre instantes consecutivos  o separados a un tamaño de intervalo específico suponen información clave para comprender los siguientes valores.\\
+
+Para controlar el funcionamiento, podemos definir la existencia de un parámetro $p = |\mathcal{L}|$, que se define implícitamente al especificar un vector $\mathcal{L}$ con las posiciones t-anteriores que se deben tener en cuenta, y controla cuántos retardos se incorporan y, por tanto, cuánta historia temporal se integra en la representación. Cada retardo añade $d$ dimensiones adicionales, lo que incrementa la capacidad descriptiva pero también el coste computacional. Por ello, la selección de retardos debe ser equilibrada y razonable, y no se deberían superar los 3 o 5 rezagos como máximo a menos que sea necesario.\\
+
+Su concepto fusiona contexto estadístico local de las 4 métricas anteriores y el gradiente temporal obtenido al realizar las diferencias, convirtiéndolo en una herramienta teóricamente más robusta para tareas de predicción en dominios donde la forma de la señal y sus cambios temporales son igualmente importantes.
+
+\subsubsection{Definición formal}
+
+Comenzamos, de nuevo, por definir nuestro vector de entrada, $X = [x_1, x_2, \dots, x_L] \in \mathbb{R}^{L \times d}$, donde $L$ es la longitud y $d$ la dimensión del \textit{embedding} original. Sea $w \in \mathbb{N}$ el tamaño de ventana deslizante y $\mathcal{L} = \{\ell_1, \ell_2, \dots, \ell_p\}$ el conjunto de retardos considerados.\\
+
+Para cada posición $t$, definimos la ventana deslizante:
+\[
+\mathcal{W}_t = \{ x_j \mid j \in [t - \lfloor w/2 \rfloor,\, t + \lfloor w/2 \rfloor] \cap [1, L] \}
+\]
+
+Calculamos los estadísticos locales como en WinStat, obteniendo nuestro vector estadístico:
+\[
+s_t = [\,\mu_t,\, \sigma_t,\, m^{\min}_t,\, m^{\max}_t\,] \in \mathbb{R}^4
+\]
+
+Y ahora, adicionalmente, para los retardos, definimos para cada $\ell_j \in \mathcal{L}$:
+\[
+\delta_t^{(\ell_j)} = | x_t - x_{t - \ell_j}|, \quad \text{si } t - \ell_j \geq 1
+\]
+
+El \textit{embedding} enriquecido de la posición $t$ está constituido por la concatenación de los valores estadísticos y las nuevas diferencias:
+\[
+\tilde{x}_t = [\,x_t \,\|\, s_t \,\|\, \delta_t^{(\ell_1)} \,\|\, \dots \,\|\, \delta_t^{(\ell_p)}\,] \in \mathbb{R}^{d + 4 + p}
+\]
+y por tanto, la secuencia enriquecida tendrá como dimensión 4 + número de rezagos p.
+\[
+\tilde{X} = [\,\tilde{x}_1, \tilde{x}_2, \dots, \tilde{x}_L\,] \in \mathbb{R}^{L \times (d+4+p )}
+\]
+
+A nivel algorítmico (ver pseudocódigo \ref{winstatlag}), buena parte del código será similar a WinStat, al cual tendrán que agregarse los valores de diferencia.
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE 
+		$X \in \mathbb{R}^{L \times d}$ (matriz de entrada), 
+		$w \in \mathbb{N}$ (tamaño de ventana),
+		$\mathcal{L} = \{\ell_1, \ell_2, \dots, \ell_p\}$ (conjunto de retardos)
+		\ENSURE 
+		$\tilde{X} \in \mathbb{R}^{L \times (d + 4 + p)}$
+		\FOR{$t = 1$ \TO $L$}
+		\STATE $W_t \gets X[\max(1, t - \lfloor w/2 \rfloor) : \min(L, t + \lfloor w/2 \rfloor)]$
+		\STATE $\mu_t \gets \text{mean}(W_t)$
+		\STATE $\sigma_t \gets \text{std}(W_t)$
+		\STATE $m^{\min}_t \gets \min(W_t)$
+		\STATE $m^{\max}_t \gets \max(W_t)$
+		\STATE $s_t \gets [\mu_t, \sigma_t, m^{\min}_t, m^{\max}_t]$
+		\STATE Inicializar vector de diferencias: $\Delta_t \gets []$
+		\FOR{cada $\ell_j \in \mathcal{L}$}
+		\IF{$t - \ell_j \geq 1$}
+		\STATE $\delta \gets |x_t - x_{t - \ell_j}|$
+		\ENDIF
+		\STATE Añadir $\delta$ a $\Delta_t$
+		\ENDFOR
+		\STATE $\tilde{x}_t \gets \text{concat}(x_t, s_t, \Delta_t)$
+		\STATE $\tilde{X}[t] \gets \tilde{x}_t$
+		\ENDFOR
+		\RETURN $\tilde{X}$
+	\end{algorithmic}
+	\caption{Cálculo del WinStatLag: añadiendo la información de los lags diferenciados}
+	\label{winstatlag}
+\end{algorithm}
+
+Al igual que en el caso de WinStat, usando las librerías adecuadas, como veremos más adelante, es posible paralelizar este código para reducir los tiempos de cálculo.
+
+\subsection{WinStatFlex}
+
+Hasta ahora, los métodos definidos han utilizado la estrategia de añadir contexto explícito al conjunto de datos de entrada, de manera que el tamaño del mismo crece. Ahora, es el momento de ver si estas adiciones permiten mejorar el rendimiento de los encodings aditivos, utilizando para ello, la estrategia anteriormente descrita en la figura \ref{enhancedhybrid}: usar, con la salida proprocionada por WinStatLag, diferentes encodings aditivos ponderados mediante el uso de pesos normalizados. A continuación, describiremos su funcionamiento en detalle.
+
+\subsubsection{Funcionamiento}
+\subsubsection{Definición formal}
 \subsection{PE combinado con TPE}
 \subsection{PE combinado con SPE}
 
