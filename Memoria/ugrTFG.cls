@@ -299,7 +299,10 @@
           \vfill\vfill\vfill\vfill
 
           \textsf{\normalsize{Presentado por:}}\\
-          {\normalsize\textrm{\miNombre}} 
+          {\normalsize\textrm{\miNombre}}
+          \vfill
+          \textsf{\normalsize{Tutores:}}\\
+          {\normalsize\textrm{\miTutor}} 
           \bigskip
 
           \textsf{\normalsize{Curso académico \miCurso}}
@@ -312,59 +315,63 @@
     \thispagestyle{empty}
 
     \begin{center}
-      \large  
+        \large
+        \vspace*{\stretch{1}}
 
-      \vspace*{\stretch{1}}
+        {\huge \miTitulo} \\[1cm]
 
-      \begingroup
-      \huge{\miTitulo} \\ \bigskip
-      \endgroup
+        \textrm{\miNombre} \\[0.75cm]
 
-      \textrm{\miNombre}
+        Tutores:\\
+        \textrm{\miTutor} \\[0.75cm]
 
-      \vspace{\stretch{5}}
+        Mentores:\\
+        \textrm{\miMentor}
 
-    \end{center}  
+        \vspace*{\stretch{5}}
+    \end{center}
+
 
     \newpage
-    \thispagestyle{empty}
+    
+%    \thispagestyle{empty}
+%
+%    \hfill
 
-    \hfill
+%    \vfill
 
-    \vfill
+%    \miNombre \textit{\miTitulo}.
 
-    \miNombre \textit{\miTitulo}.
+%    Trabajo de fin de Máster. Curso académico \miCurso.
+%    \bigskip
 
-    Trabajo de fin de Máster. Curso académico \miCurso.
-    \bigskip
-
-\begin{minipage}[t]{0.25\textwidth}
-	\flushleft
-	\textbf{Responsable de tutorización}
-\end{minipage}
-\begin{minipage}[t]{0.45\textwidth}
-	\flushleft
-	\miTutor
-\end{minipage}
-\begin{minipage}[t]{0.30\textwidth}
-	\flushright
-	\miGrado
-	\medskip
+%\begin{minipage}[t]{0.25\textwidth}
+%	\flushleft
+%	\textbf{Responsable de tutorización}
+%\end{minipage}
+%\begin{minipage}[t]{0.45\textwidth}
+%	\flushleft
+%	\miTutor
+%\end{minipage}
+%\begin{minipage}[t]{0.30\textwidth}
+%	\flushright
+%	\miGrado
+%	\medskip
 	
-	\miFacultad
-	\medskip
+%	\miFacultad
+%	\medskip
 	
-	\miUniversidad
-\end{minipage}
+%	\miUniversidad
+%\end{minipage}
 
-\vspace{0.5cm} % Espacio vertical entre secciones
+%\vspace{0.5cm} % Espacio vertical entre secciones
 
-\begin{minipage}[t]{0.25\textwidth}
-	\flushleft
-	\textbf{Mentores}
-\end{minipage}
-\begin{minipage}[t]{0.75\textwidth}
-	\flushleft
-	\miMentor
-\end{minipage}
+%\begin{minipage}[t]{0.25\textwidth}
+%	\flushleft
+%	\textbf{Mentores}
+%\end{minipage}
+%\begin{minipage}[t]{0.75\textwidth}
+%	\flushleft
+%	\miMentor
+%\end{minipage}
   }
