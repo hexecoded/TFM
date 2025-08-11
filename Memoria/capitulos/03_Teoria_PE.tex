@@ -222,7 +222,7 @@ donde \(\bar{Q}_d\) y \(\bar{K}_d\) son las representaciones convolucionales nor
 
 Sobre el papel, presenta varias ventajas. En primer lugar, captura relaciones relativas sin requerir atención cuadrática, gracias a la estimación realizada que es de orden lineal, facilitando su escalabilidad. Además, es más robusta ante sobreajuste por su componente estocástico. Sin embargo, aunque en principio pueda parecer más eficiente, modificar el mecanismo de atención puede ser delicado y su rendimiento depende mucho del conjunto de datos utilizado. De hecho, sus creadores señalan que este enfoque es más adecuado para tareas de clasificación de series temporales que para tareas de predicción, por lo que su aplicabilidad se aleja del contexto de este trabajo.
 
-\section{Propuestas}
+\section{Formulación de nuevas alternativas de PE}
 
 Una vez analizadas todas las propuestas más destacadas a fecha de 2025 \cite{irani2025positionalencodingtransformerbasedtime}, es momento de formular nuestras propias alternativas que sean capaces de aprovechar los conceptos vistos hasta el momento, pero, aporten un nuevo enfoque que nos permita obtener buenos resultados. En este apartado, analizaremos los diferentes pilares que compondrán nuestras alternativas, que serán examinadas y evaluadas para verificar si cumplen con los estándares mínimos de rendimiento.
 
@@ -353,8 +353,6 @@ donde $\|$ denota la concatenación de vectores, en este caso, el del embedding 
 que será la entrada de nuestro modelo de Transformer seleccionado.\\
 
 De manera algorítmica, su implementación es bastante sencilla (ver pseudocódigo \ref{winstat}). Al usar herramientas del lenguaje de programación que permitan cálculo en paralelo, las operaciones son fácilmente vectorizables, reduciendo así el tiempo necesario para la creación del vector.
-
-
 
 \begin{algorithm}[H]
 	\begin{algorithmic}[1]
@@ -502,7 +500,7 @@ PE_{(pos, 2i+1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)
 $$
 
 $$
-X_{PE} = X + PE[pos]
+X_{PE} = \tilde{x}_t + PE[pos]
 $$
 \item LPE:
 
@@ -511,7 +509,7 @@ LPE_{(pos)} = W_{pos}, \quad W_{pos} \in \mathbb{R}^d
 $$
 
 $$
-X_{LPE} = X + LPE_{\text{learnable}}[pos]
+X_{LPE} = \tilde{x}_t + LPE[pos]
 $$
 
 \item TAPE:
@@ -530,7 +528,7 @@ $$
 \end{equation}
 
 $$
-X_{TAPE} = X + TAPE[pos]
+X_{TAPE} = \tilde{x}_t + TAPE[pos]
 $$
 
 \end{enumerate}
@@ -569,7 +567,106 @@ Algorítmicamente, se trata simplemente de implementar modularmente por separado
 \end{algorithm}
 
 
-\subsection{PE combinado con TPE}
+De esta forma, obtenemos el comportamiento deseado, ponderable y flexible respecto al contexto de los datos.
+
+\subsection{WinStatTPE}
+
+En este cuarto método, se propone una leve modificación con respecto a la propuesta realizada por WinStatFlex: sustituir TAPE por TPE, reforzando así aún más la componente semántica de los datos, y nos permita analizar cómo se comporta esta codificación con el resto de modelos aditivos e información adicional concatenada.
+
+\subsubsection{Funcionamiento}
+
+En este caso, el funcionamiento empleado por esta metodología es bastante sencilla. Parte de la anterior codificación WinStatFlex, donde empleamos la información otorgada por los estadísticos calculados en la ventana, los rezagos y la ponderación de encodings aditivos, para retirar la utilización de TAPE y en su lugar añadir TPE.\\
+
+Esta decisión ha sido tomada por la similaridad existente entre ambos métodos. Si bien la PE clásica también sería redundante en este contexto, pues coincide totalmente con la parte geométrica de TPE, en este caso sí que hemos preferido mantenerla, ya que así, realizando un breve estudio de los pesos, podremos ver si nuestra ponderación se beneficia de un mayor contexto semántico proporcionado por TPE, o si este entra en conflicto con la información ya explícitamente añadida y los PE absolutos son suficientes de por sí.\\
+
+Manteniendo esta combinación ponderada, que sigue siendo de 4 elementos, seguimos logrando un enfoque flexible basado en los datos.
+
+
+\subsubsection{Definición formal}
+
+La definición de este método tiene como base la salida de WinStatLag. Por tanto, para no repetir dicha sección ya conocida, suponemos como entrada al conjunto de datos $\tilde{X}$, con un tensor perteneciente a $\mathbb{R}^{d + 4 + p}$, fruto de la concatenación de estadísticos, lags e información base proporcionada por $X  \in \mathbb{R}^4$.\\
+
+Supuesta la entrada, se aplican sobre ella los 3 encodings escogidos: PE, LPE y T-PE. Para cada instante pos:
+
+\begin{enumerate}
+	\item PE
+	$$
+	PE_{(pos, 2i)} = \sin\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)
+	$$
+	
+	$$
+	PE_{(pos, 2i+1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)
+	$$
+	
+	$$
+	X_{PE} = \tilde{x}_t + PE[pos]
+	$$
+	\item LPE:
+	
+	$$
+	LPE_{(pos)} = W_{pos}, \quad W_{pos} \in \mathbb{R}^d
+	$$
+	
+	$$
+	X_{LPE} = \tilde{x}_t + LPE[pos]
+	$$
+	
+	\item T-PE:
+	Para la componente geométrica, se toma PE sinusoidal:
+	\begin{equation}
+		PE_{i, 2k} = \sin\left(\frac{i}{10000^{\frac{2k}{d}}}\right), \quad
+		PE_{i, 2k+1} = \cos\left(\frac{i}{10000^{\frac{2k}{d}}}\right)
+	\end{equation}
+	
+	Y para la semántica, la similitud, que se define como:
+	
+	$$S(i, j) = \exp\left( -\frac{\|x_i - x_j\|^2}{2\sigma^2} \right)$$
+	
+	Añadiéndose al encoding final de manera aditiva:
+	
+	$$T\text{-}PE(i) = PE(i) + S(i, j)$$
+	
+	$$
+	X_{TPE} = \tilde{x}_t + T-PE[pos]
+	$$
+	
+\end{enumerate}
+
+Los tensores obtenidos se ponderan mediante los pesos $w_0, w_1, w_2, w_3 \in [0,1] \subset \mathbb{R}$, los cuales se normalizan mediante la función Softmax, y posteriormente, se realiza la suma ponderada de todos los elementos de entrada.
+
+\[
+\tilde{w}_i = \frac{e^{w_i}}{\sum_{j=0}^3 e^{w_j}}, \quad i = 0,1,2,3,
+\]
+
+\[
+X_{\text{final}} = w_0 \tilde{X} + w_1 X_{PE} + w_2 X_{LPE} + w_3 X_{TPE}, \quad \text{con} \quad \sum_{i=0}^3 w_i = 1.
+\]
+
+A nivel de algoritmo, basta con tomar la base modular creada para WinStatFlex y añadir TPE en el lugar de TAPE (ver pseudocódigo \ref{winstattpe}).
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE $X \in \mathbb{R}^{L \times d}$ (matriz de entrada), $w \in \mathbb{N}$ (tamaño de ventana), $\mathcal{L}$ (conjunto de retardos), $W = [w_0, w_1, w_2, w_3]$ (pesos)
+		\ENSURE $X_{\text{final}} \in \mathbb{R}^{L \times (d + 4 + p)}$ (representación final)
+		
+		\STATE $\tilde{X} \gets \text{WinStatLag}(X, w, \mathcal{L})$ \COMMENT{Cálculo de embedding enriquecido}
+		\STATE $X_{PE} \gets \text{PE}(\tilde{X})$ \COMMENT{Codificación sinusoidal}
+		\STATE $X_{LPE} \gets \text{LPE}(\tilde{X})$ \COMMENT{Codificación aprendible}
+		\STATE $X_{TPE} \gets \text{TPE}(\tilde{X})$ \COMMENT{Codificación TPE}
+		
+		\STATE $\tilde{W} \gets \mathrm{Softmax}(W)$ \COMMENT{Normalización de pesos}
+		
+		\STATE $X_{\text{final}} \gets \tilde{w}_0 \cdot \tilde{X} + \tilde{w}_1 \cdot X_{PE} + \tilde{w}_2 \cdot X_{LPE} + \tilde{w}_3 \cdot X_{TPE}$
+		
+		\RETURN $X_{\text{final}}$
+	\end{algorithmic}
+	\caption{Cálculo de WinStatTPE: proceso de ponderado y adición de encodings}
+	\label{winstattpe}
+\end{algorithm}
+
+Obteniendo de esta forma el embedding ponderado final, listo para ser introducido al Transformer para ser refinado y aprendido.
+
+
 \subsection{PE combinado con SPE}
 
 
