@@ -222,7 +222,7 @@ donde \(\bar{Q}_d\) y \(\bar{K}_d\) son las representaciones convolucionales nor
 
 Sobre el papel, presenta varias ventajas. En primer lugar, captura relaciones relativas sin requerir atención cuadrática, gracias a la estimación realizada que es de orden lineal, facilitando su escalabilidad. Además, es más robusta ante sobreajuste por su componente estocástico. Sin embargo, aunque en principio pueda parecer más eficiente, modificar el mecanismo de atención puede ser delicado y su rendimiento depende mucho del conjunto de datos utilizado. De hecho, sus creadores señalan que este enfoque es más adecuado para tareas de clasificación de series temporales que para tareas de predicción, por lo que su aplicabilidad se aleja del contexto de este trabajo.
 
-\section{Propuestas}
+\section{Formulación de nuevas alternativas de PE}
 
 Una vez analizadas todas las propuestas más destacadas a fecha de 2025 \cite{irani2025positionalencodingtransformerbasedtime}, es momento de formular nuestras propias alternativas que sean capaces de aprovechar los conceptos vistos hasta el momento, pero, aporten un nuevo enfoque que nos permita obtener buenos resultados. En este apartado, analizaremos los diferentes pilares que compondrán nuestras alternativas, que serán examinadas y evaluadas para verificar si cumplen con los estándares mínimos de rendimiento.
 
@@ -275,13 +275,461 @@ De este modo, si \(\alpha_k \approx 0\) el encoding correspondiente queda suprim
 \end{itemize}
 
 
-Para evaluar la utilidad de esta estrategia, diseñaremos una serie de modelos de encoding que cumplan las propiedades descritas, organizados de forma incremental en complejidad. Es decir, cada nivel incorporará nuevas características, comenzando por propuestas basadas en la correspondencia de puntos mediante estadísticos en ventana, continuando con la adición de \textit{lags} y, finalmente, hibridando con modelos más elaborados del estado del arte revisados previamente, y empleando la técnica de ponderado. Esta construcción gradual nos permitirá realizar de forma directa un \textit{ablation study} que identifique la contribución específica de cada componente, y así ver en qué puntos la estrategia no es correcta para descartarla.
+Para evaluar la utilidad de esta estrategia, diseñaremos una serie de modelos de encoding que cumplan las propiedades descritas, organizados de forma incremental en complejidad. Es decir, cada nivel incorporará nuevas características, comenzando por propuestas basadas en la correspondencia de puntos mediante estadísticos en ventana, continuando con la adición de \textit{lags} y, finalmente, hibridando con modelos más elaborados del estado del arte revisados previamente, y empleando la técnica de ponderado. Esta construcción gradual nos permitirá realizar de forma directa un \textit{ablation study} que identifique la contribución específica de cada componente, y así ver en qué puntos la estrategia no es correcta para descartarla.\\
+
+Por tanto, el camino seguido para evaluar las diferentes alternativas, quedaría resumida de la siguiente forma:
+
+\begin{enumerate}
+	\item \textbf{WinStat}. Se trata de un modelo que usará el método de ventana deslizante para adjuntar valores estadísticos a los datos de entrada. Adjuntará media, std, y extremos, por lo que aumenta en 4 dimensiones el embedding resultante.
+	\item \textbf{WinStatLag}. Consiste en añadir, a la propuesta anterior, información acerca de un conjunto de lags anteriores, de manera que se calculan las diferencias y se agregan como una nueva característica a cada punto. De nuevo, se aumenta el tamaño del embedding, y depende del número de lags a incorporar.
+	\item \textbf{WinStatFlex}. Consiste en combinar el método anterior de WinStatLag con una ponderación de los diferentes postional encoding de tipo aditivo vistos, a excepción de TPE, que se trata de un método híbrido. Para ello, se emplea la arquitectura vista en la figura \ref{enhancedhybrid}.
+	\item \textbf{WinStatTPE}. Realiza la ponderación de los métodos aditivos con TPE, pero suprimiendo TAPE, cuya codificación podría incorporar demasiada redundancia.
+	\item \textbf{WinStatSPE}. Prueba la utilidad de un modelo combinado con encodings aditivos, valores estadísticos y un mecanismo de atención modificado, concretamente SPE, que es el que mejores resultados mostró en \cite{irani2025positionalencodingtransformerbasedtime}. 
+\end{enumerate}
+
+En los siguientes puntos, examinaremos con detalle cada alternativa, atendiendo a la formulación propia de cada una de ellas.
+
+\subsection{WinStat}
+
+Este método introduce nueva información al conjunto de datos para cada posición de este, empleando para ello el cálculo de valores estadísticos que permitan ampliar el contexto de cada punto usando para ello una ventana W de tamaño definido. A diferencia de otros encodings vistos anteriormente, WinStat busca añadir información contextual de forma explícita en el conjunto de datos, a diferencia de los modelos aditivos, que de alguna manera añaden dicha información de manera implícita en los datos.
+
+\subsubsection{Funcionamiento}
+
+La justificación de realizar este procedimiento proviene de la falta de semántica que frecuentemente apreciamos a la hora de crear un embedding. Parte de este contexto viene dado por el entorno en el que se encuentra cada punto, ya que cuanto estudiamos el significado de la estacionalidad, vimos que existían períodos repetidos (con mayor o menor diferencia), y que es interesante saber en qué lugar de dicho período se encuentra un punto para corresponderlo con otro.\\
+
+Con el uso de valores estadísticos extraídos de esta ventana, como la media, la desviación típica y los extremos máximo y mínimo, estamos añadiendo al conjunto de entrada explícitamente redundancia semántica acerca de la variabilidad local de los datos, de manera que la arquitectura encuentra dicha correspondencia entre puntos de manera más sencilla y explícita. Formalmente hablando, esto puede interpretarse como la introducción de un \textit{sesgo inductivo local}: el modelo recibe de forma explícita información que de otro modo tendría que inferir a partir de múltiples capas de atención.\\
+
+En términos de complejidad, el coste adicional es $O(L \cdot w)$, siendo $w$ el tamaño de ventana, lo que resulta asumible para secuencias de larga duración.\\
+
+Su idea, por tanto, es sencilla: se basa en la generación de un vector estadístico $s_t$ que recoge el contexto local en la ventana entorno al instante $t$. Al concatenar $s_t$ con el embedding original $x_t$, obtenemos $\tilde{x}_t$, un vector enriquecido que combina la representación de partida del token, junto a una codificación explícita de su contexto cercano dentro de W.
+
+\subsubsection{Definición formal}
+
+Supongamos $X = [x_1, x_2, \dots, x_L] \in \mathbb{R}^{L \times d}$ la secuencia de entrada, donde $L$ es la longitud de la secuencia y $d$ la dimensión del embedding original en cada posición. Definimos como ventana deslizante de tamaño $w \in \mathbb{N}$ centrada en cada posición $t$ de la siguiente forma:
+
+\[
+\mathcal{W}_t = \{ x_j \mid j \in [t - \lfloor w/2 \rfloor,\, t + \lfloor w/2 \rfloor] \cap [1, L] \}
+\]
+
+Donde tenemos especial cuidado para evitar problemas de desbordamiento en los extremos del embedding (primera y última posición). Para cada ventana $\mathcal{W}_t$, calculamos los estadísticos, considerando que las operaciones se aplican elemento a elemento sobre las $d$ dimensiones del embedding:
+
+\begin{enumerate}
+	\item \textit{Media}:
+	\[
+	\mu_t = \frac{1}{|\mathcal{W}_t|} \sum_{x \in \mathcal{W}_t} x
+	\]
+	\item \textit{Desviación estándar}:
+	\[
+	\sigma_t = \sqrt{ \frac{1}{|\mathcal{W}_t|} \sum_{x \in \mathcal{W}_t} (x - \mu_t)^2 }
+	\]
+	\item \textit{Mínimo}:
+	\[
+	m^{\min}_t = \min_{x \in \mathcal{W}_t} x
+	\]
+	\item \textit{Máximo}:
+	\[
+	m^{\max}_t = \max_{x \in \mathcal{W}_t} x
+	\]
+\end{enumerate}
+
+Posteriormente, definimos el vector estadístico asociado a la posición $t$ como:
+
+\[
+s_t = [\,\mu_t,\, \sigma_t,\, m^{\min}_t,\, m^{\max}_t\,] \in \mathbb{R}^{4}
+\]
+
+Y, finalmente, el embedding enriquecido de la posición $t$ es:
+
+\[
+\tilde{x}_t = [\,x_t \, \| \, s_t\,] \in \mathbb{R}^{d+4}
+\]
+
+donde $\|$ denota la concatenación de vectores, en este caso, el del embedding de base y la nueva información contextual. El resultado global es la secuencia:
+
+\[
+\tilde{X} = [\,\tilde{x}_1, \tilde{x}_2, \dots, \tilde{x}_L\,] \in \mathbb{R}^{L \times (d+4)}
+\]
+
+que será la entrada de nuestro modelo de Transformer seleccionado.\\
+
+De manera algorítmica, su implementación es bastante sencilla (ver pseudocódigo \ref{winstat}). Al usar herramientas del lenguaje de programación que permitan cálculo en paralelo, las operaciones son fácilmente vectorizables, reduciendo así el tiempo necesario para la creación del vector.
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE $X \in \mathbb{R}^{L \times d}$ (matriz de entrada), $w \in \mathbb{N}$ (tamaño de ventana)
+		\ENSURE $\tilde{X} \in \mathbb{R}^{L \times (d+4)}$
+		\FOR{$t = 1$ \TO $L$}
+		\STATE $W_t \gets X[\max(1, t - \lfloor w/2 \rfloor) : \min(L, t + \lfloor w/2 \rfloor)]$
+		\STATE $\mu_t \gets \text{mean}(W_t)$
+		\STATE $\sigma_t \gets \text{std}(W_t)$
+		\STATE $m^{\min}_t \gets \min(W_t)$
+		\STATE $m^{\max}_t \gets \max(W_t)$
+		\STATE $s_t \gets [\mu_t, \sigma_t, m^{\min}_t, m^{\max}_t]$
+		\STATE $\tilde{x}_t \gets \text{concat}(x_t, s_t)$
+		\STATE $\tilde{X}[t] \gets \tilde{x}_t$
+		\ENDFOR
+		\RETURN $\tilde{X}$
+	\end{algorithmic}
+	\caption{WinStat: funcionamiento algorítmico del método basado en ventana de estadísticos}
+	\label{winstat}
+\end{algorithm}
+
+\subsection{WinStatLag}
+
+Teniendo como base WinStat, este método puede verse como una ampliación. Conservando los valores estadísticos calculados para cada posición, este método introduce información proporcionada de lags anteriores, de manera que se evalúa la diferencia entre el valor actual y tantos valores anteriores como se desee. El objetivo sigue siendo el mismo: mejorar la semántica a través del contexto local.
+
+\subsubsection{Funcionamiento}
+
+El método WinStatLag amplía el enfoque de WinStat incorporando, además de la estadística local de cada posición, información explícita sobre la evolución temporal a través de diferencias con lags. Este mecanismo permite capturar no solo el estado local de la señal, sino también sus variaciones a corto, medio o largo plazo, según los retardos elegidos.\\
+
+La inclusión de retardos añade una dimensión temporal explícita al embedding; mientras que los valores estadísticos resumen el vecindario inmediato mediante métricas agregadas (media, desviación estándar, mínimo y máximo), los lags añaden gradientes temporales que pueden ser críticos para identificar tendencias, oscilaciones o cambios abruptos. Esto es especialmente relevante en series temporales donde la dinámica entre instantes consecutivos  o separados a un tamaño de intervalo específico suponen información clave para comprender los siguientes valores.\\
+
+Para controlar el funcionamiento, podemos definir la existencia de un parámetro $p = |\mathcal{L}|$, que se define implícitamente al especificar un vector $\mathcal{L}$ con las posiciones t-anteriores que se deben tener en cuenta, y controla cuántos retardos se incorporan y, por tanto, cuánta historia temporal se integra en la representación. Cada retardo añade $d$ dimensiones adicionales, lo que incrementa la capacidad descriptiva pero también el coste computacional. Por ello, la selección de retardos debe ser equilibrada y razonable, y no se deberían superar los 3 o 5 rezagos como máximo a menos que sea necesario.\\
+
+Su concepto fusiona contexto estadístico local de las 4 métricas anteriores y el gradiente temporal obtenido al realizar las diferencias, convirtiéndolo en una herramienta teóricamente más robusta para tareas de predicción en dominios donde la forma de la señal y sus cambios temporales son igualmente importantes.
+
+\subsubsection{Definición formal}
+
+Comenzamos, de nuevo, por definir nuestro vector de entrada, $X = [x_1, x_2, \dots, x_L] \in \mathbb{R}^{L \times d}$, donde $L$ es la longitud y $d$ la dimensión del \textit{embedding} original. Sea $w \in \mathbb{N}$ el tamaño de ventana deslizante y $\mathcal{L} = \{\ell_1, \ell_2, \dots, \ell_p\}$ el conjunto de retardos considerados.\\
+
+Para cada posición $t$, definimos la ventana deslizante:
+\[
+\mathcal{W}_t = \{ x_j \mid j \in [t - \lfloor w/2 \rfloor,\, t + \lfloor w/2 \rfloor] \cap [1, L] \}
+\]
+
+Calculamos los estadísticos locales como en WinStat, obteniendo nuestro vector estadístico:
+\[
+s_t = [\,\mu_t,\, \sigma_t,\, m^{\min}_t,\, m^{\max}_t\,] \in \mathbb{R}^4
+\]
+
+Y ahora, adicionalmente, para los retardos, definimos para cada $\ell_j \in \mathcal{L}$:
+\[
+\delta_t^{(\ell_j)} = | x_t - x_{t - \ell_j}|, \quad \text{si } t - \ell_j \geq 1
+\]
+
+El \textit{embedding} enriquecido de la posición $t$ está constituido por la concatenación de los valores estadísticos y las nuevas diferencias:
+\[
+\tilde{x}_t = [\,x_t \,\|\, s_t \,\|\, \delta_t^{(\ell_1)} \,\|\, \dots \,\|\, \delta_t^{(\ell_p)}\,] \in \mathbb{R}^{d + 4 + p}
+\]
+y por tanto, la secuencia enriquecida tendrá como dimensión 4 + número de rezagos p.
+\[
+\tilde{X} = [\,\tilde{x}_1, \tilde{x}_2, \dots, \tilde{x}_L\,] \in \mathbb{R}^{L \times (d+4+p )}
+\]
+
+A nivel algorítmico (ver pseudocódigo \ref{winstatlag}), buena parte del código será similar a WinStat, al cual tendrán que agregarse los valores de diferencia.
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE 
+		$X \in \mathbb{R}^{L \times d}$ (matriz de entrada), 
+		$w \in \mathbb{N}$ (tamaño de ventana),
+		$\mathcal{L} = \{\ell_1, \ell_2, \dots, \ell_p\}$ (conjunto de retardos)
+		\ENSURE 
+		$\tilde{X} \in \mathbb{R}^{L \times (d + 4 + p)}$
+		\FOR{$t = 1$ \TO $L$}
+		\STATE $W_t \gets X[\max(1, t - \lfloor w/2 \rfloor) : \min(L, t + \lfloor w/2 \rfloor)]$
+		\STATE $\mu_t \gets \text{mean}(W_t)$
+		\STATE $\sigma_t \gets \text{std}(W_t)$
+		\STATE $m^{\min}_t \gets \min(W_t)$
+		\STATE $m^{\max}_t \gets \max(W_t)$
+		\STATE $s_t \gets [\mu_t, \sigma_t, m^{\min}_t, m^{\max}_t]$
+		\STATE Inicializar vector de diferencias: $\Delta_t \gets []$
+		\FOR{cada $\ell_j \in \mathcal{L}$}
+		\IF{$t - \ell_j \geq 1$}
+		\STATE $\delta \gets |x_t - x_{t - \ell_j}|$
+		\ENDIF
+		\STATE Añadir $\delta$ a $\Delta_t$
+		\ENDFOR
+		\STATE $\tilde{x}_t \gets \text{concat}(x_t, s_t, \Delta_t)$
+		\STATE $\tilde{X}[t] \gets \tilde{x}_t$
+		\ENDFOR
+		\RETURN $\tilde{X}$
+	\end{algorithmic}
+	\caption{Cálculo de WinStatLag: añadiendo la información de los lags diferenciados}
+	\label{winstatlag}
+\end{algorithm}
+
+Al igual que en el caso de WinStat, usando las librerías adecuadas, como veremos más adelante, es posible paralelizar este código para reducir los tiempos de cálculo.
+
+\subsection{WinStatFlex}
+
+Hasta ahora, los métodos definidos han utilizado la estrategia de añadir contexto explícito al conjunto de datos de entrada, de manera que el tamaño del mismo crece. Ahora, es el momento de ver si estas adiciones permiten mejorar el rendimiento de los encodings aditivos, utilizando para ello, la estrategia anteriormente descrita en la figura \ref{enhancedhybrid}: usar, con la salida proprocionada por WinStatLag, diferentes encodings aditivos ponderados mediante el uso de pesos normalizados. A continuación, describiremos su funcionamiento en detalle.
+
+\subsubsection{Funcionamiento}
+
+Anteriormente, empleamos la información otorgada por los estadísticos calculados en la ventana, y un número definido de rezagos como método explícito para mejorar la semántica de los datos y facilitar así el proceso inductivo del modelo. Sin embargo, aunque por sí solo pudieran dar resultados positivos, es interesante verificar qué ocurre cuando combinamos esta solución con la codificación posicional aditiva, más tradicional.\\
+
+Los métodos aditivos se caracterizan por añadir información absoluta de los datos, haciendo hincapié en crear una estructura que permita identificar el orden de los elementos de forma global, pero teniendo de cerca la eficiencia computacional como restricción a cumplir. Esta ha sido la estrategia seguida desde un primer comienzo por el Transformer original de Vaswani~\cite{vaswani2023attentionneed} y sus métodos de codificación sucesores vistos.\\
+
+Todos ellos se basan en el uso de la información geométrica proporcionada por los senos y cosenos: el PE original, TAPE, TPE... pero también existía la codificación posicional aprendible, LPE, que nos permite codificar la información de la forma más cercana posible a la semántica de los datos. Dada la similaridad de todos estos métodos, y a la falta de criterio exacto en la que usar cada una de estas variantes, resulta interesante permitir que el modelo, de alguna manera, escoja a qué metodología darle preferencia, y es así como surge la idea formulada anteriormente de ponderar mediante pesos: el modelo podrá aprender dichos pesos, que son normalizados, para ver a qué codificación dar preferencia.\\
+
+Dicho comportamiento nos permitirá adaptarnos a cada conjunto de entrada, y además, si estudiamos los valores finales de cada peso, ver cuáles son las necesidades del modelo: una mejora en la semántica, o por el contrario, una mayor necesidad de encoding absoluto. Recordando el funcionamiento de esta teoría de pesos, para este modelo concreto, necesitaremos 4 pesos: para PE, LPE, TAPE y para la propia información de valor, proporcionada por WinStat. De esta forma, logramos un enfoque flexible, el cual da nombre a esta estrategia.\\
+
+En esta variante, mantendremos TPE al margen, al ser una estrategia parcialmente solapada con el funcionamiento del resto de modelos aditivos, para tratar de no hacer los modelos aditivos probados demasiado redundantes.
+
+\subsubsection{Definición formal}
+
+Como punto de partida, comenzaremos calculando el vector de entrada. Este proviene de la salida proporcionada del encoding previo realizado por WinStatLag, el cual recibe como entrada los datos originales, $X = [x_1, x_2, \dots, x_L] \in \mathbb{R}^{L \times d}$; $w \in \mathbb{N}$ el tamaño de ventana deslizante y $\mathcal{L} = \{\ell_1, \ell_2, \dots, \ell_p\}$ el conjunto de lags.\\
 
 
-\subsection{PE basado en ventana de estadísticos}
-\subsection{PE basado en ventana de estadísticos y lags}
-\subsection{PE combinado flexible}
-\subsection{PE combinado con TPE}
-\subsection{PE combinado con SPE}
+Calculamos los estadísticos locales como en WinStat, obteniendo nuestro vector estadístico:
+\[
+s_t = [\,\mu_t,\, \sigma_t,\, m^{\min}_t,\, m^{\max}_t\,] \in \mathbb{R}^4
+\]
+
+Y adicionalmente, los lags $\mathcal{L}$:
+\[
+\delta_t^{(\ell_j)} = | x_t - x_{t - \ell_j}|, \quad \text{si } t - \ell_j \geq 1
+\]
+
+Así obtenemos el anteriormente definido \textit{embedding} enriquecido, fruto de la concantenación de ambo vectores adicionales:
+\[
+\tilde{x}_t = [\,x_t \,\|\, s_t \,\|\, \delta_t^{(\ell_1)} \,\|\, \dots \,\|\, \delta_t^{(\ell_p)}\,] \in \mathbb{R}^{d + 4 + p}
+\]
+
+Posteriormente, antes de emplear estos datos como entrada del Transformer, se aplican los 3 encodings aditivos: PE, LPE y TAPE. Para cada instante pos:
+
+\begin{enumerate}
+\item PE: encoding sinusoidal
+$$
+PE_{(pos, 2i)} = \sin\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)
+$$
+
+$$
+PE_{(pos, 2i+1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)
+$$
+
+$$
+X_{PE} = \tilde{x}_t + PE[pos]
+$$
+\item LPE:
+
+$$
+LPE_{(pos)} = W_{pos}, \quad W_{pos} \in \mathbb{R}^d
+$$
+
+$$
+X_{LPE} = \tilde{x}_t + LPE[pos]
+$$
+
+\item TAPE:
+
+\begin{equation}
+	\centering
+	\omega^{new}_k = k \cdot \frac{d_{model}}{L}
+\end{equation}
 
 
+\begin{equation}
+	\begin{aligned}
+		\text{TAPE}_{(pos,2i)} &= \sin\!\left( pos \cdot \omega^{new}_i \right) \\
+		\text{TAPE}_{(pos,2i+1)} &= \cos\!\left( pos \cdot \omega^{new}_i \right)
+	\end{aligned}
+\end{equation}
+
+$$
+X_{TAPE} = \tilde{x}_t + TAPE[pos]
+$$
+
+\end{enumerate}
+
+Los tensores obtenidos se ponderan mediante los pesos $w_0, w_1, w_2, w_3 \in [0,1] \subset \mathbb{R}$, los cuales se normalizan mediante la función Softmax para asegurar que la suma del vector de pesos $W = [w_0, w_1, w_2, w_3]$ sea siempre igual a 1:
+
+\[
+\tilde{w}_i = \frac{e^{w_i}}{\sum_{j=0}^3 e^{w_j}}, \quad i = 0,1,2,3,
+\]
+Donde $W = \tilde{W}$.
+ Así, cada una de las codificaciones obtenidas, \(X_{PE}\), \(X_{LPE}\) y \(X_{TAPE}\), representa una secuencia enriquecida con diferentes características que podrá ponderarse y adecuarse a las necesidades del modelo automáticamente. 
+\[
+X_{\text{final}} = w_0 \tilde{X} + w_1 X_{PE} + w_2 X_{LPE} + w_3 X_{TAPE}, \quad \text{con} \quad \sum_{i=0}^3 w_i = 1.
+\]
+
+Algorítmicamente, se trata simplemente de implementar modularmente por separado cada componente, y aplicar en el paso de forward la normalización Softmax de los pesos aprendibles, los cuales intervienen en el aprendizaje por gradientes (ver pseudocódigo \ref{winstatflex}).
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE $X \in \mathbb{R}^{L \times d}$ (matriz de entrada), $w \in \mathbb{N}$ (tamaño de ventana), $\mathcal{L}$ (conjunto de retardos), $W = [w_0, w_1, w_2, w_3]$ (pesos)
+		\ENSURE $X_{\text{final}} \in \mathbb{R}^{L \times (d + 4 + p)}$ (representación final)
+		
+		\STATE $\tilde{X} \gets \text{WinStatLag}(X, w, \mathcal{L})$ \COMMENT{Cálculo de embedding enriquecido}
+		\STATE $X_{PE} \gets \text{PE}(\tilde{X})$ \COMMENT{Codificación sinusoidal}
+		\STATE $X_{LPE} \gets \text{LPE}(\tilde{X})$ \COMMENT{Codificación aprendible}
+		\STATE $X_{TAPE} \gets \text{TAPE}(\tilde{X})$ \COMMENT{Codificación TAPE}
+		
+		\STATE $\tilde{W} \gets \mathrm{Softmax}(W)$ \COMMENT{Normalización de pesos}
+		
+		\STATE $X_{\text{final}} \gets \tilde{w}_0 \cdot \tilde{X} + \tilde{w}_1 \cdot X_{PE} + \tilde{w}_2 \cdot X_{LPE} + \tilde{w}_3 \cdot X_{TAPE}$
+		
+		\RETURN $X_{\text{final}}$
+	\end{algorithmic}
+	\caption{Cálculo de WinStatFlex: proceso de adición de encodings}
+	\label{winstatflex}
+\end{algorithm}
+
+
+De esta forma, obtenemos el comportamiento deseado, ponderable y flexible respecto al contexto de los datos.
+
+\subsection{WinStatTPE}
+
+En este cuarto método, se propone una leve modificación con respecto a la propuesta realizada por WinStatFlex: sustituir TAPE por TPE, reforzando así aún más la componente semántica de los datos, y nos permita analizar cómo se comporta esta codificación con el resto de modelos aditivos e información adicional concatenada.
+
+\subsubsection{Funcionamiento}
+
+En este caso, el funcionamiento empleado por esta metodología es bastante sencilla. Parte de la anterior codificación WinStatFlex, donde empleamos la información otorgada por los estadísticos calculados en la ventana, los rezagos y la ponderación de encodings aditivos, para retirar la utilización de TAPE y en su lugar añadir TPE.\\
+
+Esta decisión ha sido tomada por la similaridad existente entre ambos métodos. Si bien la PE clásica también sería redundante en este contexto, pues coincide totalmente con la parte geométrica de TPE, en este caso sí que hemos preferido mantenerla, ya que así, realizando un breve estudio de los pesos, podremos ver si nuestra ponderación se beneficia de un mayor contexto semántico proporcionado por TPE, o si este entra en conflicto con la información ya explícitamente añadida y los PE absolutos son suficientes de por sí.\\
+
+Manteniendo esta combinación ponderada, que sigue siendo de 4 elementos, seguimos logrando un enfoque flexible basado en los datos.
+
+
+\subsubsection{Definición formal}
+
+La definición de este método tiene como base la salida de WinStatLag. Por tanto, para no repetir dicha sección ya conocida, sea $\tilde{X}$, con un tensor perteneciente a $\mathbb{R}^{d + 4 + p}$, fruto de la concatenación de estadísticos, lags e información base proporcionada por $X  \in \mathbb{R}^4$, el conjunto de datos de entrada.\\
+
+Supuesta la entrada, se aplican sobre ella los 3 encodings escogidos: PE, LPE y T-PE. Para cada instante pos:
+
+\begin{enumerate}
+	\item PE
+	$$
+	PE_{(pos, 2i)} = \sin\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)
+	$$
+	
+	$$
+	PE_{(pos, 2i+1)} = \cos\left(\frac{pos}{10000^{\frac{2i}{d}}}\right)
+	$$
+	
+	$$
+	X_{PE} = \tilde{x}_t + PE[pos]
+	$$
+	\item LPE:
+	
+	$$
+	LPE_{(pos)} = W_{pos}, \quad W_{pos} \in \mathbb{R}^d
+	$$
+	
+	$$
+	X_{LPE} = \tilde{x}_t + LPE[pos]
+	$$
+	
+	\item T-PE:
+	Para la componente geométrica, se toma PE sinusoidal:
+	\begin{equation}
+		PE_{i, 2k} = \sin\left(\frac{i}{10000^{\frac{2k}{d}}}\right), \quad
+		PE_{i, 2k+1} = \cos\left(\frac{i}{10000^{\frac{2k}{d}}}\right)
+	\end{equation}
+	
+	Y para la semántica, la similitud, que se define como:
+	
+	$$S(i, j) = \exp\left( -\frac{\|x_i - x_j\|^2}{2\sigma^2} \right)$$
+	
+	Añadiéndose al encoding final de manera aditiva:
+	
+	$$T\text{-}PE(i) = PE(i) + S(i, j)$$
+	
+	$$
+	X_{TPE} = \tilde{x}_t + T-PE[pos]
+	$$
+	
+\end{enumerate}
+
+Los tensores obtenidos se ponderan mediante los pesos $w_0, w_1, w_2, w_3 \in [0,1] \subset \mathbb{R}$, los cuales se normalizan mediante la función Softmax, y posteriormente, se realiza la suma ponderada de todos los elementos de entrada.
+
+\[
+\tilde{w}_i = \frac{e^{w_i}}{\sum_{j=0}^3 e^{w_j}}, \quad i = 0,1,2,3,
+\]
+
+\[
+X_{\text{final}} = w_0 \tilde{X} + w_1 X_{PE} + w_2 X_{LPE} + w_3 X_{TPE}, \quad \text{con} \quad \sum_{i=0}^3 w_i = 1.
+\]
+
+A nivel de algoritmo, basta con tomar la base modular creada para WinStatFlex y añadir TPE en el lugar de TAPE (ver pseudocódigo \ref{winstattpe}).
+
+\begin{algorithm}[H]
+	\begin{algorithmic}[1]
+		\REQUIRE $X \in \mathbb{R}^{L \times d}$ (matriz de entrada), $w \in \mathbb{N}$ (tamaño de ventana), $\mathcal{L}$ (conjunto de retardos), $W = [w_0, w_1, w_2, w_3]$ (pesos)
+		\ENSURE $X_{\text{final}} \in \mathbb{R}^{L \times (d + 4 + p)}$ (representación final)
+		
+		\STATE $\tilde{X} \gets \text{WinStatLag}(X, w, \mathcal{L})$ \COMMENT{Cálculo de embedding enriquecido}
+		\STATE $X_{PE} \gets \text{PE}(\tilde{X})$ \COMMENT{Codificación sinusoidal}
+		\STATE $X_{LPE} \gets \text{LPE}(\tilde{X})$ \COMMENT{Codificación aprendible}
+		\STATE $X_{TPE} \gets \text{TPE}(\tilde{X})$ \COMMENT{Codificación TPE}
+		
+		\STATE $\tilde{W} \gets \mathrm{Softmax}(W)$ \COMMENT{Normalización de pesos}
+		
+		\STATE $X_{\text{final}} \gets \tilde{w}_0 \cdot \tilde{X} + \tilde{w}_1 \cdot X_{PE} + \tilde{w}_2 \cdot X_{LPE} + \tilde{w}_3 \cdot X_{TPE}$
+		
+		\RETURN $X_{\text{final}}$
+	\end{algorithmic}
+	\caption{Cálculo de WinStatTPE: proceso de ponderado y adición de encodings}
+	\label{winstattpe}
+\end{algorithm}
+
+Obteniendo de esta forma el embedding ponderado final, listo para ser introducido al Transformer para ser refinado y aprendido.
+
+
+\subsection{WinStatSPE}
+
+Hasta ahora, los métodos vistos empleaban la información proporcionada por la ventana y los lags, o bien, métodos aditivos basados en codificación absoluta, o bien híbrida mediante T-PE. Sin embargo, los métodos basados en modificación de la atención no se habían empleado. Por ello, como último modelo formulado, proponemos un enfoque hibrído completo, que toma como referencia la metodología de WinStatFlex, y añade a su cálculo la modificación SPE de la atención.
+
+\subsubsection{Funcionamiento}
+
+El propósito de esta última forma de codificación va más allá del propio embedding, y trata de evaluar la aportación realizada por la variante de atención propuesta por SPE. Si recordamos, la segunda variante de métodos de incorporación de información posicional es la basada en modificaciones directas sobre la matriz de atención. SPE, para lograr mejorar la semántica de la serie, y poder observar valores a diferente escala, recurría al uso de operaciones de convolución, que de alguna manera, logra realizar el mismo efecto que cuando aplicamos la ventana: obtener localidad de los patrones, y resumir la información para así facilitar la correspondencia entre valores.\\
+
+El motivo de no incorporarlo en otras propuestas de encoding se debe a que, aunque los resultados son positivos, el tipo de problema más efectivo para este tipo de codificaciones es clasificación según \cite{irani2025positionalencodingtransformerbasedtime}. Aún así, no se indica que sea incompatible con tareas de forecasting, por lo que aunque no sea su foco de diseño, podría funcionar. Para evaluar su desempeño en predicción, podemos integrarlo en nuestro modelo WinStatFlex, modificando el mecanismo de atención y permitiendo que el entrenamiento determine la ponderación óptima en combinación con SPE. Si alguna codificación resulta incompatible, su peso asociado tenderá a cero; en cambio, si mejora el rendimiento, su contribución se potenciará en la suma final, por lo que de manera activa iremos ajustando las diferentes codificaciones para ver cuál trabaja mejor en sintonía con SPE.\\
+
+A continuación, definiremos formalmente el modelo, teniendo como base los modelos anteriormente ya definidos.
+
+
+\subsubsection{Definición formal}
+
+La definición de este método tiene como base la salida de WinStatFlex. Por tanto, para no repetir dicha sección ya conocida, sea la entrada al modelo un conjunto de datos $\tilde{X}$, con un tensor perteneciente a $\mathbb{R}^{d + 4 + p}$, fruto de la concatenación de estadísticos, lags e información base proporcionada por $X  \in \mathbb{R}^4$.
+
+Supuesta la entrada, se aplican sobre ella los 3 encodings escogidos: PE, LPE y TAPE. Para cada instante pos:
+
+\begin{enumerate}
+	\item PE
+
+	$$
+	X_{PE} = \tilde{x}_t + PE[pos]
+	$$
+	\item LPE:
+	
+
+	$$
+	X_{LPE} = \tilde{x}_t + LPE[pos]
+	$$
+	
+	\item TAPE:
+	
+	$$
+	X_{TAPE} = \tilde{x}_t + TAPE[pos]
+	$$
+	
+\end{enumerate}
+
+
+Siendo su salida una ponderación como hasta ahora:
+
+$$
+X_{\text{final}} = w_0 \tilde{X} + w_1 X_{PE} + w_2 X_{LPE} + w_3 X_{TPE}, \quad \text{con} \quad \sum_{i=0}^3 w_i = 1.
+$$
+
+Posteriormente, dentro de la arquitectura Transformer que utilizaremos (y que recibe \(X_{\text{final}}\) como entrada), sustituiremos el producto original de atención por el nuevo mecanismo aportado por SPE.\\
+
+Sea \(Z_d \in \mathbb{R}^{M \times R}\) una matriz aleatoria cuyos elementos son independientes y distribuidos según una gaussiana estándar. Sobre esta matriz se aplican los filtros convolucionales aprendibles \(\Phi^Q\) y \(\Phi^K\), que transforman la información posicional en representaciones útiles para el cálculo de atención:
+
+\[
+Q_d = Z_d \otimes \Phi^Q, \quad K_d = Z_d \otimes \Phi^K,
+\]
+
+Los filtros \(\Phi^Q\) y \(\Phi^K\) son ajustados durante el entrenamiento para extraer patrones temporales y espaciales relevantes. De esta forma, y usando el parámetro R de entrada, podemos aproximar la nueva atención como:
+
+\[
+P_d \approx \frac{\bar{Q}_d \bar{K}_d^\top}{R},
+\]
+
+donde \(\bar{Q}_d\) y \(\bar{K}_d\) son las representaciones normalizadas.\\
+
+En este caso, no detallaremos un pseudocódigo, ya que este sería igual en la parte del embedding que el ya mostrado en WinStatFlex (ver pseudocódigo \ref{winstatflex}).\\
+
+En resumen, con esta estrategia combinaremos la flexibilidad de los métodos basados en kernels con la eficiencia computacional de la convolución, y teniendo además como entrada un conjunto de tokens enriquecidos mediante diferentes técnicas, y ver si el funcionamiento combinado de estas alternativas ofrece resultados competitivos.
