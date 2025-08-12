@@ -10,26 +10,26 @@ Este conjunto de datos fue empleado en la publicación original de Informer~\cit
 
 Como ya mencionamos en la introducción, disponer de una buena estimación de la carga eléctrica necesaria para abastecer a una región y controlar la salud de los diferentes componentes del sistema para evitar caídas es clave para el aprovechamiento de recursos. Pero las condiciones y necesidades en cada instante pueden ser diferentes; la demanda puede verse afectada por el día de la semana, la existencia de vacaciones, estaciones del año, climatología, temperaturas... Todas ellas afectan de manera directa a las necesidades y a la eficiencia del sistema, por lo que la complejidad del problema hace que en muchas ocasiones las decisiones se tomen teniendo al alza, sobreproduciendo y sobredimensionando las necesidades para evitar problemas de abastecimiento. Sin embargo, esto no es eficiente, ya que se están desaprovechando recursos tanto en la producción de energía, en caso de usar fuentes no renovables, y en la producción e instalación de equipos.\\
 
-Si conseguimos buenos resultados de predicción, podríamos idealmente reducir los recursos pero mantener un sistema estable. Y una componente clave de este ecuación es supervisar el estado del sistema, y en este dataset, concretamente, de los transformadores. La variable temperatura de aceite, que a priori parecía no demasiado útil, es clave en este conjunto de datos para detectar posibles anomalías que puedieran provocar un mal funcionamiento o problemas de suministro de manera bastante directa, ya que las temperaturas extremas afectan negativamente a su rendimiento. Bajo esta justificación, los autores extrajeron el conjunto de datos proveniendo de dos transformadores, y que recogen 2 años de datos minuto a minutogracias a una plataforma de recolección realizada con la colaboración de \textit{Beijing Guowang Fuda Science \& Technology Development Company}.\\
+Si conseguimos buenos resultados de predicción, podríamos idealmente reducir los recursos pero mantener un sistema estable. Y una componente clave de este ecuación es supervisar el estado del sistema, y en este dataset, concretamente, de los transformadores. La variable temperatura de aceite, que a priori parecía no demasiado útil, es clave en este conjunto de datos para detectar posibles anomalías que pudieran provocar un mal funcionamiento o problemas de suministro de manera bastante directa, ya que las temperaturas extremas afectan negativamente a su rendimiento. Bajo esta justificación, los autores extrajeron el conjunto de datos proviniendo de dos transformadores, y que recogen 2 años de datos minuto a minutogracias a una plataforma de recolección realizada con la colaboración de \textit{Beijing Guowang Fuda Science \& Technology Development Company}.\\
 
 Originalmente, fueron extraídas más series de más transformadores, pero sólo se hicieron públicos dos, agrupados en la variante ETT-Small, que podemos encontrar en su correspondiente repositorio de GitHub~\cite{zhou2021etdataset}. Los datos provienen de dos regiones de una provincia de China, denominadas ETT-small-m1 y ETT-small-m2. En total, los dos años se traduce 70.080 puntos de datos por cada transformador. Adicionalmente, podemos encontrar dos variantes preprocesadas para realizar el forecasting hora a hora, reduciendo así el esfuerzo de cómputo necesario. Siguiendo la misma estructura de notación que los anteriores, reciben los nombres ETT-small-h1 y ETT-small-h2, siendo la h el indicativo de ``horario''.\\
 
 Cada instante de los datos consta de 8 características, incluyendo el timestamp y 7 variables diferentes, entre la que se encuentra la temperatura del aceite:
 
 \begin{itemize}
-	\item \textbf{date}: Fecha y hora exacta en la que se realizó la medición, permitiendo situar cada registro en la secuencia temporal.
+	\item \textbf{date}. Fecha y hora exacta en la que se realizó la medición, permitiendo situar cada registro en la secuencia temporal.
 	
-	\item \textbf{HUFL} (\textit{High Useful Load}): Componente útil de la carga cuando el transformador trabaja a un nivel alto de demanda. Representa la parte de la energía efectivamente utilizada para alimentar la red.
+	\item \textbf{HUFL} (\textit{High Useful Load}). Componente útil de la carga cuando el transformador trabaja a un nivel alto de demanda. Representa la parte de la energía efectivamente utilizada para alimentar la red.
 	
-	\item \textbf{HULL} (\textit{High Useless Load}): Componente no útil de la carga en nivel alto, asociada principalmente a pérdidas y consumos del propio sistema del transformador cuando está sometido a alta demanda.
+	\item \textbf{HULL} (\textit{High Useless Load}). Componente no útil de la carga en nivel alto, asociada principalmente a pérdidas y consumos del propio sistema del transformador cuando está sometido a alta demanda.
 	
-	\item \textbf{MUFL} (\textit{Middle Useful Load}): Componente útil de la carga cuando el transformador opera a un nivel medio de demanda, asociado a un funcionamiento más estable y eficiente que en carga alta.
+	\item \textbf{MUFL} (\textit{Middle Useful Load}). Componente útil de la carga cuando el transformador opera a un nivel medio de demanda. Normalmente está asociado a un funcionamiento más estable y eficiente que en carga alta.
 	
-	\item \textbf{MULL} (\textit{Middle Useless Load}): Componente no útil de la carga en nivel medio, de nuevo, vinculada a pérdida y consumo propio del sistema.
+	\item \textbf{MULL} (\textit{Middle Useless Load}). Componente no útil de la carga en nivel medio, de nuevo, vinculada a pérdida y consumo propio del sistema.
 	
-	\item \textbf{LUFL} (\textit{Low Useful Load}): Componente útil en baja carga, es decir, en baja demanda energética.
+	\item \textbf{LUFL} (\textit{Low Useful Load}). Componente útil en baja carga, es decir, en baja demanda energética.
 	
-	\item \textbf{LULL} (\textit{Low Useless Load}): Componente no útil de la carga en nivel bajo. En este caso, es posible que las pérdidas puedan ser más significativas en proporción a la potencia de salida.
+	\item \textbf{LULL} (\textit{Low Useless Load}). Componente no útil de la carga en nivel bajo. En este caso, es posible que las pérdidas puedan ser más significativas en proporción a la potencia de salida.
 	
 	\item \textbf{OT} (\textit{Oil Temperature}): Temperatura del aceite del transformador, marcada por los autores del conjunto de datos como posible variable a estimar en caso de tratar los datos como un problema de predicción de única variable objetivo. Como ya comentábamos, se trata de una componente clave, ya que el sobrecalentamiento puede reducir su vida útil y provocar fallos, mientras que una temperatura demasiado baja puede empeorar la viscosidad del aceite y sus capacidades.
 \end{itemize}
@@ -58,3 +58,52 @@ En la figura \ref{autoett}, podemos apreciar el gráfico normalizado para las do
 En el caso de las variantes horarias, se trata simplemente de la misma información muestreada, por lo que el comportamiento será bastante similar al visto aquí pero con intervalos entre muestreos más largo (60 veces mayor exactamente).\\
 
 De manera previa, a la vista de la información dada por los gráficos de autocorrelación, podemos intuir además de que el segundo conjunto puede ser más complejo de modelar, ya que además este no fue utilizado por el paper original de Informer ni buena parte de los modelos posteriores que se probaron. La mayoría optan por evaluar únicamente el primer transformador.
+
+\section{Household Power Consumption (HPC)}
+
+El siguiente dataset seleccionado a analizar es Household Power Consumption, un conjunto bastante extendido que puede ser encontrado en el repositorio UCI~\cite{hebrail2006individual}. Contiene la evolución del consumo eléctrico de una vivienda localizada cerca de París, entre los años 2006 y 2010, con el objetivo de poder construir un modelo capaz de representar el consumo asociado a dicha vivienda y sus diferentes sub-mediciones.\\
+
+Continuamos de esta forma en el mismo ámbito que el dataset anterior, pero en este caso, nuestro objetivo no está centrado en evaluar el correcto funcionamiento del sistema, sino en ser capaces de modelar el consumo de la vivienda, y así poder realizar ajustes en la tarifa para contratar la potencia necesaria, o bien comprender el ciclo de consumo. Esta tarea es de vital importancia, ya que si escalamos su modelado a una población completa, podríamos obtener un modelo fiel capaz de ajustar los recursos eléctricos necesarios para su abastecimiento, y nos alineamos de nuevo con las necesidades de ahorro y eficiencia a la cual hemos dado importancia a lo largo de los diferentes ejemplos vistos en el trabajo.\\
+
+Este dataset tiene su principal diferencia frente al anterior en su extensión. Nos encontramos ante un conjunto que ha sido recopilado de manera automatizada de un fenómeno real, con una frecuencia de muestreo de un minuto, y una extensión de 47 meses, entre diciembre de 2006 y noviembre de 2010, que nos aporta un total de 2,075,259 medidas. El número de variables muestreadas parece a priori superior, ya que en UCI se describe la existencia de 9 atributos, pero esto se debe realmente el timestamp ha sido separado en hora y fecha, pero si se unen, nos encontramos ante el mismo caso que ETT: cada instante de los datos consta de 8 características, incluyendo el timestamp y 7 variables de entrada.\\
+
+Las variables recopiladas son las siguientes:
+
+\begin{itemize}
+	\item \textbf{date y time}. Son las variables asociadas a la fecha y hora en \textit{hh:mm:ss}, respectivamente. Ambas variables serán fusionadas más adelante en una sola columna para facilitar el procesado de los datos.
+	
+	\item \textbf{global\_active\_power}. Referido a la potencia activa global promedio por minuto del hogar (en kilovatios). Representa la energía eléctrica que se consume realmente para alimentar electrodomésticos, iluminación y otros dispositivos eléctricos.
+	
+	\item \textbf{global\_reactive\_power}. Potencia reactiva global promedio por minuto del hogar (en kilovatios). Esta potencia no realiza trabajo útil, sino que corresponde a la energía almacenada y liberada por componentes inductivos y capacitivos como motores o transformadores, afectando la eficiencia del sistema eléctrico a modo de pérdidas.
+	
+	\item \textbf{voltage}: Voltaje promedio por minuto (en voltios). Indica la diferencia de potencial eléctrico suministrada en el hogar.
+	
+	\item \textbf{global\_intensity}. Intensidad de corriente global promedio por minuto (en amperios). Mide la corriente eléctrica total que fluye en el sistema eléctrico de la vivienda y está directamente relacionada con el consumo.
+	
+	\item \textbf{sub\_metering\_1}: Se trata de una submedición de energía asociada a una región de la casa. En este caso, la número 1 (en vatios-hora de energía activa) corresponde a la cocina. En su publicación, podemos encontrar que esta medición incluye principalmente el lavavajillas, horno y microondas, pero no los fogones de la cocina, los cuales funcionan con gas y no mediante vitrocerámica.
+	
+	\item \textbf{sub\_metering\_2}: Submedición de energía número 2 (en vatios-hora de energía activa). En este caso, corresponde a la zona de lavandería, incluyendo la lavadora, secadora, frigorífico y una luz.
+	
+	\item \textbf{sub\_metering\_3}: Submedición de energía número 3 (en vatios-hora de energía activa). Corresponde al calentador eléctrico de agua y al aire acondicionado.
+\end{itemize}
+
+Una vez comprendida la semántica de cada variable del problema, podemos comenzar a hacer suposiciones sobre el conjunto de datos. Sabiendo que se trata de nuevo de un problema relacionado con la electricidad, es prácticamente evidente que podremos volver a encontrar patrones estacionales en muchas de las variables. Esto será potencialmente más notable en las submétricas extraídas, pero también en el resto de variables eléctricas. Por ejemplo, podremos encontrar patrones estacionales diarios en el uso de la submétrica 2, correspondiente a la cocina, ya que encontraremos momentos de mayor consumo asociados al horno y al microondas en horario de comidas; pero también la número 3, dado que se registran mayores consumos relacionados con el aire acondicionado en verano, así como un incremento en invierno debido al uso intensivo de agua caliente. Por tanto, es posible identificar un patrón con periodicidad anual, pero también patrones diarios asociados al uso de estos dispositivos: el agua caliente se utilizará principalmente en horarios relacionados con la higiene personal, mientras que el aire acondicionado se activa en las horas más calurosas del día.\\
+
+Por tanto, los datos presentan estacionalidad a varios niveles, reflejando diferentes hábitos de consumo según la época y la hora del día, suponiendo así un buen benchmark para los positional encodings diseñados. Podemos verificarlo mediante un gráfico ACF (figura \ref{autohpc}), usando un período de nuevo de dos días de lags para así apreciar los picos de la señal.\\
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.4]{img/hpc_autocorrelacion}
+	\caption{HPC: gráficso de autocorrelación durante 2880 lags}
+	\label{autohpc}
+\end{figure}
+
+Podemos apreciar varios fenómenos:
+\begin{itemize}
+	\item La variable \textit{voltage} tiene una oscilación considerable durante el día; podemos apreciar un valor mucho más elevado entorno a media noche (cada 1440 lags), mientras que este valor decae a lo largo del día (1440 lags con desfase de 1440), sufriendo un repunto más suave al mediodía. Esto puede estar asociado también a las exigencias que se da al sistema, ya que podemos ver que dichos puntos también coinciden con picos de intensidad global y consumo activo. Esto puede deberse a la propia forma de calcular potencia, como $P = I \cdot V$.
+	\item Las variables \textit{global active power} y \textit{global intensity} están estrechamente relacionadas, hasta el punto de ser coincidentes en sus valores ACF, lo cual puede ser razonable teniendo en cuenta como se relacionaban ambas variables en el punto anterior.
+	\item La variable de consumo pasivo, \textit{global reactive power} decae rápidamente a cero, y mantiene un comportamiento cercano a este durante prácticam,ente toda la serie, al igual que las variables \textit{submetering 1 y 2}, que lo hacen de forma aún más cercana. Esto podría estar representando un comportamiento estacionario, ya que los valores de ACF decaen rápidamente, por lo que modelar dichas variables con métodos más sencillos como ARIMA sería viable en caso de que se requiriese, dada la escasa variabilidad a lo largo del tiempo. 
+	\item El área 3, \textit{submetering 3}, es la que presenta un comportamiento estacional, a diferencia de las otras 2 sub divisiones de la vivienda. Esto se debe principalmente a la necesidad de agua caliente para higiene de manera periódica y la climatización, como ya mencionamos anteriormente.
+\end{itemize}
+
+Por tanto, el análisis de la autocorrelación nos ha aportado información muy valiosa acerca del problema: tenemos tanto variables estacionales, como componentes aparentemente estacionarias en el tiempo, aportando bastante complejidad al modelo, que tendrá que adaptarse a todo ello, y la codificación posicional cobrará importancia.
