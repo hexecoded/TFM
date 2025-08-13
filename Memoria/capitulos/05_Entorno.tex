@@ -141,3 +141,21 @@ En conjunto, con estas 5 métricas disponemos de una buena variedad de resultado
 
 \section{Framework de trabajo y especificaciones hardware}
 
+La realización de todo el proceso experimental se realizará haciendo uso de Python~\footnote{Python: \url{https://www.python.org/}}, debido a la gran acogida del lenguaje en el ámbito de la inteligencia artificial, llegando incluso a desplazar a R como principal lenguaje empleado en las publicaciones académicas recientes. Para el desarrollo del trabajo, emplearemos multitud de librerías que facilitan el procesado de datos, pero de entre todas ellas destaca Pytorch~\cite{paszke2019pytorchimperativestylehighperformance}.\\
+
+Su elección viene motivada por su tendencia creciente en las publicaciones científicas, así como su interfaz simplificada frente a TensorFlow. Aunque ambas soluciones nos otorgan funcionalidades equivalentes, las cuales son cada vez más accesibles gracias a diferentes API externas de alto nivel, Pytorch ofrecía un mejor equilibrio entre la baja granularidad de implementación, y el uso de bloques funcionales con los que construir y editar modelos sin entrar en detalles de bajo nivel, como la implementación de las métricas, las capas totalmente conectadas o las convoluciones. Además, el modelo empleado como base, Informer, dispone de una implementación funcional en GitHub~\cite{zhouhaoyi2020informer} realizada en este entorno.\\
+
+En cuanto al preprocesado de los datos, se han empleado las siguientes librerías: NumPy~\cite{harris2020array} para la vectorización de operaciones; Pandas~\cite{mckinney-proc-scipy-2010} para la lectura y transformación de los ficheros \textit{.csv} y \textit{.parquet}; y Matplotlib~\cite{Hunter:2007} y statmodels~\cite{seabold2010statsmodels} para representaciones gráficas y análisis previo de los datos.\\
+
+La ejecución de todos los experimentos se ha realizado haciendo uso del clúster DGX, propiedad de la Universidad de Granada, debido a la necesidad de recursos de cómputo abundantes para la ejecución de cada variante. Los recursos empleados para cada ejecución han sido:
+
+\begin{itemize}
+	\item Procesador: x 32 cores Intel® Xeon® E5-2698.
+	\item RAM: 96GB
+	\item GPU: x 1 Tesla V100 32GB 
+\end{itemize}
+
+Para garantizar la estabilidad numérica y la reproducibilidad de los resultados, todos los experimentos se han ejecutado múltiples veces utilizando una semilla aleatoria. Esta práctica permite reducir impacto propio de la inicialización aleatoria de los modelos y al muestreo de datos, asegurando que los resultados reflejen de manera más fiel el comportamiento real del modelo. En particular, se realizaron tres iteraciones independientes para cada configuración experimental, calculando posteriormente el promedio estadístico de cada una de las métricas y suavizar el impacto de ejecuciones atípicas o fluctuaciones aleatorias.\\
+
+La ejecución de los experimentos se realiza mediante el script \texttt{run\_exp.py}, disponible en el repositorio del TFM\footnote{Repositorio: \url{https://github.com/hexecoded/tfm}}. Este script permite configurar de manera flexible el modelo mediante numerosos parámetros de entrada, incluyendo la selección de los distintos tipos de codificación posicional y sus hiperparámetros asociados.
+
