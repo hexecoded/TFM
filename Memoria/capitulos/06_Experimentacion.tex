@@ -402,4 +402,52 @@ Tras la ejecución de los ocho experimentos anteriores, hemos obtenido resultado
 
 En ella, se puede apreciar rápidamente como WinStatFlex y WinStatTPE obtienen el mejor resultado, siendo la variabilidad de TPE inferior, tal y como indican las barras de error dibujadas.  Informer se sitúa en la parte intermedia de la gráfica, siendo empeorados sus resultados al emplear la codifación fija seno/coseno, no usar codificación, o bien, emplear SPE, el cual ya desestimamos.\\
 
-Si bien todos los modelos propuestos (a excepción de SPE) obtienen mejores resultados frente a Informer, debemos reducir el conjunto de métodos a un número razonable para poder llevar a cabo un experimento similar sobre conjuntos como TINA, de mayor extensión, evitando perder recursos de cómputo en otros PE menos prometedores. Por este motivo, se toma la decisión de continuar únicamente con las alternativas WinStatFlex y WinStatTPE, las cuales han mostrado un buen desempeño en las pruebas realizadas, y ofrecen resultados demasiado cercanos como para discriminar únicamente usando los valores de este conjunto de datos.
+Si bien todos los modelos propuestos (a excepción de SPE) obtienen mejores resultados frente a Informer, debemos reducir el conjunto de métodos a un número razonable para poder llevar a cabo un experimento similar sobre conjuntos como TINA, de mayor extensión, evitando perder recursos de cómputo en otros PE menos prometedores. Por este motivo, se toma la decisión de continuar únicamente con las alternativas WinStatFlex y WinStatTPE, las cuales han mostrado un buen desempeño en las pruebas realizadas, y ofrecen resultados demasiado cercanos como para discriminar únicamente usando los valores de este conjunto de datos.\\
+
+Y ahora, debemos volver a hacer hincapié sobre el objetivo que estamos persiguiendo: verificar si los nuevos encodings añaden de verdad información semántica. Para ello, realizaremos el experimento anteriormente mencionado del barajado del decoder. Volveremos a ejecutar los dos mejores algoritmos seleccionados e Informer, y ver si realmente se repite la problemática vista en \cite{zeng2022transformerseffectivetimeseries}.\\
+
+En la tabla \ref{hpcresultados_modelos}, podemos encontrar los resultados, del cual podemos extraer varias conclusiones:
+\begin{table}[ht]
+	\centering
+	\begin{tabular}{l|c|c|c|c}
+		\toprule
+		Modelo & {MAE} & {MAE (STD)} & {MSE} & {MSE (STD)}  \\
+		\midrule
+		WinStatFlex & 0,373488 & 0,006858 & 0,461892 & 0,004841 \\
+		WinStatTPE & 0,374392 & 0,004132 & 0,463651 & 0,001917 \\
+		Informer & 0,415272 & 0,012216 & 0,532965 & 0,010976 \\
+		No PE & 0,421343 & 0,005856 & 0,544844 & 0,005447 \\
+		Informer (Shuffled) & 0,419960 & 0,002769 & 0,548443 & 0,009148 \\
+		WinStatFlex (Shuffled) & 0,581124 & 0,021991 & 0,782092 & 0,027368 \\
+		WinStatTPE (Shuffled) & 0,581001 & 0,046717 & 0,851115 & 0,024083 \\
+		\bottomrule
+	\end{tabular}
+	\caption{HPC: resultados para experimento de mezcla en encoder}
+	\label{hpcresultados_modelos}
+\end{table}
+
+
+\begin{table}[ht]
+	\centering
+	\begin{tabular}{l|c|c|l|c}
+		\toprule
+		Modelo & {Tº Test(s)} & {Tº Test(s)-STD} & {Tº Train(s)} & {Tº Train(s)-STD} \\
+		\midrule
+		WinStatFlex & 350,8360 & 5,5675 & 18652,7244 & 128,3429 \\
+		WinStatTPE & 296,2529 & 1,9551 & 18913,6335 & 28,7927 \\
+		Informer & 91,9412 & 1,2444 & 7817,0202 & 821,2709 \\
+		No PE & 125,0538 & 2,8330 & 10382,2665 & 2083,3163 \\
+		Informer (Shuffled) & 85,9877 & 0,7681 & 7923,0834 & 1508,2765 \\
+		WinStatFlex (Shuffled) & 330,9885 & 6,0409 & 20842,9511 & 1877,7778 \\
+		WinStatTPE (Shuffled) & 295,0051 & 1,2049 & 20580,5136 & 2278,5627 \\
+		\bottomrule
+	\end{tabular}
+	\caption{HPC: Tiempos de ejecución para cada modelo tras el mezclado}
+	\label{tab:tiempos_modelos}
+\end{table}
+
+\begin{itemize}
+	\item En primer lugar, el rendimiento de Informer original y mezclados es muy similar, con una diferencia mínima entre ellos, respaldando así los resultados realizados en el paper original. La versión sin PE se sitúa justo en medio de ambos resultados, haciendo que los 3 modelos ofrezcan de manera general el mismo rendimiento y afianzando la pobre semántica y mantenimiento de orden que aporta la estrategia tradicional.
+	\item WinStatFlex sufre de manera marcada el impacto de aplicar el barajado, lo cual son muy buenos resultados. Esto nos indica que la información aportada por este método es capaz de modelar de manera adecuada tanto el contexto como la estructura inherente de la serie, y que cuando se aplica sobre una entrada mezclada, se produce una gran alteración y degradación del rendimiento. Este comportamiento resulta coherente y lógico desde un punto de vista teórico: el MSE pasa de $0,461892$ a $0,782092$, lo que supone un empeoramiento relativo del 69,3\%.
+	\item WinStatTPE sufre un efecto similar; al aplicar el barajado, pasamos de $0,463651$ a 
+\end{itemize}
