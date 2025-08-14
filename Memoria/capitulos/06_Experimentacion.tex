@@ -51,3 +51,157 @@ Sin embargo, en el artículo mencionado se llega a la conclusión de que los mec
 
 En nuestro caso, teniendo en cuenta que nuestra arquitectura se basa en la estructura de Informer, pero simplificando el mecanismo de atención al prescindir del muestreo y las convoluciones, la escasez mantenimiento del orden podría afectarnos de manera similar. Pero, en este caso, queremos evaluar la efectividad de los métodos de codificación propuestos en este trabajo, por lo que repetiremos el experimento, pero en lugar de hacerlo con la codificación por defecto, que ya conocemos sus resultados, con nuestras alternativas. El objetivo es claro: tratar de demostrar que permiten conservar una mayor semántica de los datos y se ven más perjudicados frente al desorden que la tradicional codificación seno-coseno.
 
+\section{Resultados de los experimentos}
+
+Una vez justificado el procedimiento de ejecución a seguir para los experimentos realizados, podemos comenzar a analizar los resultados obtenidos en el entrenamiento de los mismos. Tal y como se especificó en el capítulo \ref{cap5}, compararemos los resultados haciendo uso de las métricas de regresión especificadas, pero haciendo especial hincapié en el MAE y MSE.\\
+
+La estructura seguida por los experimentos será la siguiente: primero, evaluaremos cuales de las cinco propuestas formuladas obtiene el mejor rendimiento sobre un conjunto de referencia, Household Power Consumption~\cite{hebrail2006individual}, y posteriormente, procederemos a analizar su utilidad en el resto de conjuntos de datos.
+
+\subsection{Evaluación de las alternativas sobre el conjunto HPC}
+
+El dataset de Individual Household Power Consumption ha sido el conjunto escogido para evaluar, en primer lugar, las 5 variantes de nuestro método de encoding. Esta decisión viene motivada por dos aspectos; en primer lugar, este conjunto de datos dispone de una longitud suficiente para inferir la información relevante de la serie y realizar predicciones a largo plazo, y además, en el comportamiento de sus variables vimos aspectos como la estacionalidad, la cual es más difícil de modelar para un Transformer, y ausencia de estacionalidad, lo cual a priori podría suponer un problema para la aplicación de métodos clásicos. Pero, principalmente, la decisión de escoger un dataset viene motivada por le coste computacional: evaluar todas las alternativas en cada uno de los conjuntos de datos podría requerir semanas e incluso meses para completar por cada dataset, lo cual se escapa de los recursos y limitaciones temporales de las que disponemos.\\
+
+\subsubsection{Resultados}
+
+Por lo tanto, escoger un conjunto de datos más manejable como este, de aproximadamente 2 millones de mediciones, y 7 características, supone un interesante campo de pruebas para las codificaciones. Para la comparativa, realizaremos las siguientes ejecuciones:
+
+\begin{itemize}
+	\item Informer con configuración por defecto.
+	\item PE sinusoidal.
+	\item Nuevas propuestas: WinStat, WinStatLag, WinStatFlex,  WinStatTPE y WinStatSPE	
+	\item Sin PE.
+\end{itemize}
+
+Para realizar una comparativa justa de los resultados, se han empleado en todos los casos los mismos parámetros, de forma que criterios como la longitud de secuencia, la longitud de contexto o la longitud de predicción no afecten a los resultados. La arquitectura y los parámetros asociados se pueden ver en la tabla \ref{ajustes}.
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|l}
+		\toprule
+		Parámetro & Valor \\
+		\midrule
+		{Modelo de atención} & Vanilla \\
+		{Tamaño de batch} & 32 \\
+		{Dropout} & 0.2 \\
+		{Nº de ejecuciones} & 3 \\
+		{Tamaño de ventana} & 60 \\
+		{Longitud de secuencia} & 180 \\
+		{Longitud de etiqueta/contexto} & 60 \\
+		{Longitud de predicción} & 60 \\
+		\bottomrule
+	\end{tabular}
+\caption{HPC: configuración de parámetros comunes empleada para los experimentos}
+\label{ajustes}
+\end{table}
+
+\paragraph{Informer}
+
+En primer lugar, comenzaremos por ejecutar el modelo original de Informer. De esta forma, tendremos una referencia de partida que nos sirva para comparar las propuestas siguientes, y ver si están siendo efectivas. Por defecto, Informer usa codificación de tipo seno-coseno, pero adicionalmente, incorpora información de los timestamps a través de un mecanismo llamado timeF. Son características adicionales que tratan de ayudar al modelo a capturar patrones periódicos y estacionales en la serie temporal, aunque de manera bastante limitada. 
+
+\begin{table}[!ht]
+	\centering
+\begin{tabular}{lcc}
+	\toprule
+	Métrica & Media & STD \\
+	\midrule
+	MSE & 0,532965 & 0,010976 \\
+	MAE & 0,415272 & 0,012216 \\
+	MAPE & 2,598725 & 0,066858 \\
+	MSPE & 1345,903158 & 113,73071 \\
+	RMSE & 0,730005 & 0,00754 \\
+	TrainTime(s) & 7817,02026 & 821,270911 \\
+	TestTime(s) & 91,941244 & 1.244423 \\
+	\bottomrule
+\end{tabular}
+\caption{HPC: resultados para Informer}
+\label{hpcinf}
+\end{table}
+
+Los resultados de la ejecución pueden apreciarse en la tabla \ref{hpcinf}. En ella, podemos notar que la varianza en los resultados, tras ejecutar 3 iteraciones, es bastante pequeña, e inferior a la centésima tanto para MAE como MSE. Sin embargo, las tasas de error en las métricas de MAPE y MSPE se disparan: esto se debe a su gran sensibilidad a valores pequeños, ya que todas las mediciones han sido normalizadas, por lo que no deberían ser consideradas como una forma de comparación debida su inestabilidad. En el caso de RMSE, el error también es bastante alto, de un 73\%, fruto de la misma debilidad que la mostrada en MAPE y MSPE.\\
+
+En términos de eficiencia computacional, podemos utilizar el tiempo medio de ejecución como referencia. En promedio, una ejecución del modelo por defecto requiere aproximadamente 7817 segundos, equivalentes a casi 2,17 horas. Aunque este tiempo resulta razonable considerando la longitud del conjunto de datos, su utilidad real es servir como valor de referencia para evaluar el coste adicional que implican las operaciones introducidas en los modelos alternativos que veremos a continuación.
+
+\paragraph{PE sinusoidal}
+
+Continuando con el modelo de referencia, daremos un segundo paso. Teniendo en cuenta el impacto limitado de la información añadida por timeF, ¿es realmente relevante frente a la información proporcionada por el encoding de tipo seno-coseno?. Para conocerlo, hemos realizado una ejecución suprimiendo esta componente, convirtiendo la arquitectura en prácticamente la definición de un Transformer vanilla para procesamiento de lenguaje. 
+
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{lcc}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MSE & 0,537721 & 0,011375 \\
+		MAE & 0,414084 & 0,006756 \\
+		MAPE & 2,573043 & 0,094281 \\
+		MSPE & 1363,108439 & 117,15614 \\
+		RMSE & 0,733254 & 0,007743 \\
+		TrainTime(s) & 10741,03553 & 422,837205 \\
+		TestTime(s) & 225,145923 & 63,83665 \\
+		\bottomrule
+	\end{tabular}
+	\caption{HPC: resultados para encoding seno-coseno}
+	\label{hpcfixed}
+\end{table}
+
+Sorprendentemente, los resultados obtenidos, visibles en la tabla \ref{hpcfixed} son muy similares a los vistos en el modelo original: la pérdida de rendimiento en métricas es prácticamente despreciable, con una diferencia de rendimiento inferior a la centésima para el MSE (0,5329 vs 0,5377) y un caso similar en MAE (0,4152 vs 0,414), obteniendo incluso un mejor el resultado para esta codificación. Esto nos indica que la información adicional aportada en el modelo original no estaba aumentando considerablemente el rendimiento del modelo.\\
+
+Sin embargo, resulta relevante destacar que el tiempo de ejecución aumenta significativamente, alcanzando aproximadamente 10741 segundos (cerca de 3 horas) en el entrenamiento. Aunque este resultado pueda parecer contraintuitivo, ya que eliminar componentes debería reducir el coste, al emplear esta variante el proceso de convergencia del modelo se desarrolla de forma más lenta, y provoca un aumento del tiempo de ejecución. En defintiva, suprimir la información contextual adicional de Informer no empeora gravemente los resultados, pero disminuye la velocidad de convergencia durante el aprendizaje.\\
+
+A continuación, comenzaremos a probar las nuevas alternativas, para ver si consiguen mejorar estos resultados.
+
+\paragraph{WinStat}
+
+Comenzamos por la primera de las propuestas, la cual se basa únicamente en la adición información estadística a través de una ventana deslizante.\\
+
+Recordando su funcionamiento, este método requiere especificar el tamaño de la ventana, la cual recorre los datos para extraer y concatenar información local sobre la media, la desviación estándar y los valores extremos en su entorno. Por tanto, la elección de un tamaño de ventana adecuado resulta crítico para garantizar un rendimiento óptimo, sin comprometer la eficiencia del modelo. Como criterio heurístico, se empleará una longitud comprendida entre un tercio y un cuarto del tamaño de la secuencia de entrada, ya que ofrece un equilibrio razonable entre el mínimo posible, 3, y el extremo opuesto de utilizar una ventana de tamaño longitud de la secuencia.
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{lcc}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MSE & 0,502033 & 0,004632 \\
+		MAE & 0,394002 & 0,002849 \\
+		MAPE & 2,487715 & 0,090071 \\
+		MSPE & 1196,131307 & 105,107660 \\
+		RMSE & 0,708535 & 0,003274 \\
+		TrainTime(s) & 17697,790107 & 3174,41485 \\
+		TestTime(s) & 253,980487 & 3,765932 \\
+		\bottomrule
+	\end{tabular}
+	\caption{HPC: resultados para encoding WinStat}
+	\label{hpcwin}
+\end{table}
+
+Los resultados para esta alternativa son significativamente mejores y más estables (tabla \ref{hpcwin}) que en los casos anteriores, ya que hemos conseguido reducir tanto MAE como MSE, reduciendo además la varianza de los resultados. Tomando esta última como referencia, podemos apreciar que la mejora es superior a las tres centésimas (0,502 vs 0,537), aportando una mejora considerable del 6\%. Sin embargo, esta mejora de rendimiento ha tenido un gran impacto en el tiempo de cómputo: este es ahora mucho mayor que en casos anteriores, con una variabilidad además mucho más alta, de casi una hora.\\
+
+En promedio, se ha requerido 17697 segundos, unas 4,9 horas, para completar cada ejecución, lo cual es aumento del tiempo de ejecución a prácticamente el doble de Informer original. Si bien la mejora ha sido notable, sería deseable observar si alguna de las siguientes alternativas consigue mejorar la estabilidad numérica y la convergencia de los resultados.
+
+\paragraph{WinStatLags}
+
+WinStatLags es la siguiente propuesta de encoding a evaluar, siguiendo la estrategia especificada de ir aumentando de manera creciente la complejidad de los modelos. La principal característica de este modelo consistía en la incorporación de diferencias mediante lags, las cuales potencian el contexto local. Siguiendo las misma configuración que en los casos anteriores, obtenemos los resultados de la tabla \ref{hpcwinlags}:
+
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{lcc}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MSE & 0.491026 & 0.004988 \\
+		MAE & 0.398612 & 0.005025 \\
+		MAPE & 2.312104 & 0.086223 \\
+		MSPE & 1012.281759 & 108.017980 \\
+		RMSE & 0.700723 & 0.003566 \\
+		TrainTime(s) & 13071.568639 & 1403.397188 \\
+		TestTime(s) & 229.312370 & 3.086725 \\
+		\bottomrule
+	\end{tabular}
+	\caption{HPC: resultados para encoding WinStatLags}
+	\label{hpcwinlags}
+\end{table}
+
+
