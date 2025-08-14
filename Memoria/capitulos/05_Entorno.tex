@@ -1,4 +1,5 @@
 \chapter{Modelo escogido y entorno de trabajo}
+\label{cap5}
 
 Una vez disponemos de los conjuntos de datos seleccionados, y establecidos los métodos de codificación que queremos probar, podemos pasar a la construcción del entorno de trabajo. De por sí solos, los métodos de encoding no puede ser evaluados, ya que requieren su aplicación en un modelo concreto que lo acepte de entrada y sea capaz de procesarlo y aprender del embedding proporcionado.\\
 
@@ -154,8 +155,6 @@ La ejecución de todos los experimentos se ha realizado haciendo uso del clúste
 	\item RAM: 96GB
 	\item GPU: x 1 Tesla V100 32GB 
 \end{itemize}
-
-Para garantizar la estabilidad numérica y la reproducibilidad de los resultados, todos los experimentos se han ejecutado múltiples veces utilizando una semilla aleatoria. Esta práctica permite reducir impacto propio de la inicialización aleatoria de los modelos y al muestreo de datos, asegurando que los resultados reflejen de manera más fiel el comportamiento real del modelo. En particular, se realizaron tres iteraciones independientes para cada configuración experimental, calculando posteriormente el promedio estadístico de cada una de las métricas y suavizar el impacto de ejecuciones atípicas o fluctuaciones aleatorias.\\
 
 La ejecución de los experimentos se realiza mediante el script \texttt{run\_exp.py}, disponible en el repositorio del TFM\footnote{Repositorio: \url{https://github.com/hexecoded/tfm}}. Este script permite configurar de manera flexible el modelo mediante numerosos parámetros de entrada, incluyendo la selección de los distintos tipos de codificación posicional y sus hiperparámetros asociados.
 
