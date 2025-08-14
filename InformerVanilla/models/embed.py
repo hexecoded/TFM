@@ -385,7 +385,7 @@ class DataEmbedding_Stats(nn.Module):
     de PE ponderados para encontrar aquel que ofrece mejores rsultados
     """
 
-    def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7]):
+    def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7], embed_type="timeF"):
         super(DataEmbedding_Stats, self).__init__()
         print("Window size: ", window)
 
@@ -422,7 +422,7 @@ class DataEmbedding_StatsLags(nn.Module):
 
     """
 
-    def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7]):
+    def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7], embed_type="timeF"):
         super(DataEmbedding_StatsLags, self).__init__()
         print("Window size: ", window)
 
