@@ -1,1 +1,40 @@
 \chapter{Análisis y estudio de los resultados obtenidos}
+
+Una vez expuestas todas las condiciones del entrenamiento, como los modelos a probar, las métricas, funciones de pérdida y presentados los datos, podemos dar paso al entrenamiento. Sin lugar a dudas, es la fase más lenta de todo el proceso, la cual ha prolongado su desarrollo considerablemente. El objetivo es claro: poner a prueba las 5 propuestas realizadas para establecer, en primer lugar, cuál o cuáles de ellas son competitivas, y posteriormente, evaluar todos los conjuntos de datos para medir la ganancia con respecto al conjunto de datos original.
+
+\section{Consideraciones previas: ¿Cómo detectar si un modelo es mejor que otro?}
+
+A la hora de realizar las pruebas, existen multitud de factores que pueden influir en los resultados, y los cuales debemos controlar minuciosamente para evitar problemas que alteren los resultados y nos den una idea equivocada del rendimiento. Entre ellos, podemos encontrar las inicializaciones aleatorias de los pesos, el riesgo de sobreaprendizaje y en casos de extremada similaridad de resultados, la calidad semántica aportada por la codificación que estamos evaluando.\\
+
+Para tratar de minimizar el impacto de estos factores y facilitar el análisis de calidad de los positional encodingds propuestos, tomaremos una serie de medidas las cuales examinaremos a continuación.
+
+\subsection{Impacto de la inicialización aleatoria}
+
+Cuando entrenamos cualquier modelo de aprendizaje, en prácticamente cualquier ámbito de problema (datos tabulares, imágenes, secuencias,..) existe un paso el cual muchas veces es ignorado, y que puede afectar considerablemente a los resultados obtenidos: la inicialización de los parámetros del modelo. Aunque este paso podría parecer trivial y de escasa relevancia, debido a que los parámetros serán posteriormente ajustados mediante los mecanismos de aprendizaje, en realidad, puede desempeñar un papel determinante en el rendimiento final del modelo.\\
+
+En la práctica, la inicialización suele realizarse a partir de una distribución pseudoaleatoria generada mediante secuencias controladas por el sistema operativo o el propio lenguaje de programación. Este proceso asigna valores iniciales a cada una de las conexiones y pesos del modelo, y cada valor asignado puede influir considerablemente en la velocidad de convergencia y la estabilidad numérica, ya que los optimizadores que ajustan sus valores posteriormente, se basan en métodos de descenso de gradiente o búsqueda local para tratar de encontrar óptimos locales.\\
+
+Para mejorar la convergencia y eficiencia en entrenamiento, se han desarrollado numerosos optimizadores con el objetivo de evitar quedar atascado durante este proceso y tratar de escapar de óptimos locales de baja calidad que pudieran afectar al resultado final. Uno de los más empleados es Adam~\cite{kingma2017adammethodstochasticoptimization}, el cual utiliza momentum para dotar de cierta inercia a cada una de las dimensiones, ajustando una a una su tasa de aprendizaje, y así tratar de escapar de localidades subóptimas.\\
+
+Por ello, emplearemos este optimizador en el entrenamiento del Transformer, ya que nos permite un enfoque más estable y adaptativo en la actualización de los parámetros y reduciendo la sensibilidad a los pesos y la tasa de aprendizaje inicial.\\
+ 
+Pero esta estrategia no nos exime de los problemas derivados de malas inicializaciones que, de forma fortuita, podrían producir un mal resultado en un modelo que, en condiciones normales, tendría un desempeño superior. Dicho fenómeno puede verse potenciado al emplear los diferentes encodings ponderados, ya que una mala inicialización de alguno de los pesos podría favorecer artificialmente una de las variantes desde el inicio. Aunque el encoding asociado no proporcione un buen rendimiento, la reducción de su valor podría ser lenta, sentenciando el experimento desde el inicio. Para evitarlo, aplicaremos las siguientes soluciones:
+
+\begin{itemize}
+	\item Ejecutar todos los experimentos múltiples veces utilizando diferentes semillas aleatorias. Esta práctica nos permitirá reducir el impacto de la aleatoriedad en los modelos, asegurando que los resultados reflejen de manera más fiel el comportamiento real del modelo.
+	\item Realizar un inicio uniforme de los pesos de ponderación de encodings. Esto se traduce en establecer como valor de partida a cada peso aprendible un valor equivalente a $1/n$, siendo $n$ el número de alternativas que se desea evaluar. De esta forma, el cálculo empieza sin condiciones de dominancia, y será el propio proceso de aprendizaje el que altere los pesos a su beneficio.
+\end{itemize}
+
+ 
+Gracias a estas soluciones, paliaremos en gran medida el impacto en los resultados. No obstante, debemos tener cuidado con el número de ejecuciones de cada modelo, pues cada una puede requerir varios días de cómputo, lo que nos obliga a buscar un equilibrio entre estabilidad y tiempo. Por lo tanto, excepto si se indica lo contrario, se realizarán tres ejecuciones independientes para cada configuración experimental, calculando posteriormente el promedio estadístico de cada una de las métricas. De esta manera, logramos un \textit{trade-off} adecuado entre ambas condiciones. En conjunto con el uso de Adam, trataremos de maximizar la estabilidad y confiabilidad de los resultados.
+ 
+\subsection{Sobreaprendizaje}
+
+Otro de los problemas destacados durante en el entrenamiento puede ser el sobreaprendizaje. Cuando usamos arquitecturas tan profundas y potentes como los Transformers, es sencillo que la arquitectura tome el conjunto de entrenamiento y lo aprenda de manera bastante próxima a la distribución de estos datos, es decir, la acabe ``memorizando'' y la capacidad de generalización del modelo sea pobre. Esto es especialmente notable en conjuntos de datos más sencillos o de menor longitud, en los que el modelo podría incluso verse algo sobredimensionado. Para evitarlo. se han seleccionado dos estrategias: regularización mediante \textit{dropout} y uso de \textit{early stopping}.
+
+\begin{itemize}
+	\item Con el \textbf{early-stopping}, estamos añadiendo un mecanismo de parada automática del entrenamiento, el cual, especificando una paciencia, en épocas, detendremos el modelo en ausencia de mejora. Para controlar esta parada, monitorizaremos el error de pérdida en validación. Para mantener tener una paciencia algo tolerante, escogeremos como valor 3 épocas; si en 3 épocas el error del modelo ha sido peor que el mejor resultado registrado, cancelaremos el proceso, ahorrando recursos de cómputo y evitando mala generalización.
+	\item Mediante \textbf{dropout}, evitaremos que la capas totalmente conectadas de la red se sobreespecialicen, desactivando aleatoriamente algunas neuronas en las diferentes iteraciones del entrenamiento. Por defecto, Informer ya incluye un parámetro de dropout, cuyo valor inicial es bastante bajo, 0.05. Este dropout se aplica no solo a las capas del encoder y decoder, sino también a la estructura del embedding de entrada cuando este contiene componentes aprendibles. Dado que ambos elementos presentan comportamientos distintos, y que regularizar los datos de manera excesiva no es conveniente, pues podría perderse información, se ha establecido como criterio aplicar un dropout mayor, de 0.2, para las capas del modelo, mientras que se mantiene el dropout del embedding en su valor original de 0.05. Así, de alguna forma estamos especificando una regla heurística, en la cual mantenemos el índice asociado al embedding 4 veces menor que el aplicado en las capas de la arquitectura.
+\end{itemize}
+
+Con el uso de estos dos factores, podremos minimizar el impacto del \textit{overfitting}, y evitar una mala capacidad de generalización del modelo.
