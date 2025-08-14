@@ -391,4 +391,15 @@ Sin embargo, la diferencia con respecto a la arquitectura Informer original es m
 
 \subsubsection{Elección del mejor modelo}
 
-Tras la ejecución de los ocho experimentos anteriores, hemos obtenido resultados valiosos que nos permiten evaluar de manera comparativa el rendimiento de todas las codificaciones analizadas. Debido a que los datos intuitivos pueden ser algo densos, con el objetivo de visualizar de forma más intuitiva estas diferencias, se ha elaborado un gráfico que resume las métricas principales de cada modelo, MAE y MSE, permitiendo observar de un vistazo el ranking de alternativas ordenadas por MSE.\\
+Tras la ejecución de los ocho experimentos anteriores, hemos obtenido resultados valiosos que nos permiten evaluar de manera comparativa el rendimiento de todas las codificaciones analizadas. Debido a que los datos intuitivos pueden ser algo densos, con el objetivo de visualizar de forma más intuitiva estas diferencias, se ha elaborado un gráfico (figura \ref{hpcgraph}) que resume las métricas principales de cada modelo, MAE y MSE, permitiendo observar de un vistazo el ranking de alternativas ordenadas por MSE.\\
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.475]{img/hpcgraph}
+	\caption{HPC: comparativa gráfica de los positional encodings evaluados}
+	\label{hpcgraph}
+\end{figure}
+
+En ella, se puede apreciar rápidamente como WinStatFlex y WinStatTPE obtienen el mejor resultado, siendo la variabilidad de TPE inferior, tal y como indican las barras de error dibujadas.  Informer se sitúa en la parte intermedia de la gráfica, siendo empeorados sus resultados al emplear la codifación fija seno/coseno, no usar codificación, o bien, emplear SPE, el cual ya desestimamos.\\
+
+Si bien todos los modelos propuestos (a excepción de SPE) obtienen mejores resultados frente a Informer, debemos reducir el conjunto de métodos a un número razonable para poder llevar a cabo un experimento similar sobre conjuntos como TINA, de mayor extensión, evitando perder recursos de cómputo en otros PE menos prometedores. Por este motivo, se toma la decisión de continuar únicamente con las alternativas WinStatFlex y WinStatTPE, las cuales han mostrado un buen desempeño en las pruebas realizadas, y ofrecen resultados demasiado cercanos como para discriminar únicamente usando los valores de este conjunto de datos.
