@@ -157,7 +157,7 @@ Comenzamos por la primera de las propuestas, la cual se basa únicamente en la a
 
 Recordando su funcionamiento, este método requiere especificar el tamaño de la ventana, la cual recorre los datos para extraer y concatenar información local sobre la media, la desviación estándar y los valores extremos en su entorno. Por tanto, la elección de un tamaño de ventana adecuado resulta crítico para garantizar un rendimiento óptimo, sin comprometer la eficiencia del modelo. Como criterio heurístico, se empleará una longitud comprendida entre un tercio y un cuarto del tamaño de la secuencia de entrada, ya que ofrece un equilibrio razonable entre el mínimo posible, 3, y el extremo opuesto de utilizar una ventana de tamaño longitud de la secuencia.\\
 
-Los resultados para esta alternativa son significativamente mejores y más estables (tabla \ref{hpcwin}) que en los casos anteriores, ya que hemos conseguido reducir tanto MAE como MSE, reduciendo además la varianza de los resultados. Tomando esta última como referencia, podemos apreciar que la mejora es superior a las tres centésimas (0,502 vs 0,537), aportando una mejora considerable del 6\%. Sin embargo, esta mejora de rendimiento ha tenido un gran impacto en el tiempo de cómputo: este es ahora mucho mayor que en casos anteriores, con una variabilidad además mucho más alta, de casi una hora.\\
+Los resultados para esta alternativa son significativamente mejores y más estables (tabla \ref{hpcwin}) que en los casos anteriores, ya que hemos conseguido reducir tanto MAE como MSE, reduciendo además la varianza de los resultados. Tomando esta última como referencia, podemos apreciar que la mejora es superior a las tres centésimas ($0,502$ vs $0,537$), aportando una mejora considerable del 6\%. Sin embargo, esta mejora de rendimiento ha tenido un gran impacto en el tiempo de cómputo: este es ahora mucho mayor que en casos anteriores, con una variabilidad además mucho más alta, de casi una hora.\\
 
 \begin{table}[!ht]
 	\centering
@@ -178,13 +178,13 @@ Los resultados para esta alternativa son significativamente mejores y más estab
 	\label{hpcwin}
 \end{table}
 
-En promedio, se ha requerido 17697 segundos, unas 4,9 horas, para completar cada ejecución, lo cual es aumento del tiempo de ejecución a prácticamente el doble de Informer original. Si bien la mejora ha sido notable, sería deseable observar si alguna de las siguientes alternativas consigue mejorar la estabilidad numérica y la convergencia de los resultados.
+En promedio, se ha requerido $17697$ segundos, unas 4,9 horas, para completar cada ejecución, lo cual es aumento del tiempo de ejecución a prácticamente el doble de Informer original. Si bien la mejora ha sido notable, sería deseable observar si alguna de las siguientes alternativas consigue mejorar la estabilidad numérica y la convergencia de los resultados.
 
 \paragraph{WinStatLags}
 
 WinStatLags es la siguiente propuesta de encoding a evaluar, siguiendo la estrategia especificada de ir aumentando de manera creciente la complejidad de los modelos. La principal característica de este modelo consistía en la incorporación de diferencias mediante lags, las cuales potencian el contexto local. Siguiendo las misma configuración que en los casos anteriores, obtenemos los resultados de la tabla \ref{hpcwinlags}.\\
 
-Volvemos a obtener una mejora pequeña, esta vez del 0,01 sobre el modelo de ventana sin lags para el MSE, y una reducción del resto de métricas de error, aunque con un empeoramiento marginal registrado en MAE. Aunque dicha diferencia parezca mínima, es significativa si la tenemos en cuenta con respecto al modelo original. Además, en cuestiones de tiempo de ejecución, hemos conseguido unos tiempos de entrenamiento inferiores, sobre todo, gracias a la reducción de la variabilidad de los resultados. Podemos observar que hemos pasado de una varianza cercana a la hora por cada ejecución, a aproximadamente 24 minutos, reduciendo así casi en un tercio la variabilidad del resultado. Esto justifica por tanto la inclusión de esta nueva componente, que se mantiene como estaba previsto en el resto de codificaciones.
+Volvemos a obtener una mejora pequeña, esta vez del $0,01$ sobre el modelo de ventana sin lags para el MSE, y una reducción del resto de métricas de error, aunque con un empeoramiento marginal registrado en MAE. Aunque dicha diferencia parezca mínima, es significativa si la tenemos en cuenta con respecto al modelo original. Además, en cuestiones de tiempo de ejecución, hemos conseguido unos tiempos de entrenamiento inferiores, sobre todo, gracias a la reducción de la variabilidad de los resultados. Podemos observar que hemos pasado de una varianza cercana a la hora por cada ejecución, a aproximadamente 24 minutos, reduciendo así casi en un tercio la variabilidad del resultado. Esto justifica por tanto la inclusión de esta nueva componente, que se mantiene como estaba previsto en el resto de codificaciones.
 
 
 \begin{table}[!ht]
@@ -208,7 +208,7 @@ Volvemos a obtener una mejora pequeña, esta vez del 0,01 sobre el modelo de ven
 
 \paragraph{WinStatFlex}
 
-WinStatFlex, el siguiente modelo a examinar, combina estadísticos calculados mediante ventanas, diferencias con rezagos anteriores y codificaciones aditivas ponderadas. Su principal ventaja radica en que los pesos de ponderación entrenables, lo que permite una adaptación más precisa al conjunto de datos y ejerce un impacto crítico en el rendimiento final. En este caso, al incorporar PE, LPE y TAPE, junto con la variante basada en ventanas, se dispone de un total de cuatro pesos. Estos fueron inicializados con un valor uniforme de 0.25, con el fin de evitar problemas de dominancia inicial y garantizar una contribución equilibrada entre componentes.\\
+WinStatFlex, el siguiente modelo a examinar, combina estadísticos calculados mediante ventanas, diferencias con rezagos anteriores y codificaciones aditivas ponderadas. Su principal ventaja radica en que los pesos de ponderación entrenables, lo que permite una adaptación más precisa al conjunto de datos y ejerce un impacto crítico en el rendimiento final. En este caso, al incorporar PE, LPE y TAPE, junto con la variante basada en ventanas, se dispone de un total de cuatro pesos. Estos fueron inicializados con un valor uniforme de $0,25$, con el fin de evitar problemas de dominancia inicial y garantizar una contribución equilibrada entre componentes.\\
 
 Los resultados de este algoritmo requieren una mayor atención, dada la multitud de resultados que podemos extraer de su rendimiento (ver tabla \ref{hpcflex}):
 
@@ -248,7 +248,7 @@ Los resultados de este algoritmo requieren una mayor atención, dada la multitud
 \end{table}
 
 \begin{itemize}
-	 \item El rendimiento obtenido, tomando como referencia la métrica MSE, es notable. En comparación con el modelo basado en lags y estadísticos, se ha logrado una mejora absoluta de 0,03, equivalente a un 5,9\%. Este incremento es prácticamente idéntico al observado entre {WinStat} y la codificación original de {Informer}. En términos acumulados, la mejora con respecto a este último alcanza el 13,4\%, lo que representa un avance significativo en el desempeño del modelo. Estos valores demuestran la eficacia de la combinación mediante pesos entrenables.
+	 \item El rendimiento obtenido, tomando como referencia la métrica MSE, es notable. En comparación con el modelo basado en lags y estadísticos, se ha logrado una mejora absoluta de $0,03$, equivalente a un 5,9\%. Este incremento es prácticamente idéntico al observado entre {WinStat} y la codificación original de {Informer}. En términos acumulados, la mejora con respecto a este último alcanza el 13,4\%, lo que representa un avance significativo en el desempeño del modelo. Estos valores demuestran la eficacia de la combinación mediante pesos entrenables.
 	\item El tiempo de ejecución, por contra, es el más alto medido hasta el momento, siendo necesario un promedio de 18652 segundos, o 5,2 horas de ejecución, frente a las algo más de 2 horas requeridas por la versión original de Informer. Esta configuración incrementa el tiempo medio de ejecución a más del doble, lo que supone un coste computacional significativamente mayor. No se trata de un enfoque que sobresalga por su rapidez en las fases de entrenamiento e inferencia, pero, sin embargo, la mejora de rendimiento podría convertir esta diferencia en un coste asumible.
 	\item El valor final de los pesos (tabla \ref{hpcflexpesos}) tras el entrenamiento nos ofrece información muy valiosa sobre las necesidades de los datos. Las proporciones en promedio alcanzadas por estos indican una mayor inclinación hacia la información semántica de los valores estadísticos, con un 32,41\% de contribución. En el caso de los encodings aditivos, destaca especialmente la componente aprendida por LPE, la cual se adapta lo máximo posible a los datos, y ha adquirido una relevancia del 28,09\%. Tan solo con estas componentes, se cubre una ponderación de 0,605 de los datos, indicando que el modelo tiene una mayor preferencia por aumenta el contexto local de los datos.ç
 	
@@ -307,3 +307,84 @@ Una vez estudiado el excelente rendimiento de WinStatFlex, es el turno de su var
 \end{itemize}
 
 En definitiva, este modelo presenta grandes ventajas frente a las codificaciones tradicionales, pero en comparación a la propuesta realizada por WinStatFlex, la diferencia en métricas es marginal, y el coste es superior. Su principal característica parece ser su gran estabilidad numérica, por lo que se mantiene como una alternativa atractiva junto a WinStatFlex.
+
+\paragraph{WinStatSPE}
+
+WinStatSPE será nuestra última variante a probar de las propuestas por este trabajo, y se centrará en evaluar el funcionamiento de un modelo ponderado donde interviene un mecanismo de modificación de atención explícito como es SPE. Las expectativas de rendimiento son bastante bajas, ya que en su definición se destacó su fortaleza en problemas de clasificación, y no mencionan conclusiones acerca de sus resultados en forecasting. Pero debido, a que no se estipularon restricciones acerca de una posible aplicación de un problema de predicción como este, consideramos relevante probar su comportamiento. Por tanto, tomando como codificación posicional estándar la empleada en WinStatFlex, se ha combinado con un modelo alternativo que modifica la atención para incluir SPE. Los resultados obtenidos se pueden ver en la tabla \ref{hpcspe}:
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c|c}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MAE & 0,441418 & 0,032406 \\
+		MAPE & 2,558296 & 0,121722 \\
+		MSE & 0,582600 & 0,044727 \\
+		MSPE & 1388,203491 & 147,022305 \\
+		RMSE & 0,762703 & 0,029725 \\
+		TestTime(s) & 1730,330627 & - \\
+		TrainTime(s) & 131450,338871 & - \\
+		\bottomrule
+	\end{tabular}
+	\caption{HPC: métricas de rendimiento para WinStatSPE}
+\label{hpcspe}
+\end{table}
+
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c}
+		\toprule
+		Componente & Peso aprendido \\
+		\midrule
+		Stats &0,2505 \\
+		PE & 0,2361 \\
+		LPE &  0,1948 \\
+		tAPE &  0,3186 \\
+		\bottomrule
+	\end{tabular}
+	\caption{HPC: valores aprendidos en los pesos del encoding WinStatSPE}
+	\label{hpcspepesos}
+\end{table}
+
+\begin{itemize}
+	\item Las métricas proporcionadas por el modelo contienen peores resultados que el modelo de referencia. Esto indica que evidentemente, algo no esta funcionando adecuadamente a la hora de modificar la atención, ya que de por sí sola, la codificación complementaria que se ha utilizado sí que ofrece buenos resultados. Esto confirma las intuiciones anteriores, y muestra que posiblemente SPE sea efectivamente un método propio de clasificación.
+	
+	\item El tiempo de ejecución es muy alto en comparación con todos los métodos vistos. Debido a un problema de desbordamiento con las variables de tiempo, no se dispone de varianza, pero teniendo en cuenta el tiempo total y realizando el promedio, se estima que cada iteración de las realizadas duró una media de $131450$ segundos, lo cual equivale aproximadamente a un día y medio (36 horas). Esto pone en evidencia la ineficacia del método tanto a nivel de resultados como computacionalmente. 
+	
+	El resultado es sorprendente, dado que la definición original de este método lo proponía como una aproximación de la atención completa mediante una distribución normal. Sin embargo, debido probablemente a limitaciones de memoria o de capacidad de cómputo de la CPU, esta alternativa ha mostrado ser más lenta que el cálculo directo de la atención completa. Incluso el tiempo de inferencia ha crecido rozando un rendimiento casi 20 veces más lento.
+	
+	\item En este caso, los pesos obtenidos presentan un comportamiento inusual (tabla \ref{hpcspepesos}), probablemente debido a la alteración del mecanismo de atención. Se observa una mayor potenciación de la componente tAPE, anteriormente inferior, alcanzando una contribución del 31,86\%, y reduciendo la relevancia de los datos en sí hasta el 25,05\%. 
+	
+\end{itemize}
+
+En resumen, queda en evidencia que esta modificación, empleando SPE como variante de atención, no aporta resultados positivos. Incluso ejecuta empleando los mecanismos de PE propios de Informer, a modo de descarte, su rendimiento deja mucho que desear, con un MSE de  0,553648. Por tanto, queda eliminado de nuestro conjunto de alternativas de ensayo para los siguientes datasets evaluados.
+
+\paragraph{Informer sin PE}
+
+Una pregunta especialmente relevante, tras todo el proceso visto hasta el momento, es la siguiente: ¿realmente resulta significativo el uso de positional encoding para la predicción de series temporales?\\
+
+La teoría indica que sí, dado que los datos de entrada por sí solos no contienen información explícita sobre el orden temporal, y el cálculo de atenciones, al basarse en productos de matrices, no puede inferirlo por sí solo.  No obstante, para confirmarlo empíricamente, procederemos a evaluar esta alternativa mediante experimentación, y así reafirmar esta idea.
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c|c}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MSE & 0,544844 & 0,005447 \\
+		MAE & 0,421343 & 0,005856 \\
+		MAPE & 2,394682 & 0,055825 \\
+		MSPE & 1053,862630 & 84,204210 \\
+		RMSE & 0,738126 & 0,003690 \\
+		TrainTime(s) & 10382,266527 & 2083,316310 \\
+		TestTime(s) & 125,053827 & 2,833062 \\
+		\bottomrule
+	\end{tabular}
+	\caption{HPC: métricas de rendimiento para Informer sin PE}
+	\label{hpcnope}
+\end{table}
+
+En la Tabla \ref{hpcnope} se presentan los resultados del experimento. Tal y como se esperaba, el rendimiento sin positional encoding es inferior al de las codificaciones propuestas, a excepción de SPE, que claramente no correspondía a este ámbito de problemas.\\
+
+Sin embargo, la diferencia con respecto a la arquitectura Informer original es mínima: el rendimiento es muy cercano, con valores de $0.532965$ frente a $0.544844$. Esto indica que la información posicional aportada por el positional encoding en este caso es limitada, ya que el empeoramiento relativo es prácticamente despreciable. Esta observación refuerza aún más la relevancia del trabajo realizado en la optimización y comparación de distintas codificaciones que se viene realizando hasta el momento.
