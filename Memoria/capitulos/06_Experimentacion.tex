@@ -388,3 +388,7 @@ La teoría indica que sí, dado que los datos de entrada por sí solos no contie
 En la Tabla \ref{hpcnope} se presentan los resultados del experimento. Tal y como se esperaba, el rendimiento sin positional encoding es inferior al de las codificaciones propuestas, a excepción de SPE, que claramente no correspondía a este ámbito de problemas.\\
 
 Sin embargo, la diferencia con respecto a la arquitectura Informer original es mínima: el rendimiento es muy cercano, con valores de $0.532965$ frente a $0.544844$. Esto indica que la información posicional aportada por el positional encoding en este caso es limitada, ya que el empeoramiento relativo es prácticamente despreciable. Esta observación refuerza aún más la relevancia del trabajo realizado en la optimización y comparación de distintas codificaciones que se viene realizando hasta el momento.
+
+\subsubsection{Elección del mejor modelo}
+
+Tras la ejecución de los ocho experimentos anteriores, hemos obtenido resultados valiosos que nos permiten evaluar de manera comparativa el rendimiento de todas las codificaciones analizadas. Debido a que los datos intuitivos pueden ser algo densos, con el objetivo de visualizar de forma más intuitiva estas diferencias, se ha elaborado un gráfico que resume las métricas principales de cada modelo, MAE y MSE, permitiendo observar de un vistazo el ranking de alternativas ordenadas por MSE.\\
