@@ -2,7 +2,7 @@
 
 Una vez expuestas todas las condiciones del entrenamiento, como los modelos a probar, las métricas, funciones de pérdida y presentados los datos, podemos dar paso al entrenamiento. Sin lugar a dudas, es la fase más lenta de todo el proceso, la cual ha prolongado su desarrollo considerablemente. El objetivo es claro: poner a prueba las 5 propuestas realizadas para establecer, en primer lugar, cuál o cuáles de ellas son competitivas, y posteriormente, evaluar todos los conjuntos de datos para medir la ganancia con respecto al conjunto de datos original.
 
-\section{Consideraciones previas: ¿Cómo detectar si un modelo es mejor que otro?}
+\section{Consideraciones previas: ¿Cómo detectar si un modelo es mejor de manera justa?}
 
 A la hora de realizar las pruebas, existen multitud de factores que pueden influir en los resultados, y los cuales debemos controlar minuciosamente para evitar problemas que alteren los resultados y nos den una idea equivocada del rendimiento. Entre ellos, podemos encontrar las inicializaciones aleatorias de los pesos, el riesgo de sobreaprendizaje y en casos de extremada similaridad de resultados, la calidad semántica aportada por la codificación que estamos evaluando.\\
 
@@ -38,3 +38,16 @@ Otro de los problemas destacados durante en el entrenamiento puede ser el sobrea
 \end{itemize}
 
 Con el uso de estos dos factores, podremos minimizar el impacto del \textit{overfitting}, y evitar una mala capacidad de generalización del modelo.
+
+\subsection{Comparando la calidad semántica del encoding. Técnica del barajado}
+
+En los aparatados anteriores, hemos destacado constantemente la importancia semántica del positional encoding, y en la importancia de medir adecuadamente la calidad de las codificaciones a través de este aspecto. Sin embargo, la componente semántica es algo completamente externo para una arquitectura de este tipo, ya que las capas de esta solo entienden de valores numéricos y tensores, pero no es capaz de detectar información de significado. Sin embargo, esta puede encontrarse de manera implícita en los datos, en aspectos como la localidad y la detección de patrones, tareas las cuales hemos tratado de modelar en las propuestas de codificación formuladas.\\
+
+Existe una manera muy sencilla de verificar esta propiedad y evaluar la utilidad de la codificación añadida: mezclar la entrada del decoder durante la inferencia y analizar su impacto en la calidad del resultado final, en comparación con una entrada intacta, sin desordenar. Este procedimiento fue propuesto por la publicación \textit{``Are Transformers Effective for Time Series Forecasting?''}~\cite{zeng2022transformerseffectivetimeseries}, y nos permite evidenciar de manera intuitiva la presencia o ausencia de orden y localidad en la codificación.\\
+
+De manera inherente a su estructura, el mecanismo de self-attention de los Transformers es invariante al orden de los elementos de la secuencia. Cuando realizamos el cálculo de las matrices de atención, no estamos realizando más que un producto cruzado de todos los tokens con los demás, por lo que el orden de los productos no afectaría al resultado. Es por ello que se necesita un encoding posicional que permita incluir dicha relación de orden en los datos, y se cumpla esta propiedad esencial necesaria en las series temporales.\\
+
+Sin embargo, en el artículo mencionado se llega a la conclusión de que los mecanismos existentes para los principales modelos del estado del arte, como Informer, Autoformer y FEDformer, con sus respectivas codificaciones temporales, no son capaces de captar el orden natural de los datos. Y va incluso más allá: sustituir todo el mecanismo de atención por una capa totalmente conectada es capaz de ofrecer mejores resultados, y al aplicar el barajado, sí se ve afectada en mayor medida por el desorden. \\
+
+En nuestro caso, teniendo en cuenta que nuestra arquitectura se basa en la estructura de Informer, pero simplificando el mecanismo de atención al prescindir del muestreo y las convoluciones, la escasez mantenimiento del orden podría afectarnos de manera similar. Pero, en este caso, queremos evaluar la efectividad de los métodos de codificación propuestos en este trabajo, por lo que repetiremos el experimento, pero en lugar de hacerlo con la codificación por defecto, que ya conocemos sus resultados, con nuestras alternativas. El objetivo es claro: tratar de demostrar que permiten conservar una mayor semántica de los datos y se ven más perjudicados frente al desorden que la tradicional codificación seno-coseno.
+
