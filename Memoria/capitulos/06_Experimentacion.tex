@@ -468,7 +468,10 @@ A modo de resumen final, en la figura \ref{hpcgraphshuffled} se representan los 
 
 ETT será nuestro segundo entorno de pruebas para los encodings. En este caso, escogeremos únicamente las variantes WinStatFlex y WinStatTPE, debido a la decisión tomada en el apartado anterior para filtrar los encodings más diferenciales respecto al modelo de referencia. \\
 
-Este dataset presenta una longitud bastante más reducida que el anterior, especialmente en sus variantes horarias, ya que estas no llegan a las 20.000 mediciones. Sin embargo, resulta interesante realizar las pruebas en esta variante debido a que se trata de uno de los principales conjuntos de referencia en estado del arte, con el objetivo de mostrar la escalabilidad y flexibilidad del modelo al operar tanto en entornos de larga duración como en problemas de extensión más reducida.
+Este dataset presenta una longitud bastante más reducida que el anterior, especialmente en sus variantes horarias, ya que estas no llegan a las 15.000 mediciones. Sin embargo, resulta interesante realizar las pruebas en esta variante debido a que se trata de uno de los principales conjuntos de referencia en estado del arte, con el objetivo de mostrar la escalabilidad y flexibilidad del modelo al operar tanto en entornos de larga duración como en problemas de extensión más reducida.\\
+
+ Para validar este efecto en diferentes contextos, se realizarán las pruebas sobre los dos transformadores, es decir, sobre los conjuntos de datos \textit{ETTh1} y \textit{ETTh2}, correspondientes a las variantes horarias, con el fin de comprobar si el comportamiento de ambos sistemas, medidos bajo las mismas condiciones, pero con diferentes comportamientos, nos aportan conclusiones similares. Comenzaremos el examen por la variante ETTh1 y posteriormente analizaremos ETTh2 para cada algoritmo.
+
 
 \subsubsection{Resultados}
 
@@ -483,7 +486,7 @@ Una vez configurado el entorno de pruebas, podemos pasar a la evaluación del mo
 		{Modelo de atención} & Vanilla \\
 		{Tamaño de batch} & 32 \\
 		{Dropout} & 0.2 \\
-		{Nº de ejecuciones} & 10 \\
+		{Nº de ejecuciones} & 5 \\
 		{Tamaño de ventana} & 24 \\
 		{Longitud de secuencia} & 96 \\
 		{Longitud de etiqueta/contexto} & 48 \\
@@ -497,3 +500,204 @@ Una vez configurado el entorno de pruebas, podemos pasar a la evaluación del mo
 \paragraph{Informer}
 
 Siguiendo el camino establecido, comenzaremos ejecutando Informer, nuestro algoritmo de referencia, incorporando la información de los timestamps mediante timeF. Aunque podríamos tomar los resultados registrados en su publicación original como referencia~\cite{zhou2021informerefficienttransformerlong}, desconocemos los detalles de bajo nivel sobre cómo obtuvieron los resultados finales, por lo que es preferible reejecutar el experimento para realizar una comparativa justa.
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c|c}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MSE & 0,545807 & 0,020421 \\
+		MAE & 0,532375 & 0,017099 \\
+		MAPE & 11,799151 & 1,626443 \\
+		MSPE & 48779,951562 & 13908,208000 \\
+		RMSE & 0,738659 & 0,013775 \\
+		TrainTime(s) & 16,819558 & 1,748976 \\
+		TestTime(s) & 0,383596 & 0,002506 \\
+		\bottomrule
+	\end{tabular}
+	\caption{ETTh1: métricas de rendimiento para Informer}
+	\label{etth1informer}
+\end{table}
+
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c|c}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MSE & 0,886627 & 0,100092 \\
+		MAE & 0,754907 & 0,053964 \\
+		MAPE & 5,925552 & 0,645586 \\
+		MSPE & 2924,225586 & 475,51672 \\
+		RMSE & 0,940080
+		 & 0,053635 \\
+		TrainTime(s) & 18,676547 & 1,945601 \\
+		TestTime(s) & 0,449962 & 0,024086 \\
+		\bottomrule
+	\end{tabular}
+	\caption{ETTh2: métricas de rendimiento para Informer}
+	\label{etth2informer}
+\end{table}
+
+
+
+
+En la tabla \ref{etth1informer}, se recogen los resultados de las métricas para ETTh1. Podemos observar que, al igual que en HPC, las métricas distintas a MSE y MAE ofrecen un comportamiento bastate extremo, con tasas de error muy elevadas, potenciadas de nuevo por la cercanía a cero de buena parte de los valores, al estar estos normalizados y tener la serie extremos máximos bastante elevados. Si tomamos como referencia el MSE, obtenemos un valor bastante estable en cuanto a variabilidad del resultado, y con valor próximo al MAE.\\
+
+En el caso de ETTh2 (tabla \ref{etth2informer}), los resultados son bastante diferentes, siendo las métricas de error superiores en valor. Por ejemplo, el MSE es de $0,886$, mientras que el MAE es de $0,7549$. Pero, aunque las variables de ambos fenómenos sean las mismas y compartan unidades de medición, sus comportamientos difieren notablemente, como se evidenció en el análisis realizado en capítulos anteriores. Por ello, realizar una comparación directa de los valores numéricos podría inducir a conclusiones erróneas. Estudiaremos si ambos mejoran o empeoran cuando se usa otra codificación, pero con respecto a sí mismos y no entre ellos.\\
+
+Obtenida ya la primera referencia, procederemos a revisar el resto de encodings para determinar empíricamente si este resultado es bueno o puede ser mejorable.
+ 
+ 
+\paragraph{PE sinusoidal}
+ 
+ Para volver a comprobar si la pequeña información de contexto proporcionada por timeF es relevante, reejecutaremos la implementación de informer eliminando dicha componente y ejecutando únicamente con la parte geométrica del encoding.\\
+  
+ \begin{table}[!ht]
+ 	\centering
+ 	\begin{tabular}{l|c|c}
+ 		\toprule
+ 		Métrica & Media & STD \\
+ 		\midrule
+	 		MSE & 0,577572 & 0,075510 \\
+		MAE & 0,555214 & 0,053092 \\
+		MAPE & 11,869595 & 1,172958 \\
+		MSPE & 47931,058203 & 10247,69 \\
+		RMSE & 0,758369 & 0,049472 \\
+		TrainTime(s) & 25,520506 & 0,385055 \\
+		TestTime(s) & 0,607528 & 0,003783 \\
+ 		\bottomrule
+ 	\end{tabular}
+ 	\caption{ETTh1: resultados para encoding seno-coseno}
+ 	\label{etth1fixed}
+ \end{table}
+ 
+ 
+  
+ \begin{table}[!ht]
+ 	\centering
+ 	\begin{tabular}{l|c|c}
+ 		\toprule
+ 		Métrica & Media & STD \\
+ 		\midrule
+ 		MSE & 1,388127 & 0,158151 \\
+		MAE & 0,935477 & 0,051373 \\
+		MAPE & 3,730952 & 0,198797 \\
+		MSPE & 1794,159741 & 267,398770 \\
+		RMSE & 1,176358 & 0,065637 \\
+		TrainTime(s) & 18,290615 & 0,414452 \\
+		TestTime(s) & 0,465952 & 0,039954 \\
+ 		\bottomrule
+ 	\end{tabular}
+ 	\caption{ETTh2: resultados para encoding seno-coseno}
+ 	\label{etth2fixed}
+ \end{table}
+ 
+  Atendiendo a los valores dados por la tabla \ref{etth1fixed} para ETTh1, esta vez sí que encontramos una diferencia notable entre el modelo original y este; en el MSE encontramos una diferencia de 0,032 (0,545807 vs 0,577572), mientras que en MAE ronda una diferencia de 0,02 (valor de 0,532375 vs 0,555214). Por lo tanto, parece que la información aportada por dicha componente de Informer parece aportar información relevante.\\
+  
+  Por otro lado, en el caso del segundo dataset, estamos ante un caso bastante curioso, ya que se ha producido un aumento bastante considerable en los valores de toda las métricas; en el caso de MSE, la diferencia es de 0,5, bastante alta, mientras que en MAE es de 0,38. Esto nos está indicando que el segundo dataset sea posiblemente más complejo de modelar, y se requiera un mayor contexto para modelar adecuadamente el comportamiento. De esta forma, sería razonable pensar que cuando apliquemos las propuestas Flex y TPE, el salto de rendimiento sea considerable.\\
+  
+  En definitiva, este modelo difiere en comportamiento considerablemente entre los dos conjuntos de datos. En el caso de ETTh1, se obtiene una mejora del 5,8\%, mientras que en el caso de ETTh2, se obtiene un empeoramiento relativo del 56,5\%, siendo una degradación considerable.
+ 
+ \paragraph{WinStatFlex}
+ 
+Ahora procedemos a evaluar WinStatFlex, para ver si conseguimos mejorar los resultados, de referencia gracias al enfoque flexible de la ponderación, en ambos datasets.
+\begin{table}[!ht]
+	\centering
+	\begin{minipage}{0.5\textwidth}
+		\centering
+		\begin{tabular}{l|c|c}
+			\toprule
+			Métrica & Media & STD \\
+			\midrule
+			MSE & 0,577572 & 0,075510 \\
+			MAE & 0,555214 & 0,053092 \\
+			MAPE & 11,869595 & 1,172958 \\
+			MSPE & 47931,058203 & 10247,69 \\
+			RMSE & 0,758369 & 0,049472 \\
+			TrainTime(s) & 25,520506 & 0,385055 \\
+			TestTime(s) & 0,607528 & 0,003783 \\
+			\bottomrule
+		\end{tabular}
+	\end{minipage}%
+	\hfill
+	\begin{minipage}{0.4\textwidth}
+		\centering
+		\begin{tabular}{l|c}
+			\toprule
+			Componente & Peso aprendido \\
+			\midrule
+			Stats & 0,2704 \\
+			PE & 0,2506 \\
+			LPE & 0,242 \\
+			tAPE & 0,2371 \\
+			\bottomrule
+		\end{tabular}
+	\end{minipage}
+	
+	\caption{ETTh1: resultados para encoding WinStatFlex}
+	\label{etth1flex}
+\end{table}
+
+
+Comenzando por los resultados de ETTh1, podemos destacar los siguientes aspectos:
+
+\begin{itemize}
+	\item El rendimiento obtenido, tomando como referencia la métrica MSE, da salto considerable hacia delante. En comparación con el modelo Informer original, se ha logrado una mejora absoluta de casi $0,08$, equivalente a un 17,1\% de mejora. Este incremento es bastante alto, considerando el rango de valores en el que nos situamos. Estos resultados reafirman la potencia de la combinación mediante pesos entrenables más allá del dataset visto anteriormente.
+	\item El tiempo de ejecución no se ha visto especialmente afectado en aspectos absolutos, ya que el incremento en tiempo es de apenas 6 segundos. Sin embargo a nivel relativo es considerable, ya que estamos hablando de que es 1.5 el tiempo Informer.
+	\item Los valores de los pesos son bastante equilibrados en esta ocasión, aunque se muestra un mayor inclinación por la información apropiada por la ventana de estadísticos y las diferencias de lags, la cual es un 27,04\% de la suma final. tAPE es el método absoluto de codificación menos valorados, aunque con escasa diferencia de su valor inicial de 0,25.
+\end{itemize}
+
+
+Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejoras notables, incluso de mayor relevancia:
+
+
+\begin{table}[!ht]
+	\centering
+	\begin{minipage}{0.5\textwidth}
+		\centering
+			\begin{tabular}{l|c|c}
+			\toprule
+			Métrica & Media & STD \\
+			\midrule
+			MSE & 0,465990 & 0,027734 \\
+			MAE & 0,494661 & 0,019507 \\
+			MAPE & 10,515547 & 0,347335 \\
+			MSPE & 40193,949219 & 2941,565400 \\
+			RMSE & 0,682334 & 0,020266 \\
+			TrainTime(s) & 27,822449 & 2,565389 \\
+			TestTime(s) & 0,779390 & 0,008920 \\
+			\bottomrule
+		\end{tabular}
+	\end{minipage}%
+	\hfill
+	\begin{minipage}{0.4\textwidth}
+		\centering
+		\begin{tabular}{l|c}
+			\toprule
+			Componente & Peso aprendido \\
+			\midrule
+			Stats & 0,2569 \\
+			PE & 0,2504 \\
+			LPE & 0,2513 \\
+			tAPE & 0,2413 \\
+			\bottomrule
+		\end{tabular}
+	\end{minipage}
+	
+	\caption{ETTh2: resultados para encoding WinStatFlex}
+	\label{etth2flex}
+\end{table}
+ 
+ 
+ \begin{itemize}
+ 	\item El incremento en rendimiento es muy marcado: hemos pasado del bajo rendimiento del enfoque seno-coseno, a obtener una mejora de aproximadamente 0,42 de MSE con respecto a Informer. En términos relativos, es una mejora del resultado del 90,3\%, indicando que hemos reducido casi a la mitad el error medio. El bajo valor de la desviación además refuerza que este resultado es fácilmente reproducible.
+ 	
+ 	\item Aunque el tiempo de ejecución ha aumentado, podemos considerarlo un sobrecoste razonable, dado que hemos logrado casi duplicar el rendimiento sin duplicar el tiempo de entrenamiento. Por tanto, este incremento resulta asumible y no representa un inconveniente significativo.
+ 	
+ 	\item El valor final de los pesos (tabla derecha de \ref{etth1flex}) es bastante equilibrado. Prácticamente, los valores han permanecido iguales al valor de partida, que recordemos que era 0,25 para cada uno de ellos. Por lo tanto, parece que las 4 componentes aportan información útil de manera equilibrada. Incluso TAPE, anteriormente en HPC la minoritaria, parece aportar información vinculante.
+ \end{itemize}
+ 
+ En definitiva, el uso de WinStatFlex ha resultado muy positivo en este conjunto de datos, proporcionando un notable aumento de rendimiento en ambos conjuntos, y especialmente en ETTh2, que parece reflejar una mayor complejidad en su modelado en comparación con ETTh1. En ambos casos, es llamativo el escaso ajuste de los pesos de ponderación respecto a los valores iniciales, lo cual podría deberse a que la cantidad de datos disponible es relativamente limitada y el entrenamiento se interrumpe pronto debido al early stopping. No obstante, esto no indica que este método de codificación sea inadecuado; por el contrario, demuestra que WinStatFlex también se adapta a conjuntos de datos cortos.
