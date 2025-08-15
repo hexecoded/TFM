@@ -462,3 +462,38 @@ Estos resultados refuerzan, por tanto, un mejor aprovechamiento del contexto loc
 \end{figure}
 
 A modo de resumen final, en la figura \ref{hpcgraphshuffled} se representan los resultados de los modelos comparados con el barajado, para apreciar de manera visual que las diferencias entre pares de modelos ahora son bastante notables en comparación con Informer original.
+
+
+\subsection{Evaluación de las alternativas sobre el conjunto ETT}
+
+ETT será nuestro segundo entorno de pruebas para los encodings. En este caso, escogeremos únicamente las variantes WinStatFlex y WinStatTPE, debido a la decisión tomada en el apartado anterior para filtrar los encodings más diferenciales respecto al modelo de referencia. \\
+
+Este dataset presenta una longitud bastante más reducida que el anterior, especialmente en sus variantes horarias, ya que estas no llegan a las 20.000 mediciones. Sin embargo, resulta interesante realizar las pruebas en esta variante debido a que se trata de uno de los principales conjuntos de referencia en estado del arte, con el objetivo de mostrar la escalabilidad y flexibilidad del modelo al operar tanto en entornos de larga duración como en problemas de extensión más reducida.
+
+\subsubsection{Resultados}
+
+Una vez configurado el entorno de pruebas, podemos pasar a la evaluación del modelo. Al igual que se hizo con HPC, se han fijado todos los parámetros comunes a los algoritmos a los mismos valores con el objetivo de que la configuración de la arquitectura no afecte a los resultados, y sea el propio encoding el que determine la diferencia. La arquitectura y los parámetros asociados se pueden ver en la tabla \ref{ajustesett}. En este caso, el horizonte de predicción y el tamaño de ventana son menores, para así adecuarnos al tamaño de los datos disponibles, y teniendo en cuenta también que la granularidad es horaria.
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|l}
+		\toprule
+		Parámetro & Valor \\
+		\midrule
+		{Modelo de atención} & Vanilla \\
+		{Tamaño de batch} & 32 \\
+		{Dropout} & 0.2 \\
+		{Nº de ejecuciones} & 10 \\
+		{Tamaño de ventana} & 24 \\
+		{Longitud de secuencia} & 96 \\
+		{Longitud de etiqueta/contexto} & 48 \\
+		{Longitud de predicción} & 24 \\
+		\bottomrule
+	\end{tabular}
+	\caption{ETT: configuración de parámetros comunes empleada para los experimentos}
+	\label{ajustesett}
+\end{table}
+
+\paragraph{Informer}
+
+Siguiendo el camino establecido, comenzaremos ejecutando Informer, nuestro algoritmo de referencia, incorporando la información de los timestamps mediante timeF. Aunque podríamos tomar los resultados registrados en su publicación original como referencia~\cite{zhou2021informerefficienttransformerlong}, desconocemos los detalles de bajo nivel sobre cómo obtuvieron los resultados finales, por lo que es preferible reejecutar el experimento para realizar una comparativa justa.
