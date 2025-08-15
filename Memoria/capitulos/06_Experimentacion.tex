@@ -612,13 +612,13 @@ Ahora procedemos a evaluar WinStatFlex, para ver si conseguimos mejorar los resu
 			\toprule
 			Métrica & Media & STD \\
 			\midrule
-			MSE & 0,577572 & 0,075510 \\
-			MAE & 0,555214 & 0,053092 \\
-			MAPE & 11,869595 & 1,172958 \\
-			MSPE & 47931,058203 & 10247,69 \\
-			RMSE & 0,758369 & 0,049472 \\
-			TrainTime(s) & 25,520506 & 0,385055 \\
-			TestTime(s) & 0,607528 & 0,003783 \\
+			MSE & 0,467676 & 0,101775 \\
+			MAE & 0,512808 & 0,065133 \\
+			MAPE & 3,343877 & 0,767829 \\
+			MSPE & 1530,202856 & 410,789550 \\
+			RMSE & 0,679749 & 0,074946 \\
+			TrainTime(s) & 32,989481 & 3,775380 \\
+			TestTime(s) & 0,834729 & 0,024313 \\
 			\bottomrule
 		\end{tabular}
 	\end{minipage}%
@@ -646,7 +646,7 @@ Comenzando por los resultados de ETTh1, podemos destacar los siguientes aspectos
 
 \begin{itemize}
 	\item El rendimiento obtenido, tomando como referencia la métrica MSE, da salto considerable hacia delante. En comparación con el modelo Informer original, se ha logrado una mejora absoluta de casi $0,08$, equivalente a un 17,1\% de mejora. Este incremento es bastante alto, considerando el rango de valores en el que nos situamos. Estos resultados reafirman la potencia de la combinación mediante pesos entrenables más allá del dataset visto anteriormente.
-	\item El tiempo de ejecución no se ha visto especialmente afectado en aspectos absolutos, ya que el incremento en tiempo es de apenas 6 segundos. Sin embargo a nivel relativo es considerable, ya que estamos hablando de que es 1.5 el tiempo Informer.
+	\item El tiempo de ejecución no se ha visto especialmente afectado en aspectos absolutos, ya que el incremento en tiempo es de apenas 16 segundos. Sin embargo a nivel relativo es considerable, ya que estamos hablando de que es doble del tiempo Informer.
 	\item Los valores de los pesos son bastante equilibrados en esta ocasión, aunque se muestra un mayor inclinación por la información apropiada por la ventana de estadísticos y las diferencias de lags, la cual es un 27,04\% de la suma final. tAPE es el método absoluto de codificación menos valorados, aunque con escasa diferencia de su valor inicial de 0,25.
 \end{itemize}
 
@@ -701,3 +701,94 @@ Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejo
  \end{itemize}
  
  En definitiva, el uso de WinStatFlex ha resultado muy positivo en este conjunto de datos, proporcionando un notable aumento de rendimiento en ambos conjuntos, y especialmente en ETTh2, que parece reflejar una mayor complejidad en su modelado en comparación con ETTh1. En ambos casos, es llamativo el escaso ajuste de los pesos de ponderación respecto a los valores iniciales, lo cual podría deberse a que la cantidad de datos disponible es relativamente limitada y el entrenamiento se interrumpe pronto debido al early stopping. No obstante, esto no indica que este método de codificación sea inadecuado; por el contrario, demuestra que WinStatFlex también se adapta a conjuntos de datos cortos.
+ 
+ \paragraph{WinStatTPE}
+ 
+ La variante de WinStat con T-PE ha sido el siguiente encoding probado empíricamente. 
+ \begin{table}[!ht]
+ 	\centering
+ 	\begin{minipage}{0.5\textwidth}
+ 		\centering
+ 		\begin{tabular}{l|c|c}
+ 			\toprule
+ 			Métrica & Media & STD \\
+ 			\midrule
+ 			MSE & 0,489647 & 0,048151 \\
+	 		MAE & 0,507179 & 0,031240 \\
+	 		MAPE & 11,085088 & 0,730064 \\
+	 		MSPE & 45770,907813 & 7129,339000 \\
+	 		RMSE & 0,698881 & 0,034805 \\
+	 		TrainTime(s) & 52,732013 & 0,954233 \\
+	 	 	TestTime(s) & 1,339969 & 0,043272 \\
+ 			\bottomrule
+ 		\end{tabular}
+ 	\end{minipage}%
+ 	\hfill
+ 	\begin{minipage}{0.4\textwidth}
+ 		\centering
+ 		\begin{tabular}{l|c}
+ 			\toprule
+ 			Componente & Peso aprendido \\
+ 			\midrule
+ 			Stats & 0,258 \\
+ 			PE & 0,247 \\
+ 			LPE & 0,232 \\
+ 			TPE & 0,263 \\
+ 			\bottomrule
+ 		\end{tabular}
+ 	\end{minipage}
+ 	
+ 	\caption{ETTh1: resultados para encoding WinStatTPE}
+ 	\label{etth1tpe}
+ \end{table}
+ 
+ Procediendo de la manera habitual, comenzaremos analizando primero ETTh1 (tabla \ref{etth1tpe}):
+ 
+ \begin{itemize}
+ 	\item Nuestra métrica de referencia, MSE, muestra un rendimiento bastante cercano a la variante Flex, aunque ligeramente inferior. Si bien la diferencia con respecto a Informer sigue siendo notable, de $0,1146$, el desempeño frente a WinStatFlex resulta inferior en todas las demás métricas. Sin embargo, la varianza, uno de los puntos fuertes de T-PE, se mantiene especialmente en el cálculo del MSE, lo que sugiere que sigue siendo un elemento clave de esta variante.
+ 	
+ 	\item El tiempo de ejecución ha crecido hasta valores demasiado elevados, muy cercanos al minuto de duración. Si bien en conjuntos como este sigue siendo un tiempo bajo, estamos ante un algoritmo que ofrece un menor rendimiento que WinStatFlex, pero un tiempo 20 segundos superior, por lo que su utilización no se motivada en cuanto al equilibrio métricas-rendimiento.
+ 	\item Los valores de los pesos vuelven a ser prácticamente equilibrados, siguiendo las tendencias vistas hasta ahora.
+ \end{itemize}
+ 
+ Para ETTh2, la tónica es bastante similar (ver tabla \ref{etth2tpe}); las métricas reflejan un empeoramiento de los resultados en todas las medidas, destacando el 0,5963 de MSE, y el tiempo de ejecución es de 54 segundos de media, aumentando así considerablemente el coste de entrenar este modelo. Por lo tanto, el modelado del segundo transformador tiene un comportamiento similar a ETTh1, y WinStatTPE parece no adaptarse del todo a sus condiciones.
+ 
+  \begin{table}[!ht]
+ 	\centering
+ 	\begin{minipage}{0.5\textwidth}
+ 		\centering
+ 		\begin{tabular}{l|c|c}
+ 			\toprule
+ 			Métrica & Media & STD \\
+ 			\midrule
+ 			MSE & 0,596380 & 0,076012 \\
+ 			MAE & 0,588919 & 0,049605 \\
+ 			MAPE & 4,052313 & 0,355036 \\
+ 			MSPE & 1707,383569 & 527,479550 \\
+ 			RMSE & 0,770738 & 0,048395 \\
+  			TrainTime(s) & 54,832880 & 4,593619 \\
+ 			TestTime(s) & 1,327944 & 0,068589 \\
+ 			\bottomrule
+ 		\end{tabular}
+ 	\end{minipage}%
+ 	\hfill
+ 	\begin{minipage}{0.4\textwidth}
+ 		\centering
+ 		\begin{tabular}{l|c}
+ 			\toprule
+ 			Componente & Peso aprendido \\
+ 			\midrule
+ 			Stats & 0,251 \\
+ 			PE & 0,249 \\
+ 			LPE & 0,249 \\
+ 			TPE & 0,251 \\
+ 			\bottomrule
+ 		\end{tabular}
+ 	\end{minipage}
+ 	
+ 	\caption{ETTh2: resultados para encoding WinStatTPE}
+ 	\label{etth2tpe}
+ \end{table}
+ 
+ No obstante, es importante destacar que estos resultados continúan siendo significativamente superiores a los obtenidos con Informer, lo que confirma que hemos alcanzado el objetivo propuesto.
+ 
