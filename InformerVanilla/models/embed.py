@@ -341,7 +341,7 @@ class DataEmbeddingNoPE(nn.Module):
     """
 
     def __init__(self, c_in, d_model,  freq='h', dropout=0.1, window=24, lags=[3, 5, 7],
-                 max_len=5000):
+                 max_len=5000, embed_type="timeF"):
         super(DataEmbeddingNoPE, self).__init__()
 
         self.value_embedding = TokenEmbedding(c_in=c_in, d_model=d_model)
