@@ -1,7 +1,7 @@
 \chapter{Modelo escogido y entorno de trabajo}
 \label{cap5}
 
-Una vez disponemos de los conjuntos de datos seleccionados, y establecidos los métodos de codificación que queremos probar, podemos pasar a la construcción del entorno de trabajo. De por sí solos, los métodos de encoding no puede ser evaluados, ya que requieren su aplicación en un modelo concreto que lo acepte de entrada y sea capaz de procesarlo y aprender del embedding proporcionado.\\
+Una vez disponemos de los conjuntos de datos seleccionados, procesados, y establecidos los métodos de codificación que queremos probar, podemos pasar a la construcción del entorno de trabajo. De por sí solos, los métodos de encoding no puede ser evaluados, ya que requieren su aplicación en un modelo concreto que lo acepte de entrada y sea capaz de procesarlo y aprender del embedding proporcionado.\\
 
 En la sección del estado del arte (capítulo \ref{sota}), estudiamos multitud de modelos basados en Transformers que podríamos usar como base para nuestras pruebas. Sin embargo, en varios de los casos, los mecanismos de atención eran muy elaborados, y podrían dificultar apreciar el impacto del positional encoding evaluado. Por ello, para su evaluación, se ha optado por tomar una base similar a Informer, que nos permitirá encontrar un equilibrio entre un modelo adaptado a series temporales y un modelo lo suficientemente simple para ser comprendido y modificado.\\
 
@@ -23,12 +23,12 @@ Con esta configuración, basada en el comportamiento tradicional de los Transfor
 
 \section{Particionado y procesado de los datos}
 
-Otro de los aspectos claves que configuran el entorno de experimentación es el particionado de los datos para la posterior evaluación de rendimiento. En este punto, estudiaremos la importancia de un correcto particionado de los datos, teniendo especial cuidado en respetar la estructura propia de las series temporales, y analizando la importancia de disponer de un estimador no sesgado del modelo
+Otro de los aspectos claves que configuran el entorno de experimentación es el particionado de los datos para la posterior evaluación de rendimiento. En este punto, estudiaremos la importancia de un correcto fraccionado de los datos, teniendo especial cuidado en respetar la estructura propia de las series temporales, y analizando la importancia de disponer de un estimador no sesgado del modelo
 entrenado. Finalmente, definiremos la estrategia a seguir.
 
 \subsection{Importancia de la separación train-test}
 
-En cualquier tarea de aprendizaje, ya sea aprendizaje automático tradicional, deep learning, o en nuestro caso, Transformers para series temporales, disponer del mayor número de datos posible es el objetivo deseable, ya que aunque aumentan el coste del experimento, nos ofrecen unos resultados más fieles al fenómeno real que queremos modelar.\\
+En cualquier tarea de aprendizaje, ya sea aprendizaje automático tradicional, deep learning, y concretamente, en Transformers para series temporales, disponer del mayor número de datos posible es el objetivo deseable, ya que aunque aumentan el coste del experimento, nos ofrecen unos resultados más fieles al fenómeno real que queremos modelar.\\
 
 Sin embargo, cuando realizamos un modelo de aprendizaje, realmente estamos creando una hipótesis: procedemos a la selección de un modelo concreto de entre un conjunto de estos, con el objetivo de que su resultado se acerque lo máximo posible al comportamiento real del problema, el cual está modelado a través de una función $f$ que desconocemos. Pero, para poder estimar la bondad de nuestro ajuste de forma fiable, necesitamos algún estimador no sesgado que nos refleje la calidad del modelo escogido y nos permita saber el error que comete nuestra hipótesis con respecto a la distribución de la población real, $E_{out}$. Cuando construimos un modelo, estamos empleando una muestra de la población, la cual es recorrida continuamente durante el proceso de entrenamiento para ir ajustando los filtros aplicados sobre el conjunto y que permite inferir el comportamiento del fenómeno modelo empleando métodos de gradiente, y en definitiva, fuerza bruta.\\
 

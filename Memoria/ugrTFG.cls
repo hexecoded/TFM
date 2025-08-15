@@ -147,7 +147,7 @@
 \usepackage{array}
 \usepackage[table]{xcolor}
 \usepackage{algorithm}
-\usepackage{algorithmic}
+\usepackage{algpseudocode}
 
 
 % Redefinir \paragraph

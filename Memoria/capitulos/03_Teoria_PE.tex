@@ -354,21 +354,27 @@ que será la entrada de nuestro modelo de Transformer seleccionado.\\
 
 De manera algorítmica, su implementación es bastante sencilla (ver pseudocódigo \ref{winstat}). Al usar herramientas del lenguaje de programación que permitan cálculo en paralelo, las operaciones son fácilmente vectorizables, reduciendo así el tiempo necesario para la creación del vector.
 
+
 \begin{algorithm}[H]
 	\begin{algorithmic}[1]
-		\REQUIRE $X \in \mathbb{R}^{L \times d}$ (matriz de entrada), $w \in \mathbb{N}$ (tamaño de ventana)
-		\ENSURE $\tilde{X} \in \mathbb{R}^{L \times (d+4)}$
-		\FOR{$t = 1$ \TO $L$}
-		\STATE $W_t \gets X[\max(1, t - \lfloor w/2 \rfloor) : \min(L, t + \lfloor w/2 \rfloor)]$
-		\STATE $\mu_t \gets \text{mean}(W_t)$
-		\STATE $\sigma_t \gets \text{std}(W_t)$
-		\STATE $m^{\min}_t \gets \min(W_t)$
-		\STATE $m^{\max}_t \gets \max(W_t)$
-		\STATE $s_t \gets [\mu_t, \sigma_t, m^{\min}_t, m^{\max}_t]$
-		\STATE $\tilde{x}_t \gets \text{concat}(x_t, s_t)$
-		\STATE $\tilde{X}[t] \gets \tilde{x}_t$
-		\ENDFOR
-		\RETURN $\tilde{X}$
+		\Require 
+		$X \in \mathbb{R}^{L \times d}$ \Comment{matriz de entrada}
+		
+		$w \in \mathbb{N}$ \Comment{tamaño de ventana}
+		\Ensure 
+		$\tilde{X} \in \mathbb{R}^{L \times (d+4)}$
+		
+		\For{$t = 1$ \textbf{to} $L$}
+		\State $W_t \gets X[\max(1, t - \lfloor w/2 \rfloor) : \min(L, t + \lfloor w/2 \rfloor)]$
+		\State $\mu_t \gets \text{mean}(W_t)$
+		\State $\sigma_t \gets \text{std}(W_t)$
+		\State $m^{\min}_t \gets \min(W_t)$
+		\State $m^{\max}_t \gets \max(W_t)$
+		\State $s_t \gets [\mu_t, \sigma_t, m^{\min}_t, m^{\max}_t]$
+		\State $\tilde{x}_t \gets \text{concat}(x_t, s_t)$
+		\State $\tilde{X}[t] \gets \tilde{x}_t$
+		\EndFor
+		\State \Return $\tilde{X}$
 	\end{algorithmic}
 	\caption{WinStat: funcionamiento algorítmico del método basado en ventana de estadísticos}
 	\label{winstat}
@@ -420,36 +426,40 @@ A nivel algorítmico (ver pseudocódigo \ref{winstatlag}), buena parte del códi
 
 \begin{algorithm}[H]
 	\begin{algorithmic}[1]
-		\REQUIRE 
-		$X \in \mathbb{R}^{L \times d}$ (matriz de entrada), 
-		$w \in \mathbb{N}$ (tamaño de ventana),
-		$\mathcal{L} = \{\ell_1, \ell_2, \dots, \ell_p\}$ (conjunto de retardos)
-		\ENSURE 
+		\Require 
+		
+		$X \in \mathbb{R}^{L \times d}$ \Comment{matriz de entrada}
+		
+		$w \in \mathbb{N}$ \Comment{tamaño de ventana}
+		
+		$\mathcal{L} = \{\ell_1, \ell_2, \dots, \ell_p\}$ \Comment{conjunto de retardos}
+		\Ensure 
 		$\tilde{X} \in \mathbb{R}^{L \times (d + 4 + p)}$
-		\FOR{$t = 1$ \TO $L$}
-		\STATE $W_t \gets X[\max(1, t - \lfloor w/2 \rfloor) : \min(L, t + \lfloor w/2 \rfloor)]$
-		\STATE $\mu_t \gets \text{mean}(W_t)$
-		\STATE $\sigma_t \gets \text{std}(W_t)$
-		\STATE $m^{\min}_t \gets \min(W_t)$
-		\STATE $m^{\max}_t \gets \max(W_t)$
-		\STATE $s_t \gets [\mu_t, \sigma_t, m^{\min}_t, m^{\max}_t]$
-		\STATE Inicializar vector de diferencias: $\Delta_t \gets []$
-		\FOR{cada $\ell_j \in \mathcal{L}$}
-		\IF{$t - \ell_j \geq 1$}
-		\STATE $\delta \gets |x_t - x_{t - \ell_j}|$
-		\ENDIF
-		\STATE Añadir $\delta$ a $\Delta_t$
-		\ENDFOR
-		\STATE $\tilde{x}_t \gets \text{concat}(x_t, s_t, \Delta_t)$
-		\STATE $\tilde{X}[t] \gets \tilde{x}_t$
-		\ENDFOR
-		\RETURN $\tilde{X}$
+		
+		\For{$t = 1$ \textbf{to} $L$}
+		\State $W_t \gets X[\max(1, t - \lfloor w/2 \rfloor) : \min(L, t + \lfloor w/2 \rfloor)]$
+		\State $\mu_t \gets \text{mean}(W_t)$
+		\State $\sigma_t \gets \text{std}(W_t)$
+		\State $m^{\min}_t \gets \min(W_t)$
+		\State $m^{\max}_t \gets \max(W_t)$
+		\State $s_t \gets [\mu_t, \sigma_t, m^{\min}_t, m^{\max}_t]$
+		\State Inicializar vector de diferencias: $\Delta_t \gets []$
+		\For{cada $\ell_j \in \mathcal{L}$}
+		\If{$t - \ell_j \geq 1$}
+		\State $\delta \gets |x_t - x_{t - \ell_j}|$
+		\State Añadir $\delta$ a $\Delta_t$
+		\EndIf
+		\EndFor
+		\State $\tilde{x}_t \gets \text{concat}(x_t, s_t, \Delta_t)$
+		\State $\tilde{X}[t] \gets \tilde{x}_t$
+		\EndFor
+		\State \Return $\tilde{X}$
 	\end{algorithmic}
 	\caption{Cálculo de WinStatLag: añadiendo la información de los lags diferenciados}
 	\label{winstatlag}
 \end{algorithm}
 
-Al igual que en el caso de WinStat, usando las librerías adecuadas, como veremos más adelante, es posible paralelizar este código para reducir los tiempos de cálculo.
+Al igual que en el caso de WinStat, usando las librerías adecuadas, es posible paralelizar este código para reducir los tiempos de cálculo.
 
 \subsection{WinStatFlex}
 
@@ -548,19 +558,28 @@ Algorítmicamente, se trata simplemente de implementar modularmente por separado
 
 \begin{algorithm}[H]
 	\begin{algorithmic}[1]
-		\REQUIRE $X \in \mathbb{R}^{L \times d}$ (matriz de entrada), $w \in \mathbb{N}$ (tamaño de ventana), $\mathcal{L}$ (conjunto de retardos), $W = [w_0, w_1, w_2, w_3]$ (pesos)
-		\ENSURE $X_{\text{final}} \in \mathbb{R}^{L \times (d + 4 + p)}$ (representación final)
+		\Require
+		$X \in \mathbb{R}^{L \times d}$ \Comment{matriz de entrada}
 		
-		\STATE $\tilde{X} \gets \text{WinStatLag}(X, w, \mathcal{L})$ \COMMENT{Cálculo de embedding enriquecido}
-		\STATE $X_{PE} \gets \text{PE}(\tilde{X})$ \COMMENT{Codificación sinusoidal}
-		\STATE $X_{LPE} \gets \text{LPE}(\tilde{X})$ \COMMENT{Codificación aprendible}
-		\STATE $X_{TAPE} \gets \text{TAPE}(\tilde{X})$ \COMMENT{Codificación TAPE}
+		$w \in \mathbb{N}$ \Comment{tamaño de ventana}
 		
-		\STATE $\tilde{W} \gets \mathrm{Softmax}(W)$ \COMMENT{Normalización de pesos}
+		$\mathcal{L}$ \Comment{conjunto de retardos}
 		
-		\STATE $X_{\text{final}} \gets \tilde{w}_0 \cdot \tilde{X} + \tilde{w}_1 \cdot X_{PE} + \tilde{w}_2 \cdot X_{LPE} + \tilde{w}_3 \cdot X_{TAPE}$
+		$W = [w_0, w_1, w_2, w_3]$ \Comment{pesos}
 		
-		\RETURN $X_{\text{final}}$
+		\Ensure
+		$X_{\text{final}} \in \mathbb{R}^{L \times (d + 4 + p)}$ \Comment{Representación final}
+		
+		\State $\tilde{X} \gets \text{WinStatLag}(X, w, \mathcal{L})$ \Comment{Cálculo de embedding enriquecido}
+		\State $X_{PE} \gets \text{PE}(\tilde{X})$ \Comment{Codificación sinusoidal}
+		\State $X_{LPE} \gets \text{LPE}(\tilde{X})$ \Comment{Codificación aprendible}
+		\State $X_{TAPE} \gets \text{TAPE}(\tilde{X})$ \Comment{Codificación TAPE}
+		
+		\State $\tilde{W} \gets \mathrm{Softmax}(W)$ \Comment{Normalización de pesos}
+		
+		\State $X_{\text{final}} \gets \tilde{w}_0 \cdot \tilde{X} + \tilde{w}_1 \cdot X_{PE} + \tilde{w}_2 \cdot X_{LPE} + \tilde{w}_3 \cdot X_{TAPE}$
+		
+		\State \Return $X_{\text{final}}$
 	\end{algorithmic}
 	\caption{Cálculo de WinStatFlex: proceso de adición de encodings}
 	\label{winstatflex}
@@ -644,25 +663,38 @@ X_{\text{final}} = w_0 \tilde{X} + w_1 X_{PE} + w_2 X_{LPE} + w_3 X_{TPE}, \quad
 
 A nivel de algoritmo, basta con tomar la base modular creada para WinStatFlex y añadir TPE en el lugar de TAPE (ver pseudocódigo \ref{winstattpe}).
 
+
 \begin{algorithm}[H]
 	\begin{algorithmic}[1]
-		\REQUIRE $X \in \mathbb{R}^{L \times d}$ (matriz de entrada), $w \in \mathbb{N}$ (tamaño de ventana), $\mathcal{L}$ (conjunto de retardos), $W = [w_0, w_1, w_2, w_3]$ (pesos)
-		\ENSURE $X_{\text{final}} \in \mathbb{R}^{L \times (d + 4 + p)}$ (representación final)
+		\Require
 		
-		\STATE $\tilde{X} \gets \text{WinStatLag}(X, w, \mathcal{L})$ \COMMENT{Cálculo de embedding enriquecido}
-		\STATE $X_{PE} \gets \text{PE}(\tilde{X})$ \COMMENT{Codificación sinusoidal}
-		\STATE $X_{LPE} \gets \text{LPE}(\tilde{X})$ \COMMENT{Codificación aprendible}
-		\STATE $X_{TPE} \gets \text{TPE}(\tilde{X})$ \COMMENT{Codificación TPE}
+		$X \in \mathbb{R}^{L \times d}$ \Comment{matriz de entrada}
 		
-		\STATE $\tilde{W} \gets \mathrm{Softmax}(W)$ \COMMENT{Normalización de pesos}
+		$w \in \mathbb{N}$ \Comment{tamaño de ventana}
 		
-		\STATE $X_{\text{final}} \gets \tilde{w}_0 \cdot \tilde{X} + \tilde{w}_1 \cdot X_{PE} + \tilde{w}_2 \cdot X_{LPE} + \tilde{w}_3 \cdot X_{TPE}$
+		$\mathcal{L}$ \Comment{conjunto de retardos}
 		
-		\RETURN $X_{\text{final}}$
+		$W = [w_0, w_1, w_2, w_3]$ \Comment{pesos}
+		
+		\Ensure 
+		
+		$X_{\text{final}} \in \mathbb{R}^{L \times (d + 4 + p)}$ \Comment{representación final}
+		
+		\State $\tilde{X} \gets \text{WinStatLag}(X, w, \mathcal{L})$ \Comment{Cálculo de embedding enriquecido}
+		\State $X_{PE} \gets \text{PE}(\tilde{X})$ \Comment{Codificación sinusoidal}
+		\State $X_{LPE} \gets \text{LPE}(\tilde{X})$ \Comment{Codificación aprendible}
+		\State $X_{TPE} \gets \text{TPE}(\tilde{X})$ \Comment{Codificación T-PE}
+		
+		\State $\tilde{W} \gets \mathrm{Softmax}(W)$ \Comment{Normalización de pesos}
+		
+		\State $X_{\text{final}} \gets \tilde{w}_0 \cdot \tilde{X} + \tilde{w}_1 \cdot X_{PE} + \tilde{w}_2 \cdot X_{LPE} + \tilde{w}_3 \cdot X_{TPE}$
+		
+		\State \Return $X_{\text{final}}$
 	\end{algorithmic}
 	\caption{Cálculo de WinStatTPE: proceso de ponderado y adición de encodings}
 	\label{winstattpe}
 \end{algorithm}
+
 
 Obteniendo de esta forma el embedding ponderado final, listo para ser introducido al Transformer para ser refinado y aprendido.
 

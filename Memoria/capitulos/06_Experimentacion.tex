@@ -260,7 +260,7 @@ En resumen, este modelo supone un salto considerable frente a todas las alternat
 
 \paragraph{WinStatTPE}
 
-Una vez estudiado el excelente rendimiento de WinStatFlex, es el turno de su variante cercana WinStatTPE, la cual sustituye el uso de tAPE por TPE, que dispone de mayor riqueza semántica, manteniendo una base geométrica tradicional. El funcionamiento se basa en los mismos principios, por lo que pasaremos directamente a los resultados (\ref{hpctpe}):
+Una vez estudiado el excelente rendimiento de WinStatFlex, es el turno de su variante cercana WinStatTPE, la cual sustituye el uso de tAPE por T-PE, que dispone de mayor riqueza semántica, manteniendo una base geométrica tradicional. El funcionamiento se basa en los mismos principios, por lo que pasaremos directamente a los resultados (\ref{hpctpe}):
 \begin{table}[!ht]
 	\centering
 	\begin{tabular}{l|c|c}
@@ -391,4 +391,109 @@ Sin embargo, la diferencia con respecto a la arquitectura Informer original es m
 
 \subsubsection{Elección del mejor modelo}
 
-Tras la ejecución de los ocho experimentos anteriores, hemos obtenido resultados valiosos que nos permiten evaluar de manera comparativa el rendimiento de todas las codificaciones analizadas. Debido a que los datos intuitivos pueden ser algo densos, con el objetivo de visualizar de forma más intuitiva estas diferencias, se ha elaborado un gráfico que resume las métricas principales de cada modelo, MAE y MSE, permitiendo observar de un vistazo el ranking de alternativas ordenadas por MSE.\\
+Tras la ejecución de los ocho experimentos anteriores, hemos obtenido resultados valiosos que nos permiten comparar el rendimiento de todas las codificaciones analizadas. Debido a que las tablas pueden ser algo densas, con el objetivo de visualizar de forma más intuitiva estas diferencias, se ha elaborado un gráfico (figura \ref{hpcgraph}) que resume las métricas principales de cada modelo, MAE y MSE, permitiendo observar de un vistazo el ranking de alternativas ordenadas por MSE.\\
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.475]{img/hpcgraph}
+	\caption{HPC: comparativa gráfica de los positional encodings evaluados}
+	\label{hpcgraph}
+\end{figure}
+
+En ella, se puede apreciar rápidamente como WinStatFlex y WinStatTPE obtienen el mejor resultado, siendo la variabilidad de T-PE inferior, tal y como indican las barras de error dibujadas.  Informer se sitúa en la parte intermedia de la gráfica, siendo empeorados sus resultados al emplear la codifación fija seno/coseno, no usar codificación, o bien, emplear SPE, el cual ya desestimamos.\\
+
+Si bien todos los modelos propuestos (a excepción de SPE) obtienen mejores resultados frente a Informer, debemos reducir el conjunto de métodos a un número razonable para poder llevar a cabo un experimento similar sobre conjuntos como TINA, de mayor extensión, evitando perder recursos de cómputo en otros PE menos prometedores. Por este motivo, se toma la decisión de continuar únicamente con las alternativas WinStatFlex y WinStatTPE, las cuales han mostrado un buen desempeño en las pruebas realizadas, y ofrecen resultados demasiado cercanos como para discriminar únicamente usando los valores de este conjunto de datos.\\
+
+Y ahora, debemos volver a hacer hincapié sobre el objetivo que estamos persiguiendo: verificar si los nuevos encodings añaden de verdad información semántica. Para ello, realizaremos el experimento anteriormente mencionado del barajado del decoder. Volveremos a ejecutar los dos mejores algoritmos seleccionados e Informer, y ver si realmente se repite la problemática vista en \cite{zeng2022transformerseffectivetimeseries}.\\
+
+En la tabla \ref{hpcresultados_modelos}, podemos encontrar los resultados, del cual podemos extraer varias conclusiones:
+\begin{table}[ht]
+	\centering
+	\begin{tabular}{l|c|c|c|c}
+		\toprule
+		Modelo & {MAE} & {MAE (STD)} & {MSE} & {MSE (STD)}  \\
+		\midrule
+		WinStatFlex & 0,373488 & 0,006858 & 0,461892 & 0,004841 \\
+		WinStatTPE & 0,374392 & 0,004132 & 0,463651 & 0,001917 \\
+		Informer & 0,415272 & 0,012216 & 0,532965 & 0,010976 \\
+		No PE & 0,421343 & 0,005856 & 0,544844 & 0,005447 \\
+		Informer (Shuffled) & 0,419960 & 0,002769 & 0,548443 & 0,009148 \\
+		WinStatFlex (Shuffled) & 0,581124 & 0,021991 & 0,782092 & 0,027368 \\
+		WinStatTPE (Shuffled) & 0,581001 & 0,046717 & 0,851115 & 0,024083 \\
+		\bottomrule
+	\end{tabular}
+	\caption{HPC: resultados para experimento de mezcla en encoder}
+	\label{hpcresultados_modelos}
+\end{table}
+
+
+\begin{table}[ht]
+	\centering
+	\begin{tabular}{l|c|c|l|c}
+		\toprule
+		Modelo & {Tº Test(s)} & {Tº Test(s)-STD} & {Tº Train(s)} & {Tº Train(s)-STD} \\
+		\midrule
+		WinStatFlex & 350,8360 & 5,5675 & 18652,7244 & 128,3429 \\
+		WinStatTPE & 296,2529 & 1,9551 & 18913,6335 & 28,7927 \\
+		Informer & 91,9412 & 1,2444 & 7817,0202 & 821,2709 \\
+		No PE & 125,0538 & 2,8330 & 10382,2665 & 2083,3163 \\
+		Informer (Shuffled) & 85,9877 & 0,7681 & 7923,0834 & 1508,2765 \\
+		WinStatFlex (Shuffled) & 330,9885 & 6,0409 & 20842,9511 & 1877,7778 \\
+		WinStatTPE (Shuffled) & 295,0051 & 1,2049 & 20580,5136 & 2278,5627 \\
+		\bottomrule
+	\end{tabular}
+	\caption{HPC: Tiempos de ejecución para cada modelo tras el mezclado}
+	\label{hpc_tiempos_modelos}
+\end{table}
+
+\begin{itemize}
+	\item En primer lugar, el rendimiento de Informer original y mezclados es muy similar, con una diferencia mínima entre ellos, respaldando así los resultados realizados en el paper original. La versión sin PE se sitúa justo en medio de ambos resultados, haciendo que los 3 modelos ofrezcan de manera general el mismo rendimiento y afianzando la pobre semántica y mantenimiento de orden que aporta la estrategia tradicional.
+	\item WinStatFlex sufre de manera marcada el impacto de aplicar el barajado, lo cual son muy buenos resultados. Esto nos indica que la información aportada por este método es capaz de modelar de manera adecuada tanto el contexto como la estructura inherente de la serie, y que cuando se aplica sobre una entrada mezclada, se produce una gran alteración y degradación del rendimiento. Este comportamiento resulta coherente y lógico desde un punto de vista teórico, y sus efectos se aprecian a nivel empírico: el MSE pasa de $0,461892$ a $0,782092$, lo que supone un empeoramiento relativo del 69,3\%.
+	\item WinStatTPE muestra un efecto similar; al aplicar el barajado, pasamos de $0,463651$ a $0,851115$, sufriendo incluso un mayor empeoramiento que la variante Flex. En valores relativos, la diferencia es de un 83,5\%, indicando por tanto que la información semántica aportada por T-PE es aún más sensible a barajado que el resto de codificaciones.
+\end{itemize}
+
+Estos resultados refuerzan, por tanto, un mejor aprovechamiento del contexto local y semántico de los datos, siendo ahora una parte clave del modelo que se ve tremendamente afectada cuando realizamos alteraciones que manipulen la estructura y rompan el contexto temporal. Gracias a este experimento, hemos podido verificarlo de manera sencilla y poner en valor los resultados obtenidos. Los tiempos de ejecución han crecido, como era de esperar, en los modelos mezclados (representados como variantes \textit{Shuffled} en la tabla \ref{hpc_tiempos_modelos}), pero dicho sobrecoste asociado es asumible dada la utilidad del procedimiento.\\
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.475]{img/hpcgraphshuffled}
+	\caption{HPC: comparativa gráfica de los PE, tras aplicar barajado}
+	\label{hpcgraphshuffled}
+\end{figure}
+
+A modo de resumen final, en la figura \ref{hpcgraphshuffled} se representan los resultados de los modelos comparados con el barajado, para apreciar de manera visual que las diferencias entre pares de modelos ahora son bastante notables en comparación con Informer original.
+
+
+\subsection{Evaluación de las alternativas sobre el conjunto ETT}
+
+ETT será nuestro segundo entorno de pruebas para los encodings. En este caso, escogeremos únicamente las variantes WinStatFlex y WinStatTPE, debido a la decisión tomada en el apartado anterior para filtrar los encodings más diferenciales respecto al modelo de referencia. \\
+
+Este dataset presenta una longitud bastante más reducida que el anterior, especialmente en sus variantes horarias, ya que estas no llegan a las 20.000 mediciones. Sin embargo, resulta interesante realizar las pruebas en esta variante debido a que se trata de uno de los principales conjuntos de referencia en estado del arte, con el objetivo de mostrar la escalabilidad y flexibilidad del modelo al operar tanto en entornos de larga duración como en problemas de extensión más reducida.
+
+\subsubsection{Resultados}
+
+Una vez configurado el entorno de pruebas, podemos pasar a la evaluación del modelo. Al igual que se hizo con HPC, se han fijado todos los parámetros comunes a los algoritmos a los mismos valores con el objetivo de que la configuración de la arquitectura no afecte a los resultados, y sea el propio encoding el que determine la diferencia. La arquitectura y los parámetros asociados se pueden ver en la tabla \ref{ajustesett}. En este caso, el horizonte de predicción y el tamaño de ventana son menores, para así adecuarnos al tamaño de los datos disponibles, y teniendo en cuenta también que la granularidad es horaria.
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|l}
+		\toprule
+		Parámetro & Valor \\
+		\midrule
+		{Modelo de atención} & Vanilla \\
+		{Tamaño de batch} & 32 \\
+		{Dropout} & 0.2 \\
+		{Nº de ejecuciones} & 10 \\
+		{Tamaño de ventana} & 24 \\
+		{Longitud de secuencia} & 96 \\
+		{Longitud de etiqueta/contexto} & 48 \\
+		{Longitud de predicción} & 24 \\
+		\bottomrule
+	\end{tabular}
+	\caption{ETT: configuración de parámetros comunes empleada para los experimentos}
+	\label{ajustesett}
+\end{table}
+
+\paragraph{Informer}
+
+Siguiendo el camino establecido, comenzaremos ejecutando Informer, nuestro algoritmo de referencia, incorporando la información de los timestamps mediante timeF. Aunque podríamos tomar los resultados registrados en su publicación original como referencia~\cite{zhou2021informerefficienttransformerlong}, desconocemos los detalles de bajo nivel sobre cómo obtuvieron los resultados finales, por lo que es preferible reejecutar el experimento para realizar una comparativa justa.
