@@ -400,7 +400,7 @@ Tras la ejecución de los ocho experimentos anteriores, hemos obtenido resultado
 	\label{hpcgraph}
 \end{figure}
 
-En ella, se puede apreciar rápidamente como WinStatFlex y WinStatTPE obtienen el mejor resultado, siendo la variabilidad de T-PE inferior, tal y como indican las barras de error dibujadas.  Informer se sitúa en la parte intermedia de la gráfica, siendo empeorados sus resultados al emplear la codifación fija seno/coseno, no usar codificación, o bien, emplear SPE, el cual ya desestimamos.\\
+En ella, se puede apreciar rápidamente como WinStatFlex y WinStatTPE obtienen el mejor resultado, siendo la variabilidad de T-PE inferior, tal y como indican las barras de error dibujadas.  Informer se sitúa en la parte intermedia de la gráfica, siendo empeorados sus resultados al emplear la codificación fija seno/coseno, no usar codificación, o bien, emplear SPE, el cual ya desestimamos.\\
 
 Si bien todos los modelos propuestos (a excepción de SPE) obtienen mejores resultados frente a Informer, debemos reducir el conjunto de métodos a un número razonable para poder llevar a cabo un experimento similar sobre conjuntos como TINA, de mayor extensión, evitando perder recursos de cómputo en otros PE menos prometedores. Por este motivo, se toma la decisión de continuar únicamente con las alternativas WinStatFlex y WinStatTPE, las cuales han mostrado un buen desempeño en las pruebas realizadas, y ofrecen resultados demasiado cercanos como para discriminar únicamente usando los valores de este conjunto de datos.\\
 
@@ -836,10 +836,32 @@ Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejo
  	\label{etth2nope}
  \end{table}
 
-En ambos casos, el empeoramiento es notable. Para ETTh1, este modelo es el que peores resultados ha obtenido, demostrando así la necesidad indiscutible del encoding, pues ha pasado a aumentar el MSE 0,3776 (teniendo en cuenta el 0,5458 de Informer), provocando una caída relativa del rendimiento del 69,2\%.\\
+En ambos casos, el empeoramiento es notable. Para ETTh1, este modelo es el que peores resultados ha obtenido, demostrando así la necesidad indiscutible del encoding, pues ha pasado a aumentar el MSE $0,3776$ (teniendo en cuenta el $0,5458$ de Informer), provocando una caída relativa del rendimiento del 69,2\%.\\
 
-En ETTh2, por su parte, aunque el empeoramiento también es significativo, pasando a obtener 1,013217 y 0,777736 de MSE  y MAE, con respecto a los 0,886627 y  0,754907 de Informer, respectivamente, resulta curioso ver que aún así, el rendimiento es mejor que empleando únicamente Informer con encoding sinusoidal original sin TimeF. Esto sugiere que, en este conjunto de datos concreto, la inclusión de senos y cosenos podría introducir información posicional que no se alinea perfectamente con las relaciones temporales reales de la serie por sí sola, afectando negativamente la capacidad del modelo para capturar patrones relevantes cuando no se complementa adecuadamente. En cambio, al omitir cualquier PE, el modelo parece aprender directamente de la estructura pura de los datos, y reduciendo este problema.\\
+En ETTh2, por su parte, aunque el empeoramiento también es significativo, pasando a obtener $1,013217$ y $0,777736$ de MSE  y MAE, con respecto a los $0,886627$ y $0,754907$ de Informer, respectivamente, resulta curioso ver que aún así, el rendimiento es mejor que empleando únicamente Informer con encoding sinusoidal original sin TimeF. 
+
+\subsubsection{Elección del mejor modelo}
+
+Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos definitivamente escoger el modelo de codificación que mejores resultados ha obtenido. Para contrastarlo también visualmente, se han creado los gráficos \ref{etth1fin} y \ref{etth2fin}, los cuales recogen los resultados de los subconjuntos ETTh1 y ETTh2, respectivamente.\\
+
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.475]{img/etth1fin}
+	\caption{ETTh1: comparativa gráfica de los positional encodings evaluados}
+	\label{etth1fin}
+\end{figure}
+
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.475]{img/etth2fin}
+	\caption{ETTh2: comparativa gráfica de los positional encodings evaluados}
+	\label{etth2fin}
+\end{figure}
+
+En ellos, se puede apreciar fácilmente como WinStatFlex y WinStatTPE obtienen los mejores resultados con diferencia, aunque destacando el modelo Flex especialmente. Informer ofrece un resultado intermedio, siendo empeorados sus resultados al emplear la codificación fija seno/coseno y o no usar encoding. El calibre de estas diferencias es aún mucho más notable en el segundo, como ya vimos numéricamente en el subpunto anterior.\\
+
+En los resultados de ETTh2 además resalta especialmente el pésimo rendimiento de la codificación sinusoidal. Es posible que, en ese conjunto de datos concreto, la inclusión de senos y cosenos pueda introducir información posicional que no se alinea perfectamente con las relaciones temporales reales de la serie, y afecte negativamente la capacidad del modelo para capturar patrones relevantes cuando no se complementa adecuadamente con otros mecanismos. Al omitir cualquier PE, el modelo parece aprender directamente de la estructura pura de los datos, y se ve menos afectado por este problema.\\
 
 Sin embargo, esto no pone en duda la necesidad absoluta de disponer de un encoding flexible y con gran capacidad semántica y local, que permita al modelo adaptarse correctamente a los distintos conjuntos de datos y relaciones temporales.
-
-
