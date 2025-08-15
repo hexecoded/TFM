@@ -4,7 +4,11 @@ En el anterior capítulo, hemos revisado el estado actual de los encodings en lo
 
 Por tanto, en este apartado, introduciremos los diferentes conjuntos de datos seleccionados, analizando su contexto de extracción y algunas características básicas. Debido a su extenso tamaño, resulta complejo y costoso realizar representaciones gráficas sobre los datos, por lo que sólo se realizarán cuando sea posible por su extensión.
 
-\section{Electricity Transformer Dataset (ETT)}
+\section{Estudio de conjuntos de datos}
+
+A continuación, describiremos los detalles de cada conjunto de datos escogidos para la experimentación: ETT Dataset~\cite{zhou2021etdataset}, Household Power Consumption~\cite{hebrail2006individual}, Yellow Trip Data~\cite{nycopendata} y TINA~\cite{tina_dasci_arcelor}.
+
+\subsection{Electricity Transformer Dataset (ETT)}
 
 Este conjunto de datos fue empleado en la publicación original de Informer~\cite{zhou2021informerefficienttransformerlong}, y a raíz de su utilización, multitud de modelos posteriores han hecho uso de este dataset, a modo de conjunto de referencia para la comparativa entre arquitecturas y sus variantes. Contiene información acerca de dos transformadores eléctricos, que se encuentran en diferentes subestaciones, y se recogen datos acerca de su carga y la temperatura del aceite en el cual se encuentran sumergidos los componentes para mejorar el aislamiento.\\
 
@@ -59,7 +63,7 @@ En el caso de las variantes horarias, se trata simplemente de la misma informaci
 
 De manera previa, a la vista de la información dada por los gráficos de autocorrelación, podemos intuir además de que el segundo conjunto puede ser más complejo de modelar, ya que además este no fue utilizado por el paper original de Informer ni buena parte de los modelos posteriores que se probaron. La mayoría optan por evaluar únicamente el primer transformador.
 
-\section{Household Power Consumption (HPC)}
+\subsection{Household Power Consumption (HPC)}
 
 El siguiente dataset seleccionado a analizar es Household Power Consumption, un conjunto bastante extendido que puede ser encontrado en el repositorio UCI~\cite{hebrail2006individual}. Contiene la evolución del consumo eléctrico de una vivienda localizada cerca de París, entre los años 2006 y 2010, con el objetivo de poder construir un modelo capaz de representar el consumo asociado a dicha vivienda y sus diferentes sub-mediciones.\\
 
@@ -108,7 +112,7 @@ Podemos apreciar varios fenómenos:
 
 Por tanto, el análisis de la autocorrelación nos ha aportado información muy valiosa acerca del problema: tenemos tanto variables estacionales, como componentes aparentemente estacionarias en el tiempo, aportando bastante complejidad al modelo, que tendrá que adaptarse a todo ello, y la codificación posicional cobrará importancia.
 
-\section{Yellow Trip Data}
+\subsection{Yellow Trip Data}
 
 El tercer dataset a evaluar será Yellow Trip Data, cuya temática diverge del tema energético visto hasta el momento para estudiar nuevas semánticas de problemas. Este conjunto de datos podemos encontrarlo en la web de New York City Open Data~\cite{nycopendata}, donde se alojan multitud de datos públicos actualizados anualmente de diferentes sistemas de la ciudad. Basados en datos del año 2015, esta variante ha sido expandida artificialmente para aumentar el tamaño de la serie hasta sobrepasar las 2 millones de instancias.\\
 
@@ -153,7 +157,7 @@ En este caso, lo analizaremos durante 336 lags, el equivalente a 2 semanas de ti
 
 En definitiva, aunque este conjunto de datos presenta un menor número de atributos que los anteriores, su comportamiento es bastante similar: incluye variables estacionales y estacionarias, lo que añade complejidad al proceso de entrenamiento, y resulta adecuado como \textit{benchmark}. No obstante, dado que ha sido ampliado artificialmente, es posible que contenga valores anómalos, especialmente en los tramos finales de la serie, por lo que los resultados deben interpretarse con espíritu crítico.
 
-\section{Time-series Industrial Anomaly dataset (TINA)}
+\subsection{Time-series Industrial Anomaly dataset (TINA)}
 
 Por último, presentamos el conjunto de datos \textit{Time-series Industrial Anomaly} (TINA)~\cite{tina_dasci_arcelor}, publicado en la web de DASCI y orientado al análisis de series temporales para la detección de anomalías en entornos industriales. Este conjunto fue construido a partir de información recopilada por sensores instalados en una máquina de minería perteneciente a la compañía ArcelorMittal. En su formato original, fue muestreado en intervalos de 2 segundos, abarcando el período comprendido entre el 6 de septiembre de 2017 y el 25 de diciembre de 2018, lo que resulta en aproximadamente 38 millones de instancias. Su construcción se ha realizado uniendo diferentes ficheros de datos correspondientes a cada día de uso de la máquina, por lo que, su peso asciende a varias decenas de GB de información.\\
 
@@ -176,6 +180,94 @@ Debido a la elevada dimensionalidad del conjunto de datos, la ejecución directa
 \end{itemize}
 
 De esta forma, disponemos de un conjunto de datos variado y de mayor complejidad, capaz de valorar el correcto funcionamiento de las codificaciones no sólo en longitud de secuencia, sino también en anchura de la misma. Todo ello, ajustándonos a los recursos disponibles tratando de minimizar la pérdida de información. Su inclusión en el conjunto de datos de evaluación de estos, además, nos motiva a implementar procedimientos de forma eficiente, ya que, sin una adecuada escalabilidad, la ejecución sobre este dataset sería inviable. Incluso la simple generación del gráfico de autocorrelación, mediante el paquete \textit{statsmodels}, con el objetivo de identificar patrones visuales en los datos, provoca problemas de desbordamiento de memoria. Por ello, en este conjunto de datos concreto se ha optado por prescindir de su graficado, y por desgracia, podremos depende únicamente de los resultados experimentales para realizar el análisis.
+
+\section{Preprocesado de los datos}
+
+El preprocesado de los datos es un fase fundamental en el procesamiento previo de cualquier problema de aprendizaje. El significado semántico de cada variable, que es el contenido visto hasta ahora, nos permite entender todo el trasfondo necesario para estudiar su estructura e identificar posibles aspectos que requieren refinamiento, o ajustes para aprovechar al máximo la información que contienen en el modelo que queremos entrenar.\\
+
+En series temporales, las mayores dificultades que podemos encontrar son la diferencia de rangos entre atributos de la serie, y el formato de los timestamp que indexan las diferentes mediciones. Ambos aspectos los gestionaremos de la siguiente forma:
+
+\begin{itemize}
+	\item Para la diferencia de rangos entre variables, debemos aplicar una técnica de normalización de datos. Si bien el dataset de TINA está normalizado de origen como parte de su procedimiento de anonimizado, el resto de conjuntos presentan grandes diferencias entre atributos. Por tanto, para mejorar la convergencia del modelo y evitar condiciones de dominancia, optaremos por aplicar estandarización: calcular la media y desviación típica para cada variable y lograr media 0 y varianza 1.
+	
+	$$x_{stand} = \frac{x_i - \mu_i}{\sigma_i}$$
+	\item En el caso del timestamp, encontramos varias situaciones diferentes. En primer lugar, ETT, TINA y Yellow Trip contienen la fecha y hora en una única columna, \textit{Date}, aunque con diferentes formatos. Esto no es problemático, ya que usando herramientas como pandas, que mencionaremos posteriormente, podemos autodetectar el formato para convertirlos todos al formato \textit{YYYY-MM-DD HH:mm:ss}.
+	
+	Sin embargo, en el caso de HPC, la operación es algo más compleja, ya que tenemos dos columnas por separado como ya vimos durante su análisis, y tenemos que unir la información de ambas para lograr un formato estándar como el resto de conjuntos. Para ello, simplemente podemos concatenar la información de ambas columnas, \textit{date + time}, y aplicar el mismo procedimiento que el resto con la nueva columna resultante.
+\end{itemize}
+
+De esta forma, si bien se requerirán otros ajustes puntuales para cada uno de los conjuntos de datos (principalmente, relativos a su formato de fichero), podremos adquirir un procedimiento de procesado general como el mostrado en el pseudocódigo \ref{preproc}, el cual se inspira en la clase Dataset contenida en el repositorio de Informer~\cite{zhouhaoyi2020informer}. En él, se realiza:
+
+\begin{enumerate}
+	\item Lectura de los datos, ajustándose a los formatos: csv, parquet o txt.
+	\item Particionado siguiendo el esquema visto anteriormente de 70-30 en entrenamiento y test mediante limitación de índices.
+	\item Escalado del contenido numérico, descartando las variables categóricas.
+	\item Guardado de cada uno de los elementos en la clase asociada al dataset para que puedan ser recuperados fácilmente.
+\end{enumerate}
+
+\begin{algorithm}[H]
+	\caption{Lectura y preparación de datos}
+	\begin{algorithmic}[1]
+		\Procedure{preprocesarDatos}{root\_path, data\_path, target, seq\_len, set\_type, features, scale}
+		
+		\State \texttt{df\_raw} $\gets \Call{leerDatos}{root\_path + data\_path}$ \Comment{Adaptado según formato}
+		
+		\If{\texttt{self.cols} $\neq$ vacío}
+		\State \texttt{cols} $\gets$ copy(\texttt{self.cols})
+		\State remover \texttt{target} de \texttt{cols}
+		\Else
+		\State \texttt{cols} $\gets$ lista de columnas de \texttt{df\_raw}
+		\State remover \texttt{target} y \texttt{'date'} de \texttt{cols}
+		\EndIf
+		
+		\Comment{Marcamos las particiones de train y test}
+		\State \texttt{df\_raw} $\gets$ columnas \texttt{['date']} + \texttt{cols} + \texttt{[target]}
+		
+		\State \texttt{num\_train} $\gets$ $\lfloor$len(\texttt{df\_raw}) $\times$ 0.6$\rfloor$
+		\State \texttt{num\_test} $\gets$ $\lfloor$len(\texttt{df\_raw}) $\times$ 0.3$\rfloor$
+		\State \texttt{num\_vali} $\gets$ len(\texttt{df\_raw}) - \texttt{num\_train} - \texttt{num\_test}
+		
+		\State \texttt{border1s} $\gets$ [0, num\_train - seq\_len, len(df\_raw) - num\_test - seq\_len]
+		\State \texttt{border2s} $\gets$ [num\_train, num\_train + num\_vali, len(df\_raw)]
+		\State \texttt{border1} $\gets$ border1s[set\_type]
+		\State \texttt{border2} $\gets$ border2s[set\_type]
+		
+		\Comment{Seleccionamos entre enfoque multivariable vs única variable                 }
+		
+		\If{\texttt{features} = 'M' \textbf{or} 'MS'}
+		\State \texttt{cols\_data} $\gets$ \texttt{df\_raw.columns[1:]}
+		\State \texttt{df\_data} $\gets$ \texttt{df\_raw[cols\_data]}
+		\ElsIf{\texttt{features} = 'S'}
+		\State \texttt{df\_data} $\gets$ \texttt{df\_raw[[target]]}
+		\EndIf
+		
+		\Comment{Se aplica escalado en caso de que se especifique}
+		
+		\If{scale}
+		\State train\_data $\gets df\_data[border1s[0]:border2s[0], :]$
+		\State $\mu \gets$ \text{media columnas de train}
+		\State $\sigma \gets$ \text{desviación estándar columnas de train}
+		\State data $\gets \dfrac{df\_data - \mu}{\sigma}$
+		\Else
+		\State data $\gets df\_data$
+		\EndIf
+
+		
+		\State \texttt{df\_stamp} $\gets$ \texttt{df\_raw[['date']][border1:border2]}
+		\State \texttt{df\_stamp['date']}  $\gets$ $\Call{convertirDateTime}{df\_stamp['date']}$
+		\State \texttt{data\_stamp} $\gets$ \texttt{time\_features(df\_stamp, timeenc, freq)}
+		
+		\Comment{Almacenamos toda la información procesada}
+		
+		\State \texttt{self.data\_x} $\gets$ \texttt{data[border1:border2]}
+		\State \texttt{self.data\_y} $\gets$ \texttt{data[border1:border2]}
+		\State \texttt{self.data\_stamp} $\gets$ \texttt{data\_stamp}
+		
+		\EndProcedure
+	\end{algorithmic}
+	\caption{Preprocesado de datos: función genérica para lectura, particionado y guardado}
+	\label{preproc}
+\end{algorithm}
 
 
 
