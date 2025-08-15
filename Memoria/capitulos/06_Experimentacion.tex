@@ -790,5 +790,56 @@ Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejo
  	\label{etth2tpe}
  \end{table}
  
- No obstante, es importante destacar que estos resultados continúan siendo significativamente superiores a los obtenidos con Informer, lo que confirma que hemos alcanzado el objetivo propuesto.
+ No obstante, es importante destacar que estos resultados continúan siendo significativamente superiores a los obtenidos con Informer, lo que confirma que hemos alcanzado el objetivo propuesto de mejorar los encodings analizados.
  
+ \paragraph{Informer sin PE}
+ 
+ Por último, nos volvemos a plantear de nuevo la siguiente pregunta: ¿marca la diferencia emplear encoding en este conjunto de datos? Aunque ya hemos demostrado teóricamente que siempre será necesario disponer de él, volveremos a comprobar cuál es el impacto de retirar la componente posicional al embedding, tomando como base el modelo Informer.\\
+ 
+  \begin{table}[!ht]
+ 	\centering
+ 	\begin{tabular}{l|c|c}
+ 		\toprule
+ 		Métrica & Media & STD \\
+ 		\midrule
+ 		MSE & 0,923467 & 0,084128 \\
+		MAE & 0,741918 & 0,050922 \\
+		MAPE & 14,232987 & 4,295049 \\
+		MSPE & 76807,512109 & 46287,280000 \\
+		RMSE & 0,960007 & 0,043059 \\
+		TrainTime(s) & 17,335851 & 3,149851 \\
+		TestTime(s) & 0,451098 & 0,043514 \\
+ 		\bottomrule
+ 	\end{tabular}
+ 	\caption{ETTh1: métricas de rendimiento para Informer sin PE}
+ 	\label{etth1nope}
+ \end{table}
+ 
+ 
+ 
+   \begin{table}[!ht]
+ 	\centering
+ 	\begin{tabular}{l|c|c}
+ 		\toprule
+ 		Métrica & Media & STD \\
+ 		\midrule
+ 	 	MSE & 1,013217 & 0,241743 \\
+ 		MAE & 0,777736 & 0,119947 \\
+ 		MAPE & 6,796825 & 1,558902 \\
+ 		MSPE & 4086,226156 & 447,778530 \\
+ 		RMSE & 0,998585 & 0,126672 \\
+ 		TrainTime(s) & 18,196816 & 2,308764 \\
+ 	 	MSE & 1,013217 & 0,241743 \\
+ 		\bottomrule
+ 	\end{tabular}
+ 	\caption{ETTh2: métricas de rendimiento para Informer sin PE}
+ 	\label{etth2nope}
+ \end{table}
+
+En ambos casos, el empeoramiento es notable. Para ETTh1, este modelo es el que peores resultados ha obtenido, demostrando así la necesidad indiscutible del encoding, pues ha pasado a aumentar el MSE 0,3776 (teniendo en cuenta el 0,5458 de Informer), provocando una caída relativa del rendimiento del 69,2\%.\\
+
+En ETTh2, por su parte, aunque el empeoramiento también es significativo, pasando a obtener 1,013217 y 0,777736 de MSE  y MAE, con respecto a los 0,886627 y  0,754907 de Informer, respectivamente, resulta curioso ver que aún así, el rendimiento es mejor que empleando únicamente Informer con encoding sinusoidal original sin TimeF. Esto sugiere que, en este conjunto de datos concreto, la inclusión de senos y cosenos podría introducir información posicional que no se alinea perfectamente con las relaciones temporales reales de la serie por sí sola, afectando negativamente la capacidad del modelo para capturar patrones relevantes cuando no se complementa adecuadamente. En cambio, al omitir cualquier PE, el modelo parece aprender directamente de la estructura pura de los datos, y reduciendo este problema.\\
+
+Sin embargo, esto no pone en duda la necesidad absoluta de disponer de un encoding flexible y con gran capacidad semántica y local, que permita al modelo adaptarse correctamente a los distintos conjuntos de datos y relaciones temporales.
+
+
