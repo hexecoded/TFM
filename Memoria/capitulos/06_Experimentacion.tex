@@ -1111,3 +1111,41 @@ Podemos apreciar de manera inmediata que los resultados son marcadamente peores 
 
 \subsubsection{Elección del mejor modelo}
 
+Una vez obtenidas y analizadas las tablas de métricas correspondientes a cada uno de los experimentos realizados, debemos realizar un análisis conjunto, ordenando de mayor a menor rendimiento, de manera que podamos comprender las diferencias existentes entre cada uno. Para ello, podemos tener como referencia tanto la tabla \ref{taxifinal} como la representación gráfica, siguiendo el esquema empleado hasta ahora. Para facilitar la lectura, se ha decidido separar por un lado, el error medio absoluto \ref{taxifinalmae}, y por otro, el MSE \ref{taxifinalmse}, debido a la diferencia de escalas de $10^{-2}$ entre ambas. Además, las barras marcadas con una doble línea oblicua de color rojo indican barras que sobresalen sensiblemente por encima el eje del gráfico, y que ha sido cortada para no distorsionar la escala.\\
+
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c|c|c|c}
+		\toprule
+		Modelo & MSE (Media) & MSE (STD) & MAE (Media) & MAE (STD) \\
+		\midrule
+		WinStatTPE & $1,0 \times 10^{-5}$ & $5,0 \times 10^{-6}$ & $2,547 \times 10^{-3}$ & $9,37 \times 10^{-4}$ \\
+		WinStatFlex & $1,7 \times 10^{-5}$ & $8,0 \times 10^{-6}$ & $3,529 \times 10^{-3}$ & $1,027 \times 10^{-3}$ \\
+		Informer & $1,9 \times 10^{-5}$ & $7,0 \times 10^{-6}$ & $3,987 \times 10^{-3}$ & $7,95 \times 10^{-4}$ \\
+		PE (sin/cos) & $2,4 \times 10^{-5}$ & $1,0 \times 10^{-5}$ & $4,307 \times 10^{-3}$ & $1,044 \times 10^{-3}$ \\
+		No PE & $4,6 \times 10^{-5}$ & $6,0 \times 10^{-5}$ & $4,626 \times 10^{-3}$ & $3,954 \times 10^{-3}$ \\
+		WinStatTPE (Shuf.) & $5,6 \times 10^{-5}$ & $6,3 \times 10^{-5}$ & $5,688 \times 10^{-3}$ & $3,983 \times 10^{-3}$ \\
+		WinStatFlex (Shuf.) & $1,302 \times 10^{-1}$ & $1,838 \times 10^{-1}$ & $7,203 \times 10^{-2}$ & $9,583 \times 10^{-2}$ \\
+		\bottomrule
+	\end{tabular}
+	\caption{Resumen comparativo de modelos: MSE y MAE con medias y desviaciones estándar (notación científica)}
+	\label{tab:resumen_modelos}
+\end{table}
+
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.475]{img/taxifinalmae}
+	\caption{Yellow Trip data: comparativa gráfica de MAE para los PE evaluados}
+	\label{taxifinalmae}
+\end{figure}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.475]{img/taxifinalmse}
+	\caption{Yellow Trip data: comparativa gráfica de MSE para los PE evaluados}
+	\label{taxifinalmse}
+\end{figure}
+
+Podemos apreciar que, en ambos casos, se obtiene el mismo orden entre los algoritmos, por lo que nuestro principal temor de que MSE no fuera representativo, se ha disipado. Contrastado con MAE, las diferencias entre todos los encoding es notable, siendo especialmente notaria la de WinStatTPE, tanto en media como en varianza. Para contrastar los resultados obtenidos para los dos métodos WinStat, se han añadido también las ejecuciones correspondientes al barajado de la entrada del decoder, con el objetivo de medir cuantitativamente el impacto del desordenado en casos donde se codifica una alta localidad. Los resultados se disparan considerablemente, siendo mucho peores que no usar codificación, e incluso sobresaliendo de la gráfica en el caso de WinStatFlex. Esto refuerza de nuevo la gran utilidad de la componente semántica, que no solo mejora los resultados, sino que realmente añade información necesaria a los datos la cual destruye los resultados si es alterada.
