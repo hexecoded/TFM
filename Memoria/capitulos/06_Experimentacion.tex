@@ -2,11 +2,12 @@
 
 Una vez expuestas todas las condiciones del entrenamiento, como los modelos a probar, las métricas, funciones de pérdida y presentados los datos, podemos dar paso al entrenamiento. Sin lugar a dudas, es la fase más lenta de todo el proceso, la cual ha prolongado su desarrollo considerablemente. El objetivo es claro: poner a prueba las 5 propuestas realizadas para establecer, en primer lugar, cuál o cuáles de ellas son competitivas, y posteriormente, evaluar todos los conjuntos de datos para medir la ganancia con respecto al conjunto de datos original.
 
-\section{Consideraciones previas: ¿Cómo detectar si un modelo es mejor de manera justa?}
+\section{Consideraciones previas}
 
 A la hora de realizar las pruebas, existen multitud de factores que pueden influir en los resultados, y los cuales debemos controlar minuciosamente para evitar problemas que alteren los resultados y nos den una idea equivocada del rendimiento. Entre ellos, podemos encontrar las inicializaciones aleatorias de los pesos, el riesgo de sobreaprendizaje y en casos de extremada similaridad de resultados, la calidad semántica aportada por la codificación que estamos evaluando.\\
 
-Para tratar de minimizar el impacto de estos factores y facilitar el análisis de calidad de los positional encodingds propuestos, tomaremos una serie de medidas las cuales examinaremos a continuación.
+Para reducir el impacto de estos factores que pueden distorsionar la evaluación y, al mismo tiempo, facilitar un análisis más preciso de la calidad de los \textit{positional encodings} propuestos, tomaremos una serie de medidas que detallaremos a continuación. Estas acciones buscan garantizar que la comparación entre modelos sea lo más justa y representativa posible. Asimismo, dedicaremos especial atención a la elección de un parámetro fundamental en el rendimiento de algunos métodos: el tamaño de ventana, cuya correcta configuración resulta determinante para obtener los mejores resultados posibles.
+
 
 \subsection{Impacto de la inicialización aleatoria}
 
@@ -51,6 +52,42 @@ Sin embargo, en el artículo mencionado se llega a la conclusión de que los mec
 
 En nuestro caso, teniendo en cuenta que nuestra arquitectura se basa en la estructura de Informer, pero simplificando el mecanismo de atención al prescindir del muestreo y las convoluciones, la escasez mantenimiento del orden podría afectarnos de manera similar. Pero, en este caso, queremos evaluar la efectividad de los métodos de codificación propuestos en este trabajo, por lo que repetiremos el experimento, pero en lugar de hacerlo con la codificación por defecto, que ya conocemos sus resultados, con nuestras alternativas. El objetivo es claro: tratar de demostrar que permiten conservar una mayor semántica de los datos y se ven más perjudicados frente al desorden que la tradicional codificación seno-coseno.
 
+\subsection{Elección adecuada del tamaño de ventana}
+
+Otra de las preguntas clave que nos puede surgir a la hora de evaluar la familia de encodings propuesta es la siguiente: ¿Qué tamaño de ventana es el adecuado?.\\
+
+Este valor es un parámetro de entrada común a las cinco variantes de encodings propuestas en este trabajo, y determina cuánta información del entorno se toma como parte del contexto de cada posición, enriqueciéndolo con información asociada a estadísticas y los rezagos anteriores. Un mayor tamaño de ventana excesivamente grande puede provocar que los valores estadísticos sean demasiado genéricos, y no aporten información útil, mientras que una ventana demasiado pequeña puede contener demasiado ruido, y no sea útil para el modelo e incluso dificulte la detección de patrones.\\
+
+Por tanto, lo ideal sería emplear algún método de búsqueda de parámetros que nos permita probar con diferentes configuraciones y escoger la que mejor resultado ofrezca. Pero en conjuntos de datos de gran tamaño, esa tarea es prácticamente imposible debido al tiempo que sería necesario para realizar cada prueba. Por tanto, para disponer de una heurística a seguir, y que sea estimable en un tiempo reducido, podemos tomar las variantes horarias del dataset ETT, de tamaño reducido, y realizar un pequeño experimento: tomar los valores de longitud de secuencia, etiqueta y predicción empleados en el paper original de Informer y probar con diferentes tamaños de ventana entre 3 y longitud de secuencia.\\
+
+Estos parámetros son:
+
+\begin{itemize}
+	\item Longitud de secuencia: 96
+	\item Longitud de etiqueta: 48
+	\item Longitud de predicción: 24
+\end{itemize}
+
+Para realizar el estudio de forma intuitiva y visual, realizaremos el análisis de forma gráfica: ejecutando ETTh1 y ETTh2 con todos los valores de ventana entre 3 y 96, y realizando cada configuración 10 veces para obtener así un valor estable, pues al evaluar tamaños de ventana muy juntos las diferencias serán mínimas y así reducimos el ruido todo lo posible. Los resultados los podemos encontrar en las figuras \ref{mean_mse_vs_window_ETTh1} para ETTh1 y en la \ref{mean_mse_vs_window_ETTh2} para ETTh2, marcando en negrita los 5 mejores resultados obtenidos.\\
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.475]{img/mean_mse_vs_window_ETTh1}
+	\caption{Estudio del tamaño de ventana (ETTh1)}
+	\label{mean_mse_vs_window_ETTh1}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.475]{img/mean_mse_vs_window_ETTh2}
+	\caption{Estudio del tamaño de ventana (ETTh2)}
+	\label{mean_mse_vs_window_ETTh2}
+\end{figure}
+
+En ambos casos, los valores se sitúan entre el 24 y el 36, siendo el 24 exactamente $1/4$ del valor de longitud de secuencia, 96, y el 36 algo más de la tercera parte de este. Por tanto, una heurística razonable podría ser ubicar el valor de tamaño de ventana entre una cuarta o tercera parte de la longitud de secuencia. Si bien deducir este resultado tan solo de dos conjuntos de datos puede ser demasiado optimista, al menos nos permite tener un punto de partida, sabiendo que en el resto de conjuntos sería imposible realizar un experimento de este tipo en un tiempo razonable.
+
 \section{Resultados de los experimentos}
 
 Una vez justificado el procedimiento de ejecución a seguir para los experimentos realizados, podemos comenzar a analizar los resultados obtenidos en el entrenamiento de los mismos. Tal y como se especificó en el capítulo \ref{cap5}, compararemos los resultados haciendo uso de las métricas de regresión especificadas, pero haciendo especial hincapié en el MAE y MSE.\\
@@ -59,7 +96,7 @@ La estructura seguida por los experimentos será la siguiente: primero, evaluare
 
 \subsection{HPC: Evaluación de PE}
 
-El dataset de Individual Household Power Consumption ha sido el conjunto escogido para evaluar, en primer lugar, las 5 variantes de nuestro método de encoding. Esta decisión viene motivada por dos aspectos; en primer lugar, este conjunto de datos dispone de una longitud suficiente para inferir la información relevante de la serie y realizar predicciones a largo plazo, y además, en el comportamiento de sus variables vimos aspectos como la estacionalidad, la cual es más difícil de modelar para un Transformer, y ausencia de estacionalidad, lo cual a priori podría suponer un problema para la aplicación de métodos clásicos. Pero, principalmente, la decisión de escoger un dataset viene motivada por le coste computacional: evaluar todas las alternativas en cada uno de los conjuntos de datos podría requerir semanas e incluso meses para completar por cada dataset, lo cual se escapa de los recursos y limitaciones temporales de las que disponemos.\\
+El dataset de Individual Household Power Consumption ha sido el conjunto escogido para evaluar, en primer lugar, las 5 variantes de nuestro método de encoding. Esta decisión viene motivada por dos aspectos; en primer lugar, este conjunto de datos dispone de una longitud suficiente para inferir la información relevante de la serie y realizar predicciones a largo plazo, y además, en el comportamiento de sus variables vimos aspectos como la estacionalidad, la cual es más difícil de modelar para un Transformer, y ausencia de estacionalidad, lo cual a priori podría suponer un problema para la aplicación de métodos clásicos. Pero, principalmente, la decisión de escoger un dataset viene motivada por le coste computacional: evaluar todas las alternativas en cada uno de los conjuntos de datos podría requerir semanas e incluso meses para completar por cada dataset, lo cual se escapa de los recursos y limitaciones temporales de las que disponemos.
 
 \subsubsection{Análisis y resultados}
 
@@ -153,9 +190,7 @@ A continuación, comenzaremos a probar las nuevas alternativas, para ver si cons
 
 \paragraph{WinStat}
 
-Comenzamos por la primera de las propuestas, la cual se basa únicamente en la adición información estadística a través de una ventana deslizante.\\
-
-Recordando su funcionamiento, este método requiere especificar el tamaño de la ventana, la cual recorre los datos para extraer y concatenar información local sobre la media, la desviación estándar y los valores extremos en su entorno. Por tanto, la elección de un tamaño de ventana adecuado resulta crítico para garantizar un rendimiento óptimo, sin comprometer la eficiencia del modelo. Como criterio heurístico, se empleará una longitud comprendida entre un tercio y un cuarto del tamaño de la secuencia de entrada, ya que ofrece un equilibrio razonable entre el mínimo posible, 3, y el extremo opuesto de utilizar una ventana de tamaño longitud de la secuencia.\\
+Comenzamos por la primera de las propuestas, la cual se basa únicamente en la adición información estadística a través de una ventana deslizante. Recordando su funcionamiento, este método requiere especificar el tamaño de la ventana, la cual recorre los datos para extraer y concatenar información local sobre la media, la desviación estándar y los valores extremos en su entorno. Por tanto, la elección de un tamaño de ventana adecuado resulta crítico para garantizar un rendimiento óptimo. Para ello, utilizaremos nuestro criterio heurístico, empleando en este caso, 60, que es un tercio de la longitud de secuencia.\\
 
 Los resultados para esta alternativa son significativamente mejores y más estables (tabla \ref{hpcwin}) que en los casos anteriores, ya que hemos conseguido reducir tanto MAE como MSE, reduciendo además la varianza de los resultados. Tomando esta última como referencia, podemos apreciar que la mejora es superior a las tres centésimas ($0,502$ vs $0,537$), aportando una mejora considerable del 6\%. Sin embargo, esta mejora de rendimiento ha tenido un gran impacto en el tiempo de cómputo: este es ahora mucho mayor que en casos anteriores, con una variabilidad además mucho más alta, de casi una hora.\\
 
@@ -184,9 +219,6 @@ En promedio, se ha requerido $17697$ segundos, unas 4,9 horas, para completar ca
 
 WinStatLags es la siguiente propuesta de encoding a evaluar, siguiendo la estrategia especificada de ir aumentando de manera creciente la complejidad de los modelos. La principal característica de este modelo consistía en la incorporación de diferencias mediante lags, las cuales potencian el contexto local. Siguiendo las misma configuración que en los casos anteriores, obtenemos los resultados de la tabla \ref{hpcwinlags}.\\
 
-Volvemos a obtener una mejora pequeña, esta vez del $0,01$ sobre el modelo de ventana sin lags para el MSE, y una reducción del resto de métricas de error, aunque con un empeoramiento marginal registrado en MAE. Aunque dicha diferencia parezca mínima, es significativa si la tenemos en cuenta con respecto al modelo original. Además, en cuestiones de tiempo de ejecución, hemos conseguido unos tiempos de entrenamiento inferiores, sobre todo, gracias a la reducción de la variabilidad de los resultados. Podemos observar que hemos pasado de una varianza cercana a la hora por cada ejecución, a aproximadamente 24 minutos, reduciendo así casi en un tercio la variabilidad del resultado. Esto justifica por tanto la inclusión de esta nueva componente, que se mantiene como estaba previsto en el resto de codificaciones.
-
-
 \begin{table}[!ht]
 	\centering
 	\begin{tabular}{l|c|c}
@@ -205,6 +237,10 @@ Volvemos a obtener una mejora pequeña, esta vez del $0,01$ sobre el modelo de v
 	\caption{HPC: resultados para encoding WinStatLags}
 	\label{hpcwinlags}
 \end{table}
+
+Volvemos a obtener una mejora pequeña, esta vez del $0,01$ sobre el modelo de ventana sin lags para el MSE, y una reducción del resto de métricas de error, aunque con un empeoramiento marginal registrado en MAE. Aunque dicha diferencia parezca mínima, es significativa si la tenemos en cuenta con respecto al modelo original. Además, en cuestiones de tiempo de ejecución, hemos conseguido unos tiempos de entrenamiento inferiores, sobre todo, gracias a la reducción de la variabilidad de los resultados. Podemos observar que hemos pasado de una varianza cercana a la hora por cada ejecución, a aproximadamente 24 minutos, reduciendo así casi en un tercio la variabilidad del resultado. Esto justifica por tanto la inclusión de esta nueva componente, que se mantiene como estaba previsto en el resto de codificaciones.
+
+
 
 \paragraph{WinStatFlex}
 
@@ -1073,7 +1109,7 @@ Nuestra siguiente prueba emplea el encoding ponderado de TPE, WinStatTPE. La tab
 		Stats & 0,278 \\
 		PE & 0,238 \\
 		LPE & 0,202 \\
-		tAPE & 0,282 \\
+		TPE & 0,282 \\
 		\bottomrule
 	\end{tabular}
 	\caption{Yellow Trip data: valores aprendidos en los pesos del encoding WinStatTPE}
@@ -1129,7 +1165,7 @@ Una vez obtenidas y analizadas las tablas de métricas correspondientes a cada u
 		WinStatFlex (Shuf.) & $1,302 \times 10^{-1}$ & $1,838 \times 10^{-1}$ & $7,203 \times 10^{-2}$ & $9,583 \times 10^{-2}$ \\
 		\bottomrule
 	\end{tabular}
-	\caption{Resumen comparativo de modelos: MSE y MAE con medias y desviaciones estándar (notación científica)}
+	\caption{Yellow Trip data: resultados ordenados, incluyendo modelos barajados}
 	\label{tab:resumen_modelos}
 \end{table}
 
@@ -1151,3 +1187,251 @@ Una vez obtenidas y analizadas las tablas de métricas correspondientes a cada u
 Podemos apreciar que, en ambos casos, se obtiene el mismo orden entre los algoritmos, por lo que nuestro principal temor de que MSE no fuera representativo, se ha disipado. Contrastado con MAE, las diferencias entre todos los encoding es notable, siendo especialmente notaria la de WinStatTPE, tanto en media como en varianza. Para contrastar los resultados obtenidos para los dos métodos WinStat, se han añadido también las ejecuciones correspondientes al barajado de la entrada del decoder, con el objetivo de medir cuantitativamente el impacto del desordenado en casos donde se codifica una alta localidad. Los resultados se disparan considerablemente, siendo mucho peores que no usar codificación, e incluso sobresaliendo de la gráfica en el caso de WinStatFlex. Esto refuerza de nuevo la gran utilidad de la componente semántica, que no solo mejora los resultados, sino que realmente añade información necesaria a los datos la cual destruye los resultados si es alterada.\\
 
 En resumen, WinStatTPE se puede establecer como el mejor modelo para Yellow Trip data, y su variante Flex supone una buena alternativa. En ambos casos, se añade información fuertemente vinculada al orden y semántica de los datos, que permite mejorar los resultados obtenidos en la predicción, aunque con un mayor coste computacional.
+
+
+\subsection{TINA: Evaluación de PE}
+
+Como último conjunto de datos disponemos de TINA. Este dataset representa un auténtico reto en términos de complejidad y eficiencia de los algoritmos que se evaluarán a continuación, dado que su elevada dimensionalidad, superior a 103 características por timestamp, exige una gestión cuidadosa de los recursos. Incluso con una optimización profunda, su procesamiento ha demandado una gran potencia de hardware y varios días de tiempo de ejecución. Pero, a pesar las dificultades asociadas, su gran tamaño lo convierte en un benchmark excelente para nuestro método basado en estadísticos y ventanas, tanto a nivel de eficiencia como en efectividad en métricas con respecto a otros modelos del estado del arte.\\
+
+Es importante recordar que este conjunto de datos proviene del ámbito de la detección de anomalías. Por tanto, su objetivo fundamental es evaluar la capacidad de los modelos no solo para predecir la evolución temporal de la serie, sino también para identificar y anticipar comportamientos atípicos. Nuestro problema es principalmente forecasting, por lo que estos puntos anómalos puede ser un complejo reto de solventar, ya que su presencia puede afectar gravemente a las métricas de error y a como se comportan.\\
+
+Este aspecto va referido principalmente al MSE, nuestra principal métrica de referencia. Debido a que eleva al cuadrado las diferencias entre el valor real y el predicho, tiende a amplificar los errores puntuales generados por dichas anomalías, provocando una sobreestimación del error global y, en consecuencia, inestabilidad en la evaluación del modelo. Por el contrario, MAE, que ha sido nuestra segunda opción hasta ahora, al basarse en la magnitud absoluta de las diferencias sin ponderarlas cuadráticamente, proporciona una medida posiblemente más robusta y representativa en este tipo de contextos.\\
+
+A la hora de analizar los experimentos, debemos de tener este aspecto claro, y contrastar adecuadamente entre ambos valores.
+
+\subsubsection{Análisis y resultados}
+
+A continuación, se mostrarán los resultados de los modelos evaluados, siendo de nuevo los 5 modelos ya valorados Yellow Trip y ETTh. En este caso, los parámetros base empleado para todos ellos han sufrido algunas modificaciones considerables para adquirir mayor información de contexto, ya que este dataset tiene un intervalo de medición de 30 segundos. En la tabla \ref{ajustestina}, podemos ver los valores, donde destaca especialmente la longitud de secuencia de 288. Sin embargo, la ventana empleada es de 60, indicando que tomamos únicamente la última media hora. Esto se debe a que aumentar el tamaño hasta alcanzar la heurística comentada en HPC de 1/3 o 1/4 de la longitud de secuencia generaba problemas de reserva de memoria.
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|l}
+		\toprule
+		Parámetro & Valor \\
+		\midrule
+		{Modelo de atención} & Vanilla \\
+		{Tamaño de batch} & 32 \\
+		{Dropout} & 0.2 \\
+		{Nº de ejecuciones} & 3 \\
+		{Tamaño de ventana} & 60 \\
+		{Longitud de secuencia} & 288 \\
+		{Longitud de etiqueta/contexto} & 96 \\
+		{Longitud de predicción} & 48 \\
+		\bottomrule
+	\end{tabular}
+	\caption{TINA: configuración de parámetros comunes empleada para los experimentos}
+	\label{ajustestina}
+\end{table}
+
+\paragraph{Informer}
+
+Para disponer de una base de comparación, comenzaremos por el análisis de Informer. En la tabla \ref{tinainformer}, se recopilan los resultados obtenidos por estas métricas. Podemos ver que el valora del MSE es bastante alto en comparación con el obtenido para MAE, como ya anunciábamos en la introducción. Además, el resto de métricas también han subido considerablemente, debido al gran impacto de los errores, potencialmente en los puntos de anomalía, que disparan su penalización.\\
+
+ Los tiempos de ejecución, de manera sorprendente, no han aumentado de forma significativa, manteniéndose entre los valores obtenidos con Household Power o Yellow Trip Data. Esto sugiere que las operaciones asociadas al encoding se están paralelizando de manera adecuada y, en consecuencia, no representan un coste computacional prohibitivo para el modelo. Sin embargo, este aspecto ha de vigilarse de cerca en las codificaciones ponderadas, donde el impacto podrá ser mayor.
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c|c}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MSE & 1,096588 & 0,106495 \\
+		MAE & 0,356679 & 0,020001 \\
+		MAPE & 2,780652 & 0,213355 \\
+		MSPE & 110744,161458 & 41945,4380 \\
+		RMSE & 1,045978 & 0,050186 \\
+		TrainTime(s) & 6437,735532 & 1826,084507 \\
+		TestTime(s) & 75,916715 & 1,479102 \\
+		\bottomrule
+	\end{tabular}
+	\caption{TINA: métricas de rendimiento para Informer}
+	\label{tinainformer}
+\end{table}
+
+\paragraph{PE sinusoidal}
+
+Con el fin de evaluar si el modelo Informer, utilizando su esquema de codificación por defecto, ofrece un rendimiento superior al diseño original de los Transformers, analizaremos a continuación los resultados obtenidos al aplicar exclusivamente la codificación seno–coseno a los datos.\\
+
+En la tabla \ref{tinasincos} se muestran los resultados obtenidos para todas las métricas. De nuevo, tenemos que descartar las métricas diferentes a MAE y MSE, que por desgracia, se ven demasiado afectadas por los efectos de las anomalías y aumentan desproporcionadamente su valor. Pero, si nos fijamos en las dos escogidas, podemos ver que se produce un empeoramiento considerable del resultado, especialmente en MSE, debido al efecto potenciador del cuadrado. En MAE también es apreciable, aunque de forma más suave, suponiendo un empeoramiento de $0,03$ sobre Informer. El tiempo de ejecución también ha aumentado, debido a que la convergencia ha sido más lenta y se ha requerido un mayor número de épocas, y no compensa que el coste de la codificación sea menor.
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c|c}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MSE & 1,247064 & 0,137599 \\
+		MAE & 0,386111 & 0,016464 \\
+		MAPE & 3,130485 & 0,223893 \\
+		MSPE & 83611,562500 & 5558,4220 \\
+		RMSE & 1,115078 & 0,060539 \\
+		TrainTime(s) & 10709,456470 & 3030,954371 \\
+		TestTime(s) & 191,650185 & 0,539033 \\
+		\bottomrule
+	\end{tabular}
+	\caption{TINA: métricas de rendimiento para encoding seno-coseno}
+	\label{tinasincos}
+\end{table}
+
+\paragraph{WinStatFlex}
+
+Para WinStatFlex, podemos encontrar los resultados para las métricas en la tabla \ref{tinaflex}, mientras que los pesos de la suma ponderada se ubican en la tabla \ref{tinaflexpesos}.
+
+\begin{itemize}
+	\item El rendimiento del modelo requiere un análisis cuidadoso de las métricas. Si tomamos como referencia el MSE, su valor, $1,148$, nos hace entender que este modelo es considerablemente peor a Informer, que arrojaba $1,0965$. Sin embargo, si nos fijamos en el MAE, que por definición es más estable para este problema, apreciamos una mejora, pues pasamos del $0,3566$ de Informer a $0,317$, siendo una mejora de 0,038 aproximadamente (11,9\%). Teniendo en cuenta la suposición realizada sobre MAE, estableceremos que el rendimiento de este modelo es, por tanto, positivo.
+	
+	\item Los pesos del modelo (tabla \ref{tinaflexpesos}) arrojan resultados relevantes de comentar. La componente asociada a estadísticos y lags parece ser la más relevante de todas, siendo el 38,14\% de la ponderación. La codificación fija es el encoding absoluto que más predomina de los 3, alcanzando una aportación del 27,52\%. Las variantes LPE, pero especialmente tAPE, cobran un menor protagonismo en los resultados.
+	
+	\item Por último, el tiempo promedio de entrenamiento ha aumentado hasta las 7 horas, siendo muy más alto que el visto en Informer, concretamente 4 veces más. Observando la escasa distancia entre modelos, Informer ofrece un resultado más equilibrado tiempo-resultados, indicando a priori, a falta de confirmar en TPE, que en series de mayor extensión el impacto de la semántica ayuda, pero el sobrecoste a pagar puede ser demasiado elevado.
+\end{itemize}
+ 
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c|c}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MSE & 1,148123 & 0,101258 \\
+		MAE & 0,317082 & 0,007091 \\
+		MAPE & 2,523967 & 0,158450 \\
+		MSPE & 48155,902018 & 22603,7360 \\
+		RMSE & 1,070447 & 0,047603 \\
+		TrainTime(s) & 25612,583748 & 2671,774248 \\
+		TestTime(s) & 471,924614 & 4,538266 \\
+		\bottomrule
+	\end{tabular}
+	\caption{TINA: métricas de rendimiento para WinStatFlex}
+	\label{tinaflex}
+\end{table}
+ 
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c}
+		\toprule
+		Componente & Peso aprendido \\
+		\midrule
+		Stats & 0,3814 \\
+		PE & 0,2752 \\
+		LPE & 0,1918 \\
+		tAPE & 0,1515 \\
+		\bottomrule
+	\end{tabular}
+	\caption{TINA: valores aprendidos en los pesos del encoding WinStatFlex}
+	\label{tinaflexpesos}
+\end{table}
+
+\paragraph{WinStatTPE}
+
+El siguiente encoding evaluado es WinStatTPE, cuyas métricas podemos encontrar en la tabla \ref{tinatpe} y los pesos correspondientes a las componentes en la tabla \ref{tinatpepesos}. Podemos destacar los siguientes aspectos:
+
+\begin{itemize}
+	\item Las métricas de rendimiento siguen el mismo comportamiento que el visto en WinStatFlex: MSE muestra un empeoramiento respecto a Informer, pero MAE establece que se ha producido una mejora, pero tanto con Informer como con WinStatFlex. Por tanto, siguiendo nuestro razonamiento sobre la estabilidad de las métricas, y atendiendo únicamente a MAE, estamos consiguiendo una mejora de $44^{-3}$ con respecto a Flex, pero una considerablemente mayor con Informer, ya que hemos pasado de $0,356679$ a $0,317082$.
+	
+	\item La distribución de pesos ha cambiado significativamente, optando ahora por una configuración mucho más equilibradas en todas las componentes. Tan solo destacar que las de mayor relevancia, por poco margen, parecen ser TPE y los valores estadísticos, ambas con el mismo peso normalizado de $0,263$.
+	
+	\item Por último, el rendimiento sigue siendo un aspecto crítico, requiriendo ahora un promedio de 10 horas para completar el entrenamiento. Al menos, la varianza de este parece menor, ya que en todos los casos el modelo ha requerido 6 épocas antes de detenerse por early stopping.
+\end{itemize}
+
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c|c}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MSE & 1,133453 & 0,121601 \\
+		MAE & 0,312652 & 0,021571 \\
+		MAPE & 2,544894 & 0,114816 \\
+		MSPE & 49108,398700 & 23029,2045 \\
+		RMSE & 1,063045 & 0,058214 \\
+		TrainTime(s) & 35866,691845 & 116,147264 \\
+		TestTime(s) & 438,925862 & 12,634359 \\
+		\bottomrule
+	\end{tabular}
+	\caption{TINA: métricas de rendimiento para WinStatTPE}
+	\label{tinatpe}
+\end{table}
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c}
+		\toprule
+		Componente & Peso aprendido \\
+		\midrule
+		Stats & 0,263 \\
+		PE & 0,245 \\
+		LPE & 0,229 \\
+		TPE & 0,263 \\
+		\bottomrule
+	\end{tabular}
+	\caption{TINA: valores aprendidos en los pesos del encoding WinStatTPE}
+	\label{tinatpepesos}
+\end{table}
+
+En definitiva, parece que este modelo es capaz de ofrecer mejor rendimiento que Informer y WinStatFlex, pero asumiendo un coste aún mayor con respecto a ambos en tiempo de ejecución. Dicho incremento podría incluso llevarnos a decantarnos por la variante Flex, debido a la escasa diferencia promedio encontrada en MAE, en caso de que necesitásemos implementar un sistema real de predicción con estos datos.
+
+\paragraph{Informer sin PE}
+
+Por último se ha ejecutado un modelo sin ningún tipo de codificación posicional para medir el impacto de su ausencia. Tal y como se muestra en la tabla \ref{tinanope}, su rendimiento en cuanto MAE es el segundo peor de todos los modelos evaluados, evidenciando la necesidad de encoding. Curiosamente, la codificación seno-coseno sí que se encuentra clasificada por detrás, obteniendo aún peores resultados, emulando una situación muy similar a la ya vista con ETTh2. Al igual que en este último, es probable que la ausencia de contenido semántico en la codificación posicional tradicional no permita un correcto ordenamiento de la información al no apoyarse en la relatividad y la semática y los resultados se vean alterados negativamente.
+
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{l|c|c}
+		\toprule
+		Métrica & Media & STD \\
+		\midrule
+		MSE & 1,225175 & 0,213712 \\
+		MAE & 0,366518 & 0,017925 \\
+		MAPE & 2,872100 & 0,106873 \\
+		MSPE & 74118,093750 & 52512,9700 \\
+		RMSE & 1,102336 & 0,100149 \\
+		TrainTime(s) & 14390,446017 & 7472,113055 \\
+		TestTime(s) & 212,148864 & 0,769808 \\
+		\bottomrule
+	\end{tabular}
+	\caption{TINA: métricas de rendimiento  en ausencia de PE}
+	\label{tinanope}
+\end{table}
+
+
+\subsubsection{Eleccióin del mejor modelo}
+
+Ahora que disponemos de todas las métricas recopiladas para cada modelo, podemos proceder a ordenar los resultados y ver las diferencias entre todas las propuestas. Al igual que en los conjuntos anteriores, podemos observar los resultados en la tabla \ref{tinafinal}, donde los modelos han sido ordenados por MSE. Adicionalmente, se han incluido las variantes barajadas de WinStatFlex y WinStatTPE para verificar el comportamiento de los modelos cuando se rompe el orden temporal. Para una comparación más intuitiva, se ha incluido adicionalmente el gráfico de barras \ref{tinafinal1}.
+
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{l|c|c|c|c}
+		\toprule
+		Modelo & MSE (Media) & MSE (STD) & MAE (Media) & MAE (STD) \\
+		\midrule
+		Informer & 1,096588 & 0,106495 & 0,356679 & 0,020001 \\
+		WinStatTPE (Shuf.) & 1,126912 & 0,171745 & 0,454709 & 0,012089 \\
+		WinStatTPE & 1,133453 & 0,121601 & 0,312652 & 0,021571 \\
+		WinStatFlex & 1,148123 & 0,101258 & 0,317082 & 0,007091 \\
+		No PE & 1,225175 & 0,213712 & 0,366518 & 0,017925 \\
+		PE (sin/cos) & 1,247064 & 0,137599 & 0,386111 & 0,016464 \\
+		\bottomrule
+	\end{tabular}
+	\caption{TINA: resultados ordenados por MSE, incluyendo modelos barajados}
+	\label{tinafinal}
+\end{table}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.45]{img/tinafinal1}
+	\caption{TINA: comparativa gráfica ordenada por MSE para los PE evaluados}
+	\label{tinafinal1}
+\end{figure}
+
+Se pueden apreciar casos muy extraños, como que el modelo WinStatTPE barajado obtiene mejor MSE que el modelo no barajado. Esto no tiene ningún sentido desde el punto de vista teórico, ya que desordenar la estructura temporal de la serie en el decoder está rompiendo la naturaleza de la serie y su localidad asociada. Pero si en su lugar miramos el MAE, vemos que la diferencia es muy alta, de $0,142$ más alto en el caso del modelo \textit{Shuffled}. Por tanto, aunque pueda parecer que el modelo no funciona adecuadamente, si lo esta haciendo pero MSE no es la adecuada por la propia naturaleza de TINA.\\
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.45]{img/tinafinal2}
+	\caption{TINA: comparativa gráfica ordenada por MAE para los PE evaluados}
+	\label{tinafinal2}
+\end{figure}
+
+Si en su lugar, ordenamos los modelos por MAE, la situación resulta mucho más cercana a todos los casos anteriores, y muestra un comportamiento más lógico. Como se puede apreciar en la figura \ref{tinafinal2}, ahora los modelos barajados pasan al final de la lista, y los encodings WinStatTPE y WinStatFlex ocupan los dos primeros lugares en ese orden, con una escasa diferencia entre sí. Informer queda en tercera posición, seguido de cerca por el modelo no codificado y el de seno-coseno, poniendo así en jaque las propiedades del modelo original. Pero este efecto puede verse potenciado por las escasas diferencias, a nivel general, entre todos los modelos ejecutados, fruto de la extensa longitud y anchura del dataset, que dificulta su codificación.\\
+
+Por tanto, podemos concluir que los modelos WinStatTPE y WinStatFlex son los mejores para este conjunto de datos, siguiendo así la misma tendencia que los 3 anteriores datasets. Sin embargo, es importante destacar que, dada la distancia mínima entre los resultados de TPE y Flex, usar la segunda variante podría ser más razonable en caso de que el tiempo de entrenamiento sea clave, ya que el tiempo requerido para este es, en promedio, menor.
