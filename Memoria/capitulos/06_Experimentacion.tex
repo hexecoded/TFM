@@ -57,11 +57,11 @@ Una vez justificado el procedimiento de ejecución a seguir para los experimento
 
 La estructura seguida por los experimentos será la siguiente: primero, evaluaremos cuales de las cinco propuestas formuladas obtiene el mejor rendimiento sobre un conjunto de referencia, Household Power Consumption~\cite{hebrail2006individual}, y posteriormente, procederemos a analizar su utilidad en el resto de conjuntos de datos.
 
-\subsection{Evaluación de las alternativas sobre el conjunto HPC}
+\subsection{HPC: Evaluación de PE}
 
 El dataset de Individual Household Power Consumption ha sido el conjunto escogido para evaluar, en primer lugar, las 5 variantes de nuestro método de encoding. Esta decisión viene motivada por dos aspectos; en primer lugar, este conjunto de datos dispone de una longitud suficiente para inferir la información relevante de la serie y realizar predicciones a largo plazo, y además, en el comportamiento de sus variables vimos aspectos como la estacionalidad, la cual es más difícil de modelar para un Transformer, y ausencia de estacionalidad, lo cual a priori podría suponer un problema para la aplicación de métodos clásicos. Pero, principalmente, la decisión de escoger un dataset viene motivada por le coste computacional: evaluar todas las alternativas en cada uno de los conjuntos de datos podría requerir semanas e incluso meses para completar por cada dataset, lo cual se escapa de los recursos y limitaciones temporales de las que disponemos.\\
 
-\subsubsection{Resultados}
+\subsubsection{Análisis y resultados}
 
 Por lo tanto, escoger un conjunto de datos más manejable como este, de aproximadamente 2 millones de mediciones, y 7 características, supone un interesante campo de pruebas para las codificaciones. Para la comparativa, realizaremos las siguientes ejecuciones:
 
@@ -464,7 +464,7 @@ Estos resultados refuerzan, por tanto, un mejor aprovechamiento del contexto loc
 A modo de resumen final, en la figura \ref{hpcgraphshuffled} se representan los resultados de los modelos comparados con el barajado, para apreciar de manera visual que las diferencias entre pares de modelos ahora son bastante notables en comparación con Informer original.
 
 
-\subsection{Evaluación de las alternativas sobre el conjunto ETT}
+\subsection{ETT: Evaluación de PE}
 
 ETT será nuestro segundo entorno de pruebas para los encodings. En este caso, escogeremos únicamente las variantes WinStatFlex y WinStatTPE, debido a la decisión tomada en el apartado anterior para filtrar los encodings más diferenciales respecto al modelo de referencia. \\
 
@@ -473,7 +473,7 @@ Este dataset presenta una longitud bastante más reducida que el anterior, espec
  Para validar este efecto en diferentes contextos, se realizarán las pruebas sobre los dos transformadores, es decir, sobre los conjuntos de datos \textit{ETTh1} y \textit{ETTh2}, correspondientes a las variantes horarias, con el fin de comprobar si el comportamiento de ambos sistemas, medidos bajo las mismas condiciones, pero con diferentes comportamientos, nos aportan conclusiones similares. Comenzaremos el examen por la variante ETTh1 y posteriormente analizaremos ETTh2 para cada algoritmo.
 
 
-\subsubsection{Resultados}
+\subsubsection{Análisis y resultados}
 
 Una vez configurado el entorno de pruebas, podemos pasar a la evaluación del modelo. Al igual que se hizo con HPC, se han fijado todos los parámetros comunes a los algoritmos a los mismos valores con el objetivo de que la configuración de la arquitectura no afecte a los resultados, y sea el propio encoding el que determine la diferencia. La arquitectura y los parámetros asociados se pueden ver en la tabla \ref{ajustesett}. En este caso, el horizonte de predicción y el tamaño de ventana son menores, para así adecuarnos al tamaño de los datos disponibles, y teniendo en cuenta también que la granularidad es horaria.
 
@@ -842,7 +842,7 @@ En ETTh2, por su parte, aunque el empeoramiento también es significativo, pasan
 
 \subsubsection{Elección del mejor modelo}
 
-Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos definitivamente escoger el modelo de codificación que mejores resultados ha obtenido. Para contrastarlo también visualmente, se han creado los gráficos \ref{etth1fin} y \ref{etth2fin}, los cuales recogen los resultados de los subconjuntos ETTh1 y ETTh2, respectivamente.\\
+Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos definitivamente escoger el modelo de codificación que mejores resultados ha obtenido. Para contrastarlo también visualmente, se han creado los gráficos \ref{etth1fin} y \ref{etth2fin}, los cuales recogen los resultados de los subconjuntos ETTh1 y ETTh2, respectivamente. En ambos, se muestran también los resultados de barajar la entrada del decoder tanto para WinStatFlex como para WinStatTPE.\\
 
 
 \begin{figure}[!ht]
@@ -860,8 +860,20 @@ Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos de
 	\label{etth2fin}
 \end{figure}
 
-En ellos, se puede apreciar fácilmente como WinStatFlex y WinStatTPE obtienen los mejores resultados con diferencia, aunque destacando el modelo Flex especialmente. Informer ofrece un resultado intermedio, siendo empeorados sus resultados al emplear la codificación fija seno/coseno y o no usar encoding. El calibre de estas diferencias es aún mucho más notable en el segundo, como ya vimos numéricamente en el subpunto anterior.\\
+Se puede observar claramente que WinStatFlex y WinStatTPE alcanzan los mejores resultados, destacando especialmente el primero. Informer, en cambio, ofrece un desempeño intermedio, que se ve reducido cuando se emplea la codificación fija de senos/cosenos, pero es mejor a la hora de prescindir de cualquier encoding. La magnitud de estas diferencias se vuelve aún más evidente en el segundo conjunto de datos, tal y como se mostró numéricamente en el subpunto anterior.\\
 
-En los resultados de ETTh2 además resalta especialmente el pésimo rendimiento de la codificación sinusoidal. Es posible que, en ese conjunto de datos concreto, la inclusión de senos y cosenos pueda introducir información posicional que no se alinea perfectamente con las relaciones temporales reales de la serie, y afecte negativamente la capacidad del modelo para capturar patrones relevantes cuando no se complementa adecuadamente con otros mecanismos. Al omitir cualquier PE, el modelo parece aprender directamente de la estructura pura de los datos, y se ve menos afectado por este problema.\\
+En el subconjunto ETTh1, podemos ver que el barajado de las dos propuestas analizadas, a pesar de empeorar gravemente los resultados tanto para MAE como para MSE (aumentándolos en $0,2$ en ambos métricas para Flex; 0,31 y 0,169 para MSE y MAE de la variante T-PE, respectivamente) sigue ofreciendo mejores resultados que no utilizar ningún tipo de codificación. Este comportamiento resulta interesante, ya que normalmente podríamos esperar que desordenar la información semántica dificultara aún más el aprendizaje que no disponer de ella.\\
 
-Sin embargo, esto no pone en duda la necesidad absoluta de disponer de un encoding flexible y con gran capacidad semántica y local, que permita al modelo adaptarse correctamente a los distintos conjuntos de datos y relaciones temporales.
+En el caso de ETTh2 resalta especialmente el pésimo rendimiento de la codificación sinusoidal, siendo esta peor incluso que los modelos con codificación y semántica barajadas. Es posible que, en ese conjunto de datos concreto, la inclusión de senos y cosenos pueda introducir información posicional que no se alinea perfectamente con las relaciones temporales reales de la serie, y afecte negativamente la capacidad del modelo para capturar patrones relevantes cuando no se complementa adecuadamente con otros mecanismos. Al omitir cualquier PE, el modelo parece aprender directamente de la estructura pura de los datos, y se ve menos afectado por este problema.\\
+
+En conclusión, estos resultados ponen en valor y refuerzan la necesidad de un encoding flexible y con gran capacidad semántica y local, que permita al modelo adaptarse correctamente a su estructura, incluso en conjuntos menos extensos como este.
+
+\subsection{Yellow Trip Data: Evaluación de PE}
+
+Yellow Trip será el tercer conjunto de datos empleado para evaluar el rendimiento de las propuestas de encoding. A diferencia de los dos datasets anteriores, este presenta un cambio significativo en el contexto semántico, pues se abandona el entorno de los sistemas eléctricos para centrarse en los taxis de Nueva York. Además de su distinta naturaleza, marcada por una estacionalidad más pronunciada, resulta relevante la característica previamente señalada: los datos fueron ampliados de manera artificial. \\
+
+Aunque esta expansión podría parecer beneficiosa desde el punto de vista del entrenamiento, pues disponemos de un conjunto más extenso, también podría generar sesgos. Esto se debe a que la serie probablemente fue aumentada mediante modelos predictivos, que, como hemos estudiado a lo largo de este trabajo, tienden a simplificar excesivamente los patrones originales. Por tanto, es posible que los resultados obtenidos con este dataset sean especialmente optimistas, ya que Informer, será capaz de modelarlo de manera fiel, arrojando tasas de error muy bajas.\\
+
+En los siguientes apartados, analizaremos los resultados, teniendo especial cuidado con la escala del MSE y contrastando con el error absoluto con los resultados sean confusos.
+
+\subsubsection{Análisis y resultados}
