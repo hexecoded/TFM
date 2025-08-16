@@ -2,11 +2,12 @@
 
 Una vez expuestas todas las condiciones del entrenamiento, como los modelos a probar, las métricas, funciones de pérdida y presentados los datos, podemos dar paso al entrenamiento. Sin lugar a dudas, es la fase más lenta de todo el proceso, la cual ha prolongado su desarrollo considerablemente. El objetivo es claro: poner a prueba las 5 propuestas realizadas para establecer, en primer lugar, cuál o cuáles de ellas son competitivas, y posteriormente, evaluar todos los conjuntos de datos para medir la ganancia con respecto al conjunto de datos original.
 
-\section{Consideraciones previas: ¿Cómo detectar si un modelo es mejor de manera justa?}
+\section{Consideraciones previas}
 
 A la hora de realizar las pruebas, existen multitud de factores que pueden influir en los resultados, y los cuales debemos controlar minuciosamente para evitar problemas que alteren los resultados y nos den una idea equivocada del rendimiento. Entre ellos, podemos encontrar las inicializaciones aleatorias de los pesos, el riesgo de sobreaprendizaje y en casos de extremada similaridad de resultados, la calidad semántica aportada por la codificación que estamos evaluando.\\
 
-Para tratar de minimizar el impacto de estos factores y facilitar el análisis de calidad de los positional encodingds propuestos, tomaremos una serie de medidas las cuales examinaremos a continuación.
+Para reducir el impacto de estos factores que pueden distorsionar la evaluación y, al mismo tiempo, facilitar un análisis más preciso de la calidad de los \textit{positional encodings} propuestos, tomaremos una serie de medidas que detallaremos a continuación. Estas acciones buscan garantizar que la comparación entre modelos sea lo más justa y representativa posible. Asimismo, dedicaremos especial atención a la elección de un parámetro fundamental en el rendimiento de algunos métodos: el tamaño de ventana, cuya correcta configuración resulta determinante para obtener los mejores resultados posibles.
+
 
 \subsection{Impacto de la inicialización aleatoria}
 
@@ -51,6 +52,42 @@ Sin embargo, en el artículo mencionado se llega a la conclusión de que los mec
 
 En nuestro caso, teniendo en cuenta que nuestra arquitectura se basa en la estructura de Informer, pero simplificando el mecanismo de atención al prescindir del muestreo y las convoluciones, la escasez mantenimiento del orden podría afectarnos de manera similar. Pero, en este caso, queremos evaluar la efectividad de los métodos de codificación propuestos en este trabajo, por lo que repetiremos el experimento, pero en lugar de hacerlo con la codificación por defecto, que ya conocemos sus resultados, con nuestras alternativas. El objetivo es claro: tratar de demostrar que permiten conservar una mayor semántica de los datos y se ven más perjudicados frente al desorden que la tradicional codificación seno-coseno.
 
+\subsection{Elección adecuada del tamaño de ventana}
+
+Otra de las preguntas clave que nos puede surgir a la hora de evaluar la familia de encodings propuesta es la siguiente: ¿Qué tamaño de ventana es el adecuado?.\\
+
+Este valor es un parámetro de entrada común a las cinco variantes de encodings propuestas en este trabajo, y determina cuánta información del entorno se toma como parte del contexto de cada posición, enriqueciéndolo con información asociada a estadísticas y los rezagos anteriores. Un mayor tamaño de ventana excesivamente grande puede provocar que los valores estadísticos sean demasiado genéricos, y no aporten información útil, mientras que una ventana demasiado pequeña puede contener demasiado ruido, y no sea útil para el modelo e incluso dificulte la detección de patrones.\\
+
+Por tanto, lo ideal sería emplear algún método de búsqueda de parámetros que nos permita probar con diferentes configuraciones y escoger la que mejor resultado ofrezca. Pero en conjuntos de datos de gran tamaño, esa tarea es prácticamente imposible debido al tiempo que sería necesario para realizar cada prueba. Por tanto, para disponer de una heurística a seguir, y que sea estimable en un tiempo reducido, podemos tomar las variantes horarias del dataset ETT, de tamaño reducido, y realizar un pequeño experimento: tomar los valores de longitud de secuencia, etiqueta y predicción empleados en el paper original de Informer y probar con diferentes tamaños de ventana entre 3 y longitud de secuencia.\\
+
+Estos parámetros son:
+
+\begin{itemize}
+	\item Longitud de secuencia: 96
+	\item Longitud de etiqueta: 48
+	\item Longitud de predicción: 24
+\end{itemize}
+
+Para realizar el estudio de forma intuitiva y visual, realizaremos el análisis de forma gráfica: ejecutando ETTh1 y ETTh2 con todos los valores de ventana entre 3 y 96, y realizando cada configuración 10 veces para obtener así un valor estable, pues al evaluar tamaños de ventana muy juntos las diferencias serán mínimas y así reducimos el ruido todo lo posible. Los resultados los podemos encontrar en las figuras \ref{mean_mse_vs_window_ETTh1} para ETTh1 y en la \ref{mean_mse_vs_window_ETTh2} para ETTh2, marcando en negrita los 5 mejores resultados obtenidos.\\
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.475]{img/mean_mse_vs_window_ETTh1}
+	\caption{Estudio del tamaño de ventana (ETTh1)}
+	\label{mean_mse_vs_window_ETTh1}
+\end{figure}
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[scale=0.475]{img/mean_mse_vs_window_ETTh2}
+	\caption{Estudio del tamaño de ventana (ETTh2)}
+	\label{mean_mse_vs_window_ETTh2}
+\end{figure}
+
+En ambos casos, los valores se sitúan entre el 24 y el 36, siendo el 24 exactamente $1/4$ del valor de longitud de secuencia, 96, y el 36 algo más de la tercera parte de este. Por tanto, una heurística razonable podría ser ubicar el valor de tamaño de ventana entre una cuarta o tercera parte de la longitud de secuencia. Si bien deducir este resultado tan solo de dos conjuntos de datos puede ser demasiado optimista, al menos nos permite tener un punto de partida, sabiendo que en el resto de conjuntos sería imposible realizar un experimento de este tipo en un tiempo razonable.
+
 \section{Resultados de los experimentos}
 
 Una vez justificado el procedimiento de ejecución a seguir para los experimentos realizados, podemos comenzar a analizar los resultados obtenidos en el entrenamiento de los mismos. Tal y como se especificó en el capítulo \ref{cap5}, compararemos los resultados haciendo uso de las métricas de regresión especificadas, pero haciendo especial hincapié en el MAE y MSE.\\
@@ -59,7 +96,7 @@ La estructura seguida por los experimentos será la siguiente: primero, evaluare
 
 \subsection{HPC: Evaluación de PE}
 
-El dataset de Individual Household Power Consumption ha sido el conjunto escogido para evaluar, en primer lugar, las 5 variantes de nuestro método de encoding. Esta decisión viene motivada por dos aspectos; en primer lugar, este conjunto de datos dispone de una longitud suficiente para inferir la información relevante de la serie y realizar predicciones a largo plazo, y además, en el comportamiento de sus variables vimos aspectos como la estacionalidad, la cual es más difícil de modelar para un Transformer, y ausencia de estacionalidad, lo cual a priori podría suponer un problema para la aplicación de métodos clásicos. Pero, principalmente, la decisión de escoger un dataset viene motivada por le coste computacional: evaluar todas las alternativas en cada uno de los conjuntos de datos podría requerir semanas e incluso meses para completar por cada dataset, lo cual se escapa de los recursos y limitaciones temporales de las que disponemos.\\
+El dataset de Individual Household Power Consumption ha sido el conjunto escogido para evaluar, en primer lugar, las 5 variantes de nuestro método de encoding. Esta decisión viene motivada por dos aspectos; en primer lugar, este conjunto de datos dispone de una longitud suficiente para inferir la información relevante de la serie y realizar predicciones a largo plazo, y además, en el comportamiento de sus variables vimos aspectos como la estacionalidad, la cual es más difícil de modelar para un Transformer, y ausencia de estacionalidad, lo cual a priori podría suponer un problema para la aplicación de métodos clásicos. Pero, principalmente, la decisión de escoger un dataset viene motivada por le coste computacional: evaluar todas las alternativas en cada uno de los conjuntos de datos podría requerir semanas e incluso meses para completar por cada dataset, lo cual se escapa de los recursos y limitaciones temporales de las que disponemos.
 
 \subsubsection{Análisis y resultados}
 
@@ -153,9 +190,7 @@ A continuación, comenzaremos a probar las nuevas alternativas, para ver si cons
 
 \paragraph{WinStat}
 
-Comenzamos por la primera de las propuestas, la cual se basa únicamente en la adición información estadística a través de una ventana deslizante.\\
-
-Recordando su funcionamiento, este método requiere especificar el tamaño de la ventana, la cual recorre los datos para extraer y concatenar información local sobre la media, la desviación estándar y los valores extremos en su entorno. Por tanto, la elección de un tamaño de ventana adecuado resulta crítico para garantizar un rendimiento óptimo, sin comprometer la eficiencia del modelo. Como criterio heurístico, se empleará una longitud comprendida entre un tercio y un cuarto del tamaño de la secuencia de entrada, ya que ofrece un equilibrio razonable entre el mínimo posible, 3, y el extremo opuesto de utilizar una ventana de tamaño longitud de la secuencia.\\
+Comenzamos por la primera de las propuestas, la cual se basa únicamente en la adición información estadística a través de una ventana deslizante. Recordando su funcionamiento, este método requiere especificar el tamaño de la ventana, la cual recorre los datos para extraer y concatenar información local sobre la media, la desviación estándar y los valores extremos en su entorno. Por tanto, la elección de un tamaño de ventana adecuado resulta crítico para garantizar un rendimiento óptimo. Para ello, utilizaremos nuestro criterio heurístico, empleando en este caso, 60, que es un tercio de la longitud de secuencia.\\
 
 Los resultados para esta alternativa son significativamente mejores y más estables (tabla \ref{hpcwin}) que en los casos anteriores, ya que hemos conseguido reducir tanto MAE como MSE, reduciendo además la varianza de los resultados. Tomando esta última como referencia, podemos apreciar que la mejora es superior a las tres centésimas ($0,502$ vs $0,537$), aportando una mejora considerable del 6\%. Sin embargo, esta mejora de rendimiento ha tenido un gran impacto en el tiempo de cómputo: este es ahora mucho mayor que en casos anteriores, con una variabilidad además mucho más alta, de casi una hora.\\
 
@@ -184,9 +219,6 @@ En promedio, se ha requerido $17697$ segundos, unas 4,9 horas, para completar ca
 
 WinStatLags es la siguiente propuesta de encoding a evaluar, siguiendo la estrategia especificada de ir aumentando de manera creciente la complejidad de los modelos. La principal característica de este modelo consistía en la incorporación de diferencias mediante lags, las cuales potencian el contexto local. Siguiendo las misma configuración que en los casos anteriores, obtenemos los resultados de la tabla \ref{hpcwinlags}.\\
 
-Volvemos a obtener una mejora pequeña, esta vez del $0,01$ sobre el modelo de ventana sin lags para el MSE, y una reducción del resto de métricas de error, aunque con un empeoramiento marginal registrado en MAE. Aunque dicha diferencia parezca mínima, es significativa si la tenemos en cuenta con respecto al modelo original. Además, en cuestiones de tiempo de ejecución, hemos conseguido unos tiempos de entrenamiento inferiores, sobre todo, gracias a la reducción de la variabilidad de los resultados. Podemos observar que hemos pasado de una varianza cercana a la hora por cada ejecución, a aproximadamente 24 minutos, reduciendo así casi en un tercio la variabilidad del resultado. Esto justifica por tanto la inclusión de esta nueva componente, que se mantiene como estaba previsto en el resto de codificaciones.
-
-
 \begin{table}[!ht]
 	\centering
 	\begin{tabular}{l|c|c}
@@ -205,6 +237,10 @@ Volvemos a obtener una mejora pequeña, esta vez del $0,01$ sobre el modelo de v
 	\caption{HPC: resultados para encoding WinStatLags}
 	\label{hpcwinlags}
 \end{table}
+
+Volvemos a obtener una mejora pequeña, esta vez del $0,01$ sobre el modelo de ventana sin lags para el MSE, y una reducción del resto de métricas de error, aunque con un empeoramiento marginal registrado en MAE. Aunque dicha diferencia parezca mínima, es significativa si la tenemos en cuenta con respecto al modelo original. Además, en cuestiones de tiempo de ejecución, hemos conseguido unos tiempos de entrenamiento inferiores, sobre todo, gracias a la reducción de la variabilidad de los resultados. Podemos observar que hemos pasado de una varianza cercana a la hora por cada ejecución, a aproximadamente 24 minutos, reduciendo así casi en un tercio la variabilidad del resultado. Esto justifica por tanto la inclusión de esta nueva componente, que se mantiene como estaba previsto en el resto de codificaciones.
+
+
 
 \paragraph{WinStatFlex}
 
@@ -1382,7 +1418,7 @@ Ahora que disponemos de todas las métricas recopiladas para cada modelo, podemo
 
 \begin{figure}[!ht]
 	\centering
-	\includegraphics[scale=0.475]{img/tinafinal1}
+	\includegraphics[scale=0.45]{img/tinafinal1}
 	\caption{TINA: comparativa gráfica ordenada por MSE para los PE evaluados}
 	\label{tinafinal1}
 \end{figure}
@@ -1391,7 +1427,7 @@ Se pueden apreciar casos muy extraños, como que el modelo WinStatTPE barajado o
 
 \begin{figure}[!ht]
 	\centering
-	\includegraphics[scale=0.475]{img/tinafinal2}
+	\includegraphics[scale=0.45]{img/tinafinal2}
 	\caption{TINA: comparativa gráfica ordenada por MAE para los PE evaluados}
 	\label{tinafinal2}
 \end{figure}
