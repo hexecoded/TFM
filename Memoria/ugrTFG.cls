@@ -379,3 +379,4 @@
 %	\miMentor
 %\end{minipage}
   }
+\newcolumntype{N}{>{$}c<{$}}

@@ -269,9 +269,9 @@ Los resultados de este algoritmo requieren una mayor atención, dada la multitud
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c}
+		\begin{tabular}{l|N}
 		\toprule
-		Componente & Peso aprendido \\
+		Componente & \text{Peso aprendido} \\
 		\midrule
 		Stats & 0,3241 \\
 		PE & 0,2355 \\
@@ -318,11 +318,11 @@ Una vez estudiado el excelente rendimiento de WinStatFlex, es el turno de su var
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c}
+		\begin{tabular}{l|N}
 		\toprule
-		Componente & Peso aprendido \\
+		Componente & \text{Peso aprendido} \\
 		\midrule
-		Stats & 0,24 \\
+		Stats & 0,240 \\
 		PE & 0,258 \\
 		LPE & 0,271 \\
 		TPE & 0,231 \\
@@ -369,10 +369,10 @@ WinStatSPE será nuestra última variante a probar de las propuestas por este tr
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c}
-		\toprule
-		Componente & Peso aprendido \\
-		\midrule
+	\begin{tabular}{l|N}
+	\toprule
+	Componente & \text{Peso aprendido} \\
+	\midrule
 		Stats &0,2505 \\
 		PE & 0,2361 \\
 		LPE &  0,1948 \\
@@ -661,9 +661,9 @@ Ahora procedemos a evaluar WinStatFlex, para ver si conseguimos mejorar los resu
 	\hfill
 	\begin{minipage}{0.4\textwidth}
 		\centering
-		\begin{tabular}{l|c}
+			\begin{tabular}{l|N}
 			\toprule
-			Componente & Peso aprendido \\
+			Componente & \text{Peso aprendido} \\
 			\midrule
 			Stats & 0,2704 \\
 			PE & 0,2506 \\
@@ -711,9 +711,9 @@ Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejo
 	\hfill
 	\begin{minipage}{0.4\textwidth}
 		\centering
-		\begin{tabular}{l|c}
+			\begin{tabular}{l|N}
 			\toprule
-			Componente & Peso aprendido \\
+			Componente & \text{Peso aprendido} \\
 			\midrule
 			Stats & 0,2569 \\
 			PE & 0,2504 \\
@@ -762,9 +762,9 @@ Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejo
  	\hfill
  	\begin{minipage}{0.4\textwidth}
  		\centering
- 		\begin{tabular}{l|c}
+ 			\begin{tabular}{l|N}
  			\toprule
- 			Componente & Peso aprendido \\
+ 			Componente & \text{Peso aprendido} \\
  			\midrule
  			Stats & 0,258 \\
  			PE & 0,247 \\
@@ -810,9 +810,9 @@ Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejo
  	\hfill
  	\begin{minipage}{0.4\textwidth}
  		\centering
- 		\begin{tabular}{l|c}
+ 			\begin{tabular}{l|N}
  			\toprule
- 			Componente & Peso aprendido \\
+ 			Componente & \text{Peso aprendido} \\
  			\midrule
  			Stats & 0,251 \\
  			PE & 0,249 \\
@@ -1062,9 +1062,9 @@ En cuanto al tiempo de entrenamiento, resulta interesante observar que, a pesar 
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c}
+	\begin{tabular}{l|N}
 	\toprule
-	Componente & Peso aprendido \\
+	Componente & \text{Peso aprendido} \\
 	\midrule
 	Stats & 0,2657 \\
 	PE & 0,2137 \\
@@ -1102,9 +1102,9 @@ Nuestra siguiente prueba emplea el encoding ponderado de TPE, WinStatTPE. La tab
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c}
+		\begin{tabular}{l|N}
 		\toprule
-		Componente & Peso aprendido \\
+		Componente & \text{Peso aprendido} \\
 		\midrule
 		Stats & 0,278 \\
 		PE & 0,238 \\
@@ -1306,9 +1306,9 @@ Para WinStatFlex, podemos encontrar los resultados para las métricas en la tabl
  
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c}
+		\begin{tabular}{l|N}
 		\toprule
-		Componente & Peso aprendido \\
+		Componente & \text{Peso aprendido} \\
 		\midrule
 		Stats & 0,3814 \\
 		PE & 0,2752 \\
@@ -1354,9 +1354,9 @@ El siguiente encoding evaluado es WinStatTPE, cuyas métricas podemos encontrar 
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c}
+	\begin{tabular}{l|N}
 		\toprule
-		Componente & Peso aprendido \\
+		Componente & \text{Peso aprendido} \\
 		\midrule
 		Stats & 0,263 \\
 		PE & 0,245 \\
@@ -1376,14 +1376,14 @@ Por último se ha ejecutado un modelo sin ningún tipo de codificación posicion
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
+	\begin{tabular}{l|N|N}
 		\toprule
-		Métrica & Media & STD \\
+		Métrica & \text{Media} & \text{STD} \\
 		\midrule
 		MSE & 1,225175 & 0,213712 \\
 		MAE & 0,366518 & 0,017925 \\
 		MAPE & 2,872100 & 0,106873 \\
-		MSPE & 74118,093750 & 52512,9700 \\
+		MSPE & 74118,093750 & 52512,970000 \\
 		RMSE & 1,102336 & 0,100149 \\
 		TrainTime(s) & 14390,446017 & 7472,113055 \\
 		TestTime(s) & 212,148864 & 0,769808 \\
@@ -1400,17 +1400,18 @@ Ahora que disponemos de todas las métricas recopiladas para cada modelo, podemo
 
 \begin{table}[h!]
 	\centering
-	\begin{tabular}{l|c|c|c|c}
+	\begin{tabular}{l|N|N|N|N}
 		\toprule
-		Modelo & MSE (Media) & MSE (STD) & MAE (Media) & MAE (STD) \\
+		Modelo & \text{MSE (Media)} & \text{MSE (STD)} & \text{MAE (Media)} & \text{MAE (STD)} \\
 		\midrule
-		Informer & 1,096588 & 0,106495 & 0,356679 & 0,020001 \\
-		WinStatTPE (Shuf.) & 1,126912 & 0,171745 & 0,454709 & 0,012089 \\
-		WinStatTPE & 1,133453 & 0,121601 & 0,312652 & 0,021571 \\
-		WinStatFlex & 1,148123 & 0,101258 & 0,317082 & 0,007091 \\
-		No PE & 1,225175 & 0,213712 & 0,366518 & 0,017925 \\
-		PE (sin/cos) & 1,247064 & 0,137599 & 0,386111 & 0,016464 \\
-		\bottomrule
+		Informer & 1,0965 & 0,1064 & 0,3566 & 0,0200 \\
+		WinStatTPE & 1,1334 & 0,1216 & 0,3126 & 0,0215 \\
+		WinStatFlex & 1,1481 & 0,1012 & 0,3170 & 0,0070 \\
+		No PE & 1,2251 & 0,2137 & 0,3665 & 0,0179 \\
+		PE (sin/cos) & 1,2470 & 0,13759 & 0,3861 & 0,0164 \\
+		WinStatFlex (Shuf.) & 1, & 0, & 0, & 0, \\
+		WinStatTPE (Shuf.) & 1,4412 & 0,1025 & 0,4511 & 0,0061 \\
+		\bottomrule 
 	\end{tabular}
 	\caption{TINA: resultados ordenados por MSE, incluyendo modelos barajados}
 	\label{tinafinal}
@@ -1423,7 +1424,7 @@ Ahora que disponemos de todas las métricas recopiladas para cada modelo, podemo
 	\label{tinafinal1}
 \end{figure}
 
-Se pueden apreciar casos muy extraños, como que el modelo WinStatTPE barajado obtiene mejor MSE que el modelo no barajado. Esto no tiene ningún sentido desde el punto de vista teórico, ya que desordenar la estructura temporal de la serie en el decoder está rompiendo la naturaleza de la serie y su localidad asociada. Pero si en su lugar miramos el MAE, vemos que la diferencia es muy alta, de $0,142$ más alto en el caso del modelo \textit{Shuffled}. Por tanto, aunque pueda parecer que el modelo no funciona adecuadamente, si lo esta haciendo pero MSE no es la adecuada por la propia naturaleza de TINA.\\
+Se puede apreciar que la distancia entre los tres primeros modelos es muy pequeña. Las variantes TPE y Flex se encuentran muy próximas entre sí, a $0,01$ de diferencia, mientras que Informer parece mostrar un rendimiento más diferenciador si tenemos en cuenta el MSE. Por su parte, desordenar la estructura temporal de la serie en el decoder está rompiendo la naturaleza de la serie y su localidad asociada tanto para WinStatFlex como para WinStatTPE. Pero, si en su lugar miramos el MAE, vemos que la diferencia entre los tres mejores es más alta. Por tanto, aunque pueda parecer que nuestra propuesta no funciona tan bien como en casos anteriores, si lo esta haciendo pero MSE puede distorsionar un poco los resultados por la propia naturaleza de TINA.\\
 
 \begin{figure}[!ht]
 	\centering
@@ -1432,7 +1433,7 @@ Se pueden apreciar casos muy extraños, como que el modelo WinStatTPE barajado o
 	\label{tinafinal2}
 \end{figure}
 
-Si en su lugar, ordenamos los modelos por MAE, la situación resulta mucho más cercana a todos los casos anteriores, y muestra un comportamiento más lógico. Como se puede apreciar en la figura \ref{tinafinal2}, ahora los modelos barajados pasan al final de la lista, y los encodings WinStatTPE y WinStatFlex ocupan los dos primeros lugares en ese orden, con una escasa diferencia entre sí. Informer queda en tercera posición, seguido de cerca por el modelo no codificado y el de seno-coseno, poniendo así en jaque las propiedades del modelo original. Pero este efecto puede verse potenciado por las escasas diferencias, a nivel general, entre todos los modelos ejecutados, fruto de la extensa longitud y anchura del dataset, que dificulta su codificación.\\
+Ordenando los modelos por MAE, la situación resulta mucho más cercana a todos los casos anteriores. Como se puede apreciar en la figura \ref{tinafinal2}, ahora los modelos barajados pasan al final de la lista, y los encodings WinStatTPE y WinStatFlex ocupan los dos primeros lugares en ese orden, con una escasa diferencia entre sí. Informer queda en tercera posición, seguido de cerca por el modelo no codificado y el de seno-coseno, poniendo así en jaque las propiedades del modelo original. Pero este efecto puede verse potenciado por las escasas diferencias, a nivel general, entre todos los modelos ejecutados, fruto de la extensa longitud y anchura del dataset, que dificulta su codificación.\\
 
 Por tanto, podemos concluir que los modelos WinStatTPE y WinStatFlex son los mejores para este conjunto de datos, siguiendo así la misma tendencia que los 3 anteriores datasets. Sin embargo, es importante destacar que, dada la distancia mínima entre los resultados de TPE y Flex, usar la segunda variante podría ser más razonable en caso de que el tiempo de entrenamiento sea clave, ya que el tiempo requerido para este es, en promedio, menor.
 
