@@ -1435,3 +1435,55 @@ Se pueden apreciar casos muy extraños, como que el modelo WinStatTPE barajado o
 Si en su lugar, ordenamos los modelos por MAE, la situación resulta mucho más cercana a todos los casos anteriores, y muestra un comportamiento más lógico. Como se puede apreciar en la figura \ref{tinafinal2}, ahora los modelos barajados pasan al final de la lista, y los encodings WinStatTPE y WinStatFlex ocupan los dos primeros lugares en ese orden, con una escasa diferencia entre sí. Informer queda en tercera posición, seguido de cerca por el modelo no codificado y el de seno-coseno, poniendo así en jaque las propiedades del modelo original. Pero este efecto puede verse potenciado por las escasas diferencias, a nivel general, entre todos los modelos ejecutados, fruto de la extensa longitud y anchura del dataset, que dificulta su codificación.\\
 
 Por tanto, podemos concluir que los modelos WinStatTPE y WinStatFlex son los mejores para este conjunto de datos, siguiendo así la misma tendencia que los 3 anteriores datasets. Sin embargo, es importante destacar que, dada la distancia mínima entre los resultados de TPE y Flex, usar la segunda variante podría ser más razonable en caso de que el tiempo de entrenamiento sea clave, ya que el tiempo requerido para este es, en promedio, menor.
+
+\section{Resumen final}
+
+\clearpage
+\begin{landscape}
+	\vspace*{\fill} % empuja el contenido hacia el centro vertical
+	\begin{table}[H]
+		\centering
+		\huge
+		\resizebox{\linewidth}{!}{%
+			\setlength{\tabcolsep}{7pt}%
+			\renewcommand{\arraystretch}{2}%
+			\begin{tabular}{c|cc|cc|cc|cc|cc}
+				\toprule
+				\multirow{2}{*}{\begin{tabular}{c}Modelo \\ Métrica\end{tabular}} 
+				& \multicolumn{2}{c|}{Informer} 
+				& \multicolumn{2}{c|}{PE (sin/cos)} 
+				& \multicolumn{2}{c|}{WinStatFlex} 
+				& \multicolumn{2}{c|}{WinStatTPE} 
+				& \multicolumn{2}{c}{No PE} \\
+				\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
+				& MSE & MAE & MSE & MAE & MSE & MAE & MSE & MAE & MSE & MAE \\
+				\midrule
+				HPC         & $0,5329$ & $0,4152$ & $0,5377$ & $0,4140$ & $\mathbf{0,4618}$ & $\mathbf{0,3734}$ & $0,4636$ & $0,3743$ & $0,5448$ & $0,4213$ \\
+				\addlinespace
+				ETTh1       & $0,5458$ & $0,5324$ & $0,5776$ & $0,5552$ & $\mathbf{0,4660}$ &$\mathbf{0,4947}$ & $0,4896$ & $0,5072$ & $0,9235$ & $0,7419$ \\
+				\addlinespace
+				ETTh2       & $0,8866$ & $0,7549$ & $1,3881$ & $0,9355$ & $\mathbf{0,4677}$ & $\mathbf{0,5128}$ & $0,5964$ & $0,5889$ & $1,0132$ & $0,7777$ \\
+				\addlinespace
+				Yellow Trip & $1,9 \times 10^{-5}$ & $3,987 \times 10^{-3}$ & $2,4 \times 10^{-5}$ & $4,307 \times 10^{-3}$ & $1,7 \times 10^{-5}$ & $3,529 \times 10^{-3}$ & $\mathbf{1,0 \times 10^{-5}}$ & $\mathbf{2,547 \times 10^{-3}}$ & $4,6 \times 10^{-5}$ & $4,626 \times 10^{-3}$ \\
+				\addlinespace
+				TINA        & $\mathbf{1,0965}$ & $0,3566$ & $1,2470$ & $0,3861$ & $1,1481$ & $0,3170$ & $1,1334$ & $\mathbf{0,3126}$ & $1,2251$ & $0,3665$ \\
+				\addlinespace
+				\midrule
+				\midrule
+				Count & \multicolumn{2}{c|}{1} & \multicolumn{2}{c|}{0} & \multicolumn{2}{c|}{\textbf{6}} & \multicolumn{2}{c|}{3} & \multicolumn{2}{c}{0} \\
+				\bottomrule
+			\end{tabular}%
+		}
+		\caption{Resumen final: resultados para MAE y MSE en cada dataset}
+	\end{table}
+	\vspace*{\fill} % completa la parte inferior para centrar verticalmente
+\end{landscape}
+\clearpage
+
+
+
+
+
+
+
+
