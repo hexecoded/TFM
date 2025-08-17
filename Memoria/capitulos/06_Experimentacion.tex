@@ -137,9 +137,9 @@ En primer lugar, comenzaremos por ejecutar el modelo original de Informer. De es
 
 \begin{table}[!ht]
 	\centering
-\begin{tabular}{l|c|c}
+	\begin{tabular}{l|N|N}
 	\toprule
-	Métrica & Media & STD \\
+	\text{Métrica} & \text{Media} & \text{STD} \\
 	\midrule
 	MSE & 0,532965 & 0,010976 \\
 	MAE & 0,415272 & 0,012216 \\
@@ -147,7 +147,7 @@ En primer lugar, comenzaremos por ejecutar el modelo original de Informer. De es
 	MSPE & 1345,903158 & 113,73071 \\
 	RMSE & 0,730005 & 0,00754 \\
 	TrainTime(s) & 7817,02026 & 821,270911 \\
-	TestTime(s) & 91,941244 & 1.244423 \\
+	TestTime(s) & 91,941244 & 1,244423 \\
 	\bottomrule
 \end{tabular}
 \caption{HPC: resultados para Informer}
@@ -166,10 +166,10 @@ Sorprendentemente, los resultados obtenidos, visibles en la tabla \ref{hpcfixed}
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
-		\toprule
-		Métrica & Media & STD \\
-		\midrule
+	\begin{tabular}{l|N|N}
+	\toprule
+	\text{Métrica} & \text{Media} & \text{STD} \\
+	\midrule
 		MSE & 0,537721 & 0,011375 \\
 		MAE & 0,414084 & 0,006756 \\
 		MAPE & 2,573043 & 0,094281 \\
@@ -196,9 +196,9 @@ Los resultados para esta alternativa son significativamente mejores y más estab
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
+		\begin{tabular}{l|N|N}
 		\toprule
-		Métrica & Media & STD \\
+		\text{Métrica} & \text{Media} & \text{STD} \\
 		\midrule
 		MSE & 0,502033 & 0,004632 \\
 		MAE & 0,394002 & 0,002849 \\
@@ -221,9 +221,9 @@ WinStatLags es la siguiente propuesta de encoding a evaluar, siguiendo la estrat
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
+		\begin{tabular}{l|N|N}
 		\toprule
-		Métrica & Media & STD \\
+		\text{Métrica} & \text{Media} & \text{STD} \\
 		\midrule
 		MSE & 0,491026 & 0,004988 \\
 		MAE & 0,398612 & 0,005025 \\
@@ -250,10 +250,10 @@ Los resultados de este algoritmo requieren una mayor atención, dada la multitud
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
-		\toprule
-		Métrica & Media & STD \\
-		\midrule
+	\begin{tabular}{l|N|N}
+	\toprule
+	\text{Métrica} & \text{Media} & \text{STD} \\
+	\midrule
 		MSE & 0,461892 & 0,004841 \\
 		MAE & 0,373488 & 0,006858 \\
 		MAPE & 2,251120 & 0,091233 \\
@@ -299,9 +299,9 @@ En resumen, este modelo supone un salto considerable frente a todas las alternat
 Una vez estudiado el excelente rendimiento de WinStatFlex, es el turno de su variante cercana WinStatTPE, la cual sustituye el uso de tAPE por T-PE, que dispone de mayor riqueza semántica, manteniendo una base geométrica tradicional. El funcionamiento se basa en los mismos principios, por lo que pasaremos directamente a los resultados (\ref{hpctpe}):
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
+		\begin{tabular}{l|N|N}
 		\toprule
-		Métrica & Media & STD \\
+		\text{Métrica} & \text{Media} & \text{STD} \\
 		\midrule
 		MSE & 0,463651 & 0,001917 \\
 		MAE & 0,374392 & 0,004132 \\
@@ -349,10 +349,10 @@ En definitiva, este modelo presenta grandes ventajas frente a las codificaciones
 WinStatSPE será nuestra última variante a probar de las propuestas por este trabajo, y se centrará en evaluar el funcionamiento de un modelo ponderado donde interviene un mecanismo de modificación de atención explícito como es SPE. Las expectativas de rendimiento son bastante bajas, ya que en su definición se destacó su fortaleza en problemas de clasificación, y no mencionan conclusiones acerca de sus resultados en forecasting. Pero debido, a que no se estipularon restricciones acerca de una posible aplicación de un problema de predicción como este, consideramos relevante probar su comportamiento. Por tanto, tomando como codificación posicional estándar la empleada en WinStatFlex, se ha combinado con un modelo alternativo que modifica la atención para incluir SPE. Los resultados obtenidos se pueden ver en la tabla \ref{hpcspe}:
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
-		\toprule
-		Métrica & Media & STD \\
-		\midrule
+	\begin{tabular}{l|N|N}
+	\toprule
+	\text{Métrica} & \text{Media} & \text{STD} \\
+	\midrule
 		MAE & 0,441418 & 0,032406 \\
 		MAPE & 2,558296 & 0,121722 \\
 		MSE & 0,582600 & 0,044727 \\
@@ -404,10 +404,10 @@ La teoría indica que sí, dado que los datos de entrada por sí solos no contie
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
-		\toprule
-		Métrica & Media & STD \\
-		\midrule
+	\begin{tabular}{l|N|N}
+	\toprule
+	\text{Métrica} & \text{Media} & \text{STD} \\
+	\midrule
 		MSE & 0,544844 & 0,005447 \\
 		MAE & 0,421343 & 0,005856 \\
 		MAPE & 2,394682 & 0,055825 \\
@@ -445,9 +445,9 @@ Y ahora, debemos volver a hacer hincapié sobre el objetivo que estamos persigui
 En la tabla \ref{hpcresultados_modelos}, podemos encontrar los resultados, del cual podemos extraer varias conclusiones:
 \begin{table}[ht]
 	\centering
-	\begin{tabular}{l|c|c|c|c}
+	\begin{tabular}{l|N|N|N|N}
 		\toprule
-		Modelo & {MAE} & {MAE (STD)} & {MSE} & {MSE (STD)}  \\
+		Modelo & \text{MAE (Media)} & \text{MAE (STD)} & \text{MSE (Media)} & \text{MSE (STD)} \\
 		\midrule
 		WinStatFlex & 0,373488 & 0,006858 & 0,461892 & 0,004841 \\
 		WinStatTPE & 0,374392 & 0,004132 & 0,463651 & 0,001917 \\
@@ -465,9 +465,9 @@ En la tabla \ref{hpcresultados_modelos}, podemos encontrar los resultados, del c
 
 \begin{table}[ht]
 	\centering
-	\begin{tabular}{l|c|c|l|c}
+	\begin{tabular}{l|N|N|N|N}
 		\toprule
-		Modelo & {Tº Test(s)} & {Tº Test(s)-STD} & {Tº Train(s)} & {Tº Train(s)-STD} \\
+		Modelo & \text{Tº Test(s)} & \text{Tº Test(s)-STD} & \text{Tº Train(s)} & \text{Tº Train(s)-STD} \\
 		\midrule
 		WinStatFlex & 350,8360 & 5,5675 & 18652,7244 & 128,3429 \\
 		WinStatTPE & 296,2529 & 1,9551 & 18913,6335 & 28,7927 \\
@@ -539,9 +539,9 @@ Siguiendo el camino establecido, comenzaremos ejecutando Informer, nuestro algor
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
+	\begin{tabular}{l|N|N}
 		\toprule
-		Métrica & Media & STD \\
+		\text{Métrica} & \text{Media} & \text{STD} \\
 		\midrule
 		MSE & 0,545807 & 0,020421 \\
 		MAE & 0,532375 & 0,017099 \\
@@ -559,9 +559,9 @@ Siguiendo el camino establecido, comenzaremos ejecutando Informer, nuestro algor
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
+	\begin{tabular}{l|N|N}
 		\toprule
-		Métrica & Media & STD \\
+		\text{Métrica} & \text{Media} & \text{STD} \\
 		\midrule
 		MSE & 0,886627 & 0,100092 \\
 		MAE & 0,754907 & 0,053964 \\
@@ -593,11 +593,11 @@ Obtenida ya la primera referencia, procederemos a revisar el resto de encodings 
   
  \begin{table}[!ht]
  	\centering
- 	\begin{tabular}{l|c|c}
+ 	\begin{tabular}{l|N|N}
  		\toprule
- 		Métrica & Media & STD \\
+ 		\text{Métrica} & \text{Media} & \text{STD} \\
  		\midrule
-	 		MSE & 0,577572 & 0,075510 \\
+	 	MSE & 0,577572 & 0,075510 \\
 		MAE & 0,555214 & 0,053092 \\
 		MAPE & 11,869595 & 1,172958 \\
 		MSPE & 47931,058203 & 10247,69 \\
@@ -614,9 +614,9 @@ Obtenida ya la primera referencia, procederemos a revisar el resto de encodings 
   
  \begin{table}[!ht]
  	\centering
- 	\begin{tabular}{l|c|c}
+ 	\begin{tabular}{l|N|N}
  		\toprule
- 		Métrica & Media & STD \\
+ 		\text{Métrica} & \text{Media} & \text{STD} \\
  		\midrule
  		MSE & 1,388127 & 0,158151 \\
 		MAE & 0,935477 & 0,051373 \\
@@ -644,9 +644,9 @@ Ahora procedemos a evaluar WinStatFlex, para ver si conseguimos mejorar los resu
 	\centering
 	\begin{minipage}{0.5\textwidth}
 		\centering
-		\begin{tabular}{l|c|c}
+		\begin{tabular}{l|N|N}
 			\toprule
-			Métrica & Media & STD \\
+			\text{Métrica} & \text{Media} & \text{STD} \\
 			\midrule
 			MSE & 0,467676 & 0,101775 \\
 			MAE & 0,512808 & 0,065133 \\
@@ -694,10 +694,10 @@ Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejo
 	\centering
 	\begin{minipage}{0.5\textwidth}
 		\centering
-			\begin{tabular}{l|c|c}
-			\toprule
-			Métrica & Media & STD \\
-			\midrule
+			\begin{tabular}{l|N|N}
+				\toprule
+				\text{Métrica} & \text{Media} & \text{STD} \\
+				\midrule
 			MSE & 0,465990 & 0,027734 \\
 			MAE & 0,494661 & 0,019507 \\
 			MAPE & 10,515547 & 0,347335 \\
@@ -745,9 +745,9 @@ Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejo
  	\centering
  	\begin{minipage}{0.5\textwidth}
  		\centering
- 		\begin{tabular}{l|c|c}
+ 		\begin{tabular}{l|N|N}
  			\toprule
- 			Métrica & Media & STD \\
+ 			\text{Métrica} & \text{Media} & \text{STD} \\
  			\midrule
  			MSE & 0,489647 & 0,048151 \\
 	 		MAE & 0,507179 & 0,031240 \\
@@ -793,9 +793,9 @@ Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejo
  	\centering
  	\begin{minipage}{0.5\textwidth}
  		\centering
- 		\begin{tabular}{l|c|c}
+ 		\begin{tabular}{l|N|N}
  			\toprule
- 			Métrica & Media & STD \\
+ 			\text{Métrica} & \text{Media} & \text{STD} \\
  			\midrule
  			MSE & 0,596380 & 0,076012 \\
  			MAE & 0,588919 & 0,049605 \\
@@ -834,9 +834,9 @@ Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejo
  
   \begin{table}[!ht]
  	\centering
- 	\begin{tabular}{l|c|c}
+ 	\begin{tabular}{l|N|N}
  		\toprule
- 		Métrica & Media & STD \\
+ 		\text{Métrica} & \text{Media} & \text{STD} \\
  		\midrule
  		MSE & 0,923467 & 0,084128 \\
 		MAE & 0,741918 & 0,050922 \\
@@ -855,9 +855,9 @@ Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejo
  
    \begin{table}[!ht]
  	\centering
- 	\begin{tabular}{l|c|c}
+ 	\begin{tabular}{l|N|N}
  		\toprule
- 		Métrica & Media & STD \\
+ 		\text{Métrica} & \text{Media} & \text{STD} \\
  		\midrule
  	 	MSE & 1,013217 & 0,241743 \\
  		MAE & 0,777736 & 0,119947 \\
@@ -890,9 +890,9 @@ Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos de
 
 \begin{table}[ht]
 	\centering
-	\begin{tabular}{l|c|c|c|c}
+	\begin{tabular}{l|N|N|N|N}
 		\toprule
-		Modelo & {MAE} & {MAE (STD)} & {MSE} & {MSE (STD)}  \\
+		Modelo & \text{MAE (Media)} & \text{MAE (STD)} & \text{MSE (Media)} & \text{MSE (STD)} \\
 		\midrule
 		WinStatFlex            & 0.4947 & 0.0195 & 0.4660 & 0.0277 \\
 		WinStatTPE             & 0.5072 & 0.0312 & 0.4896 & 0.0482 \\
@@ -919,9 +919,9 @@ Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos de
 
 \begin{table}[ht]
 	\centering
-	\begin{tabular}{l|c|c|c|c}
+	\begin{tabular}{l|N|N|N|N}
 		\toprule
-		Modelo & {MAE} & {MAE (STD)} & {MSE} & {MSE (STD)}  \\
+		Modelo & \text{MAE (Media)} & \text{MAE (STD)} & \text{MSE (Media)} & \text{MSE (STD)} \\
 		\midrule
 		WinStatFlex            & 0.5128 & 0.0651 & 0.4677 & 0.1018 \\
 		WinStatTPE             & 0.5889 & 0.0496 & 0.5964 & 0.0760 \\
@@ -1166,7 +1166,7 @@ Una vez obtenidas y analizadas las tablas de métricas correspondientes a cada u
 		\bottomrule
 	\end{tabular}
 	\caption{Yellow Trip data: resultados ordenados, incluyendo modelos barajados}
-	\label{tab:resumen_modelos}
+	\label{taxifinal}
 \end{table}
 
 
@@ -1231,9 +1231,9 @@ Para disponer de una base de comparación, comenzaremos por el análisis de Info
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
+	\begin{tabular}{l|N|N}
 		\toprule
-		Métrica & Media & STD \\
+		\text{Métrica} & \text{Media} & \text{STD} \\
 		\midrule
 		MSE & 1,096588 & 0,106495 \\
 		MAE & 0,356679 & 0,020001 \\
@@ -1256,9 +1256,9 @@ En la tabla \ref{tinasincos} se muestran los resultados obtenidos para todas las
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
+	\begin{tabular}{l|N|N}
 		\toprule
-		Métrica & Media & STD \\
+		\text{Métrica} & \text{Media} & \text{STD} \\
 		\midrule
 		MSE & 1,247064 & 0,137599 \\
 		MAE & 0,386111 & 0,016464 \\
@@ -1287,9 +1287,9 @@ Para WinStatFlex, podemos encontrar los resultados para las métricas en la tabl
  
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
+	\begin{tabular}{l|N|N}
 		\toprule
-		Métrica & Media & STD \\
+		\text{Métrica} & \text{Media} & \text{STD} \\
 		\midrule
 		MSE & 1,148123 & 0,101258 \\
 		MAE & 0,317082 & 0,007091 \\
@@ -1335,9 +1335,9 @@ El siguiente encoding evaluado es WinStatTPE, cuyas métricas podemos encontrar 
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c}
+	\begin{tabular}{l|N|N}
 		\toprule
-		Métrica & Media & STD \\
+		\text{Métrica} & \text{Media} & \text{STD} \\
 		\midrule
 		MSE & 1,133453 & 0,121601 \\
 		MAE & 0,312652 & 0,021571 \\
