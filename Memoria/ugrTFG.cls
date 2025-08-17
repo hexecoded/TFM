@@ -91,13 +91,15 @@
   \renewcommand{\sfdefault}{iwona} 
 }
 \RequirePackage{inconsolata}
+\usepackage{siunitx} % Añadir en el preámbulo
 
 \RequirePackage{setspace}
 \RequirePackage{xspace} % Para problemas de espaciado al definir comandos
-
+\usepackage{multirow}
 \RequirePackage{xurl}
 
 \RequirePackage{hyperref}
+\usepackage{pdflscape} 
 
 \hypersetup{%
   % hidelinks,            % Enlaces sin color ni borde. El borde no se imprime
@@ -377,3 +379,4 @@
 %	\miMentor
 %\end{minipage}
   }
+\newcolumntype{N}{>{$}c<{$}}
