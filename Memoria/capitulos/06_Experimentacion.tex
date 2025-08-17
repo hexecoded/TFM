@@ -1438,6 +1438,32 @@ Por tanto, podemos concluir que los modelos WinStatTPE y WinStatFlex son los mej
 
 \section{Resumen final}
 
+Con la finalización del análisis y experimentación sobre el dataset TINA, disponemos de los resultados para todos los modelos evaluados, lo que nos permite ver, de manera global, el funcionamiento de cada uno de ellos, y su consistencia en cuanto a resultados sobre el resto de modelos. En la tabla \ref{resumenfinal}, se puede encontrar en formato apaisado los valores obtenidos tanto para MAE como para MSE, destacando en negrita los mejores resultados, para así distinguir fácilmente el mejor modelo en cada dataset. A modo de síntesis, de manera general podemos extraer las siguientes conclusiones:
+
+\begin{itemize}
+	\item Aunque no estén explícitamente ejecutados, los modelos WinStat y más concretamente, WinStatLag, han sido la base de este experimento. Podemos ver que en todos los datasets, el modelo con mejor rendimiento era uno de los que empleaba WinStatLag como primera componente aditiva del producto ponderado, demostrando que este concepto ha permitido capturar una mayor información local y contextual del problema, permitiendo reducir al falta de semántica que tanto caracterizan a los encodings tradicionales geométricos. 
+	
+	Sin embargo, a pesar de ser una componente decisiva, ésta no ha funcionado correctamente cuando se emparejaba con SPE. Esto se debe, tal y como describimos en su definición, que los mecanismos de atención modificados pueden llegar a dificultar el rendimiento de los modelos de forecasting, aunque permite reforzar la identificación de segmentos temporales muy concretos para clasificación. Pero esto no era contexto de nuestro análisis, más orientado a forecasting, por lo que su uso estaba fuera de lugar.
+	
+	 Para verificar que no se trataba de un efecto de complementariedad con WinStatLags, se evaluó de manera independiente utilizando Informer original, a modo de ablation study. Sin embargo, como se observó en el conjunto HPC, los resultados seguían siendo significativamente inferiores a los obtenidos por las demás variantes, lo que motivó su descarte en los siguientes conjuntos de datos. Esto deja a WinStatLags como pieza clave del rendimiento, gracias a sus estadísticos y diferencias con rezagos.
+	 
+	 \item La ponderación de componentes aditivas ha permitido mejorar considerablemente el rendimiento del modelo sin parámetros extra. Gracias a emplear pesos entrenables, la combinación aditiva de encodings vista en WinStatFlex y WinStatTPE ha permitido obtener mejoras considerables de rendimiento respecto a nuestro algoritmo de referencia, sin necesidad de requerir al usuario su especificación. De esta forma, mediante la función de pérdida, podemos ir ajustando para obtener siempre los mejores resultados, llegando incluso a anular componentes si fuera necesario. El único aspecto a tener en cuenta es que debemos ser cuidadosos con su inicialización y rango, pero empleando Softmax podemos controlarlos sin problemas.
+	 
+	 \item El dominio de WinStatFlex es bastante marcado. Aunque en numerosas ocasiones, como TINA y Yellow Trip, la variante TPE ha conseguido prácticamente igualar o superar su rendimiento, en promedio, WinStatFlex ha sido capaz de agregar eficazmente información posicional al modelo, mejorando considerablemente los resultados y diferenciándose claramente de Informer. Aunque su eficiencia temporal es mucho mayor a este, el diferencia de rendimiento es lo suficientemente significativo como para ser una alternativa justificable sobre la definición tradicional.
+	 
+	 \item WinStatTPE resulta una alternativa interesante para WinStatFlex, pero se ve lastrado por su rendimiento. Los resultados generados por este encoding son también atractivos, dejándolo en segunda posición en cuanto a lo que rendimiento respecta. Su baja varianza en los resultados indica que se trata de un algoritmo muy estable numéricamente y que suele converger en puntos similares en sucesivas ejecuciones. Sin embargo, su tiempo de ejecución es considerablemente más elevado, por lo que en problemas donde la estabilidad numérica es crítica, como vimos en Yellow Trip o TINA, su rendimiento destaca, pero por lo general, se recomendaría el uso de WinStatFlex.
+\end{itemize}
+
+Por tanto, tal y como se puede apreciar en la tabla \ref{resumenfinal}, siguiendo la metodología aplicada en el paper de Informer\cite{zhou2021informerefficienttransformerlong} y realizando el recuento de ejecuciones en primer lugar, obtenemos el siguiente orden por rendimiento:
+
+\begin{enumerate}
+	\item \textit{WinStatFlex}
+	\item \textit{WinStatTPE}
+	\item \textit{Informer}
+	\item \textit{PE geométrico (seno-coseno)}
+	\item \textit{Sin uso de PE (No PE)}
+\end{enumerate}
+
 \clearpage
 \begin{landscape}
 	\vspace*{\fill} % empuja el contenido hacia el centro vertical
@@ -1475,6 +1501,7 @@ Por tanto, podemos concluir que los modelos WinStatTPE y WinStatFlex son los mej
 			\end{tabular}%
 		}
 		\caption{Resumen final: resultados para MAE y MSE en cada dataset}
+		\label{resumenfinal}
 	\end{table}
 	\vspace*{\fill} % completa la parte inferior para centrar verticalmente
 \end{landscape}
