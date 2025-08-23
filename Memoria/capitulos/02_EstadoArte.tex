@@ -1,20 +1,20 @@
 \chapter{Tendencias y Estado del arte}
 \label{sota}
 
-Antes de adentrarnos de lleno en el análisis del problema y la realización de nuevas metodologías, es necesario estudiar y comprender el estado actual de esta temática en el estado del arte. Debido a que no se ha visto tan explotada como otros ámbitos de la IA, como es el caso de los modelos convolucionales o el aprendizaje automático supervisado tabular, podemos encontrar continuos cambios y nuevas vertientes que pueden inspirarnos a la hora de abordar el problema.
+Antes de adentrarnos de lleno en el análisis del problema y la realización de nuevas metodologías, es necesario estudiar y comprender el estado actual de esta temática en el estado del arte. Debido a que no se ha visto tan explotada como otros ámbitos de la IA, como es el caso de los modelos convolucionales o el aprendizaje automático supervisado tabular, podemos encontrar continuos cambios y nuevas vertientes que pueden inspirarnos a la hora de abordar el problema.\\
 
-Hasta hace una década, buena parte de las técnicas diseñadas especialmente para series temporales y predicción a largo plazo, se basan principalmente en la descomposición las mismas en subcomponentes mucho más sencillas de procesar, las cuales pueden seguir un enfoque similar a divide y vencerás: descomponer la red en diferentes elementos, y mediante un mecanismo de agregación (aditivo, multiplicativo, o estadístico), recomponer la solución a la tarea. Sin embargo, se trata de una estrategia últimamente menos utilizada, en decadencia a favor de nuevas técnicas \\
+Hasta hace una década, buena parte de las técnicas diseñadas especialmente para series temporales y predicción a largo plazo, se basan principalmente en la descomposición las mismas en subcomponentes mucho más sencillas de procesar, las cuales pueden seguir un enfoque similar a divide y vencerás: descomponer la red en diferentes elementos, y mediante un mecanismo de agregación (aditivo, multiplicativo, o estadístico) recomponer la solución a la tarea~\cite{garg2022machinelearningalgorithmstime}. Sin embargo, se trata de una estrategia últimamente menos utilizada. \\
 
-Actualmente, una de las principales tendencias consiste en adaptar modelos originalmente desarrollados para otras modalidades. Un ejemplo de ello es el uso de convoluciones, ampliamente utilizadas en visión por computador, con el objetivo de capturar patrones locales en las secuencias y reducir la dimensionalidad del modelo. Previamente, también se han explorado arquitecturas recurrentes, como las Recurrent Neural Networks (RNN) y sus variantes más avanzadas, como las Long Short-Term Memory (LSTM) \cite{6795963}, aunque estas presentaban ciertas limitaciones en cuanto a capacidad de paralelización y en la modelización de relaciones temporales de mayor alcance, ya que para lograrlo aumentaba en exceso el tamaño de la red para incorporar más conexiones.\\
+Actualmente, una de las principales tendencias consiste en adaptar modelos originalmente desarrollados para otras modalidades. Un ejemplo de ello es el uso de convoluciones, ampliamente utilizadas en visión por computador, con el objetivo de capturar patrones locales en las secuencias y reducir la dimensionalidad del modelo~\cite{zeng2023financialtimeseriesforecasting}. Previamente, también se han explorado arquitecturas recurrentes, como las Recurrent Neural Networks (RNN) y sus variantes más avanzadas, como las Long Short-Term Memory (LSTM) \cite{6795963}, aunque estas presentaban ciertas limitaciones en cuanto a capacidad de paralelización y en la modelización de relaciones temporales de mayor alcance, ya que para lograrlo aumentaba en exceso el tamaño de la red para incorporar más conexiones.\\
 
-Más recientemente, ha ganado protagonismo la adaptación de mecanismos provenientes del procesamiento de lenguaje natural, en particular los Transformers, debido a su capacidad para modelar dependencias a largo plazo de forma eficiente. Además, comparten una motivación estructural con las series temporales: la necesidad de preservar una secuencia ordenada y coherente en la entrada, lo que permite aprovechar su arquitectura basada en atención para tareas de predicción.\\
+Más recientemente, ha ganado protagonismo la adaptación de mecanismos provenientes del procesamiento de lenguaje natural, en particular los Transformers~\cite{wen2023transformerstimeseriessurvey}, debido a su capacidad para modelar dependencias a largo plazo de forma eficiente. Además, comparten una motivación estructural con las series temporales: la necesidad de preservar una secuencia ordenada y coherente en la entrada, lo que permite aprovechar su arquitectura basada en atención para tareas de predicción.\\
 
 A continuación, nos adentraremos de lleno en dichas propuestas, con el fin de aclarar, en primer, los conceptos clave acerca de las series temporales, y además, entender las problemáticas que surgen durante su procesado.
 
 
 \section{Procesamiento básico de Series Temporales}
 
-En la introducción, se han presentado brevemente las características fundamentales de las series temporales: su estructura temporal, caracterizada por muestreo, la importancia del orden de medición, y la necesidad de mantener las relaciones temporales para lograr aprender de forma efectiva.\\
+En la Introducción, se han presentado brevemente las características fundamentales de las series temporales: su estructura temporal, caracterizada por muestreo, la importancia del orden de medición, y la necesidad de mantener las relaciones temporales para lograr aprender de forma efectiva.\\
 
 Pero, en esta sección, profundizaremos en los aspectos clave del preprocesamiento necesario para su análisis de manera más formal, ya que a diferencia de otros tipos de datos, las series temporales requieren una atención especial a la dimensión temporal, y cualquier alteración en su estructura puede afectar directamente la capacidad del modelo para aprender los patrones subyacentes en ella. Por ello, es fundamental centrarnos en cuestiones como la frecuencia de muestreo, la consistencia temporal, el tratamiento de valores faltantes, y la normalización de las variables.
 
@@ -40,9 +40,7 @@ Frecuentemente, podemos encontrar 3 comportamientos, los cuales son fácilmente 
 
     \item \textbf{Estacionalidad}. Son fluctuaciones periódicas y predecibles dentro de la serie temporal, las cuales siguen una determinada frecuencia y que pueden ser fácilmente modelables una vez se observa al menos un periodo. Normalmente, coinciden con unidades de medida de calendario, pudiendo encontrar así frecuecias semanales, mensuales, trimestrales, anuales... etc. Normalmente, son un factor visualmente sencillo de identificar, el cual apenas varía ente períodos, y que nos permite obtener información muy valiosa para el modelado.
 
-    Podemos encontrar este comportamiento, por ejemplo, en los desplazamientos realizados durante las épocas vacionales: podremos observar un patrón de crecimiento en estas en Navidad y las vacaciones de verano, principalmente julio y agosto; y en el resto de meses el comportamiento será a la baja. Y eso ocurrirá con un período anual, ya que dichas fechas se ubican siempre en el mismo lugar. Diferente caso sería con Semana Santa, ya que su fecha no es coincidente todos los años y no cumple al 100\% de estacionalidad como las otras dos, ya que aunque es acotable en calendario, no es exactamente coincidente anualmente.
-
-    En el caso del dataset anterior, se puede observar esta estacionalidad claramente (figura \ref{season})
+    Podemos encontrar este comportamiento, por ejemplo, en los desplazamientos realizados durante las épocas vacacionales: podremos observar un patrón de crecimiento en estas en Navidad y las vacaciones de verano, principalmente julio y agosto; y en el resto de meses el comportamiento será a la baja. Y eso ocurrirá con un período anual, ya que dichas fechas se ubican siempre en el mismo lugar. Diferente caso sería con Semana Santa, ya que su fecha no es coincidente todos los años y no cumple al 100\% de estacionalidad como las otras dos, ya que aunque es acotable en calendario, no es exactamente coincidente anualmente. En el caso del dataset anterior, se puede observar esta estacionalidad claramente (figura \ref{season}).
 
     \begin{figure}[h] %con el [H] le obligamos a situar aquí la figura
         \centering
@@ -139,7 +137,7 @@ Para obtener un modelo para cada una de ellas,  normalmente se sigue un proceso 
     Esta parte representa la variabilidad no explicada por los patrones sistemáticos de largo plazo ni por los ciclos periódicos, e incluye tanto el ruido aleatorio como cualquier información no capturada por el modelo. Si bien no es modelable, es muy útil para identificar si la serie es correctamente modelable por este método, ya que si observamos demasiada información en esta componente, nos está indicando que una parte importante de la información no está siendo recogida. Lo deseable es la que la varianza descrita sea la mínima posible. Sin embargo, hay algunos casos en los que encontrar puntos extremos es de utilidad, y se trata de la búsqueda de valores anómalos. Si la serie restante permanece estable y con poca varianza, a excepción de ciertos puntos, puede ser de interés estudiar qué ocurrió en dichos instantes, ya que su comportamiento se sale del comportamiento habitual modelado.
 \end{enumerate}
 
-En su publicación original, podemos encontrar un ejemplo de ejecución sobre el conjunto de datos \textit{Daily Carbon Dioxide Data} (ver figura \ref{stl}), que recoge información sobre las emisiones de $CO_2$ desde el 17 de abril de 1974 hasta el 31 de diciembre de 1986, y permite observar la información recogida por cada una de las componentes.
+En su publicación original, podemos encontrar un ejemplo de ejecución sobre el conjunto de datos \textit{Daily Carbon Dioxide Data} (ver \ref{stl}), que recoge información sobre las emisiones de $CO_2$ desde el 17 de abril de 1974 hasta el 31 de diciembre de 1986, y permite observar la información recogida por cada una de las componentes.
 
 \begin{figure}[!htp] %con el [H] le obligamos a situar aquí la figura
     \centering
@@ -375,7 +373,7 @@ Hasta ahora, la mayoría de soluciones estudiadas se han basado en el procesamie
 
 Podríamos pensar en emplear modelos tradicionales vistos en otros ámbitos, como las redes neuronales. Pero en dichos problemas, las entradas y salidas no guardan una relación entre sí; son independientes. En los conjuntos de entrenamiento habituales, como problemas tabulares de regresión o clasificación, lo que nos importa es asignar el valor adecuado, y normalmente, cada instancia es independiente del resto. Pero cuando disponemos de información secuencial, como el lenguaje natural, o en nuestro caso, las series temporales, esto no es así.\\
 
-En los métodos basados en descomposición, hemos podido apreciar que nos basamos continuamente en los valores pasados para ser capaces de modelar perdiendo la mínima información posible, y que por ejemplo, encontrar patrones como la estacionalidad es de gran importancia para minimizar el error y a su vez simplificar el modelado. Esto descarta la utilización de perceptrones multicapa, o capas densamente conectadas para el modelado de series temporales con un mínimo de complejidad, debido a dicha dependencia. Solo quizás, podríamos modelar series simples con una clara tendencia y forma, debido a que podrían asemejarse a una regresión. Pero si queremos obtener resultados escalables a redes más compleja, debemos tener en cuenta las conexiones temporales entre cada timestamp, y modelar dicho orden dentro de la secuencia global de los datos. Esto lo podemos conseguir relacionando cada salida con la anterior y es así como surge el concepto de las Redes Neuronales Recurrentes.
+En los métodos basados en descomposición, hemos podido apreciar que nos basamos continuamente en los valores pasados para ser capaces de modelar perdiendo la mínima información posible, y que por ejemplo, encontrar patrones como la estacionalidad es de gran importancia para minimizar el error y a su vez simplificar el modelado. Esto descarta la utilización de perceptrones multicapa, o capas densamente conectadas para el modelado de series temporales con un mínimo de complejidad, debido a dicha dependencia. Solo quizás, podríamos modelar series simples con una clara tendencia y forma, debido a que podrían asemejarse a una regresión. Pero si queremos obtener resultados escalables a redes más compleja, debemos tener en cuenta las conexiones temporales entre cada timestamp, y modelar dicho orden dentro de la secuencia global de los datos. Esto lo podemos conseguir relacionando cada salida con la anterior y es así como surge el concepto de las Redes Neuronales Recurrentes~\cite{petneházi2019recurrentneuralnetworkstime}.
 
 \subsubsection{Funcionamiento de las RNN}
 
@@ -494,7 +492,7 @@ Cada compuerta dentro de una celda LSTM desempeña una función específica en l
 \begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
     \centering
     \includegraphics[scale=1]{img/lstm}
-    \caption{LSTM: funcionamiento de la arquitectura de puertas}
+    \caption{LSTM: funcionamiento de la arquitectura de puertas~\cite{Oliveira2021EnergyForecast}}
     \label{lstm}
 \end{figure}
 
@@ -521,7 +519,7 @@ A modo de conclusión, aunque las LSTM representaron un avance fundamental en el
 
 \section{Transformers}
 
-Los Transformes son una de las mayores invenciones de los últimos años en el tratamiento de datos secuenciales, como el lenguaje natural, y en series temporales. Su estructura (ver figura \ref{trans}), la cual propone el uso de mecanismos basados en atención, ha permitido prescindir de los algoritmos basados en recurrencia, y simplificar el proceso complejo de aprendizaje que teníamos debido a los problemas con la propagación y los gradientes.\\
+Los Transformes~\cite{vaswani2023attentionneed} son una de las mayores invenciones de los últimos años en el tratamiento de datos secuenciales, como el lenguaje natural, y en series temporales. Su estructura (ver figura \ref{trans}), la cual propone el uso de mecanismos basados en atención, ha permitido prescindir de los algoritmos basados en recurrencia, y simplificar el proceso complejo de aprendizaje que teníamos debido a los problemas con la propagación y los gradientes.\\
 
 A diferencia de las redes RNN o LSTM, que procesan la información de forma secuencial y requieren mantener estados ocultos a lo largo del tiempo, los Transformers permiten procesar todas las posiciones de la secuencia en paralelo, lo que mejora drásticamente la eficiencia computacional y la capacidad de modelar relaciones a largo plazo. Esto nos permite también aprovechar arquitecturas de computación con gran capacidad para la paralelización, como el uso de GPUs, y así reducir tiempos de ejecución, o bien, aprovechar la capacidad extra de paralelización para enfrentarnos a problemas mucho más complejos, con mayor número de parámetros y dependencias a largo plazo.\\
 
@@ -624,9 +622,9 @@ Este diseño ofrece varias ventajas: al ser funciones periódicas y determinista
 
 No obstante, aunque esta técnica es adecuada para procesar texto, donde el orden es fundamental, su aplicabilidad en series temporales es más compleja y no siempre ha de producir un buen resultados. En las series temporales, la posición en la secuencia no es solo un índice ordinal, sino que representa una dimensión temporal real, ligada a un instante específico. Esto implica que los elementos de la secuencia deben ordenarse dado su timestamp, pero también contienen información contextual inherente al tiempo: estacionalidad, tendencias que evolucionan a lo largo del tiempo, y eventos que ocurren en momentos concretos.\\
 
-En las series temporales, cuando queremos detectar sucesos concretos o anomalías, para posteriormente modelar y crear predicciones largo plazo, toda la información no suele estar concentrada en único timestamp. Por ejemplo, si tenemos un dataset muestreado por horas, puede ser frecuente y viable que para comprender el fenómeno, debamos mirar no sólo la información de una hora concreta, sino del día completo. Por tanto, la codificación posicional tradicional basada en seno y coseno no captura explícitamente estas características, pues si bien es capaz de establecer un orden en el punto de vista global de los datos, no es capaz de contener y explicar información local de estos. Estamos perdiendo información contenida en patrones temporales más complejos.\\
+En las series temporales, cuando queremos detectar sucesos concretos o anomalías, para posteriormente modelar y crear predicciones largo plazo, toda la información no suele estar concentrada en único timestamp. Por ejemplo, si tenemos un dataset muestreado por horas, puede ser frecuente y viable que para comprender el fenómeno, debamos mirar no sólo la información de una hora concreta, sino del día completo. Por tanto, la codificación posicional tradicional basada en seno y coseno no captura explícitamente estas características, pues si bien es capaz de establecer un orden en el punto de vista global de los datos, no es capaz de contener y explicar información local de estos~\cite{Foumani_2023,irani2025positionalencodingtransformerbasedtime}. Estamos perdiendo información contenida en patrones temporales más complejos.\\
 
-Esto plantea un desafío fundamental: la necesidad de diseñar o adaptar mecanismos de \textit{positional encoding} que sean capaces de integrar no solo la información ordinal, sino también las propiedades temporales explícitas que caracterizan a estos datos. En el estado del arte, podemos encontrar ya algunos enfoques en esta dirección:
+Esto plantea un desafío fundamental: la necesidad de diseñar o adaptar mecanismos de \textit{positional encoding} que sean capaces de integrar no solo la información ordinal, sino también las propiedades temporales explícitas que caracterizan a estos datos. En el estado del arte, podemos encontrar ya algunos enfoques en esta dirección~\cite{irani2025positionalencodingtransformerbasedtime}:
 
 \begin{itemize}
     \item \textbf{Encodings aprendibles}. Permiten al modelo optimizar vectores posicionales específicos para las características del conjunto de datos. Tienen la ventaja de facilitar el proceso de entrenamiento sin necesidad de especificar parámetros de forma explícita, pero se debe tener especial cuidado con la inicialización y la normalización de valores, para evitar problemas de crecimiento desproporcionado en ciertos parámetros.
@@ -644,7 +642,7 @@ Además, en muchos contextos, los eventos relevantes están más determinados po
 
 En el apartado siguiente, estudiaremos los modelos más relevantes del estado del arte, y analizaremos en qué característica clave se basa cada uno de ellos. Además, prestaremos atención a qué tipo de codificación emplea cada uno, de cara a obtener conclusiones sobre la importancia que se le da a este aspecto.
 
-\subsection{Modelos aplicados al forecasting de series temporales}
+\subsection{Modelos basados en Transformer aplicados al forecasting de series temporales}
 
 En el estado del arte, podemos encontrar multitud de modelos que proponen adaptaciones y soluciones alternativas al uso de Transformers para series temporales. Algunas, son soluciones propias de lenguaje natural adaptadas a su uso en series temporales, mientras que en otros casos tratan de basarse en conceptos básicos anteriormente explotados en series, como la descomposición o el uso de la autocorrelación, pero empleando Transformers como vía de aprendizaje.\\
 
@@ -652,9 +650,7 @@ Concretamente, comenzaremos analizando variantes del modelo Transformer original
 
 \subsubsection{Variantes de Transformer y mejoras previas}
 
-El modelo original de Transformer propuesto en \textit{Attention is All You Need} \cite{vaswani2023attentionneed} ha sido objetivo de muchas investigaciones que han buscado optimizar tanto la capacidad de modelado como la eficiencia computacional. Si bien su principal campo de aplicación siguió siendo el lenguaje natural, dichas innovaciones han permitido posteriores mejoras a las aplicaciones de Transformers en series temporales.\\
-
-De entre las características deseables, se han buscado continuamente mejoras de rendimiento para dominios de larga secuencia, relaciones de dependencia a múltiples escalas y mejoras a nivel computacional, tratando de reducir la complejidad de ejecución pero sacrificando el mínimo rendimiento posible.
+El modelo original de Transformer propuesto en \textit{Attention is All You Need} \cite{vaswani2023attentionneed} ha sido objetivo de muchas investigaciones que han buscado optimizar tanto la capacidad de modelado como la eficiencia computacional. Si bien su principal campo de aplicación siguió siendo el lenguaje natural, dichas innovaciones han permitido posteriores mejoras a las aplicaciones de Transformers en series temporales. De entre las características deseables, se han buscado continuamente mejoras de rendimiento para dominios de larga secuencia, relaciones de dependencia a múltiples escalas y mejoras a nivel computacional, tratando de reducir la complejidad de ejecución pero sacrificando el mínimo rendimiento posible.
 
 \paragraph{Transformer-XL (2019)}
 
@@ -663,7 +659,6 @@ Una de las primeras propuestas realizadas es el Transformer-XL \cite{dai2019tran
 
 En series temporales, esta técnica tiene una gran relevancia en la detección de patrones estacionales, ya que nos permite encontrar patrones, donde el significado de la relación temporal radica sobre todo en dónde se ubica un evento concreto dentro del período estacional, y no tanto en su posición absoluta en la secuencia.
 
-\newpage
 
 \paragraph{LogTrans (2019)}
 

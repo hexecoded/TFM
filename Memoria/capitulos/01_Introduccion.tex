@@ -1,6 +1,6 @@
 \chapter{Introducción}
 
-En este primer punto, describiremos de forma breve la motivación a realizar este TFM. Analizaremos la importancia de poseer herramientas capaces de realizar una predicción a largo plazo en series temporales (en inglés,\textit{ Long-term Time Series Forecasting},  LSTF), pero, sobre todo, centrándonos en un aspecto clave: la codificación posicional (\textit{Positional Encoding}, en adelante, PE), común a prácticamente todas las alternativas actuales del estado del arte. 
+En este primer punto, describiremos de forma breve la motivación a realizar este TFM. Analizaremos la importancia de poseer herramientas capaces de realizar una predicción a largo plazo en series temporales (en inglés,\textit{ Long-term Time Series Forecasting},  LSTF~\cite{CHEN2023101819}), pero, sobre todo, centrándonos en un aspecto clave: la codificación posicional (\textit{Positional Encoding}, en adelante, PE), común a prácticamente todas las alternativas actuales del estado del arte. 
 
 Procederemos a justificar su importancia, así como a formular los objetivos que se cubren con la realización de este trabajo.
 \section{Motivación}
@@ -48,7 +48,7 @@ La misión de este trabajo se centra en tratar de encontrar una alternativa que 
 
 \section{Justificación}
 
-Tras estudiar el problema, surge la necesidad de crear una alternativa adecuada a los modelos de codificación existentes, incorporando dentro de ella la semántica del propio problema, e información local que permita una mayor adaptabilidad de los modelos creados, reduciendo las tasas de error. Aunque este objetivo ya es tratado por diversos modelos y líneas de investigación del estado del arte, en este trabajo buscamos replantear el positional encoding para que sea adaptable y capaz de incorporar información global y local. Podemos verificar que muchas de las arquitecturas más utilizadas del estado del arte tratan de paliar este problema, pero en la práctica, siguen teniendo graves problemas para mantener el orden y la semántica de los datos \cite{zeng2022transformerseffectivetimeseries}.
+Tras estudiar el problema, surge la necesidad de crear una alternativa adecuada a los modelos de codificación existentes, incorporando dentro de ella la semántica del propio problema, e información local que permita una mayor adaptabilidad de los modelos creados, reduciendo las tasas de error. Aunque este objetivo ya es tratado por diversos modelos y líneas de investigación del estado del arte, en este trabajo buscamos replantear el positional encoding para que sea adaptable y capaz de incorporar información global y local. Podemos verificar que muchas de las arquitecturas más utilizadas del estado del arte tratan de paliar este problema, pero en la práctica, siguen teniendo graves problemas para mantener el orden y la semántica de los datos \cite{zeng2022transformerseffectivetimeseries}.\\
 
 Por tanto, este trabajo plantea aprovechar el conocimiento adquirido a partir de técnicas más clásicas, como ARIMA, e incorporando información estadística que resulte comprensible para prácticamente cualquier persona que utilice el modelo, con el objetivo mejorar los resultados existentes de la codificación posicional. De este modo, aunque se recurra posteriormente a modelos profundos como los Transformers, la codificación posicional introducida  al inicio en los datos puede ser ajustable y fácilmente interpretable en función del contexto del problema.\\
  
@@ -59,15 +59,14 @@ Hasta ahora, gran parte de los esfuerzos se han centrado en adaptar soluciones d
 Teniendo en cuenta los conceptos descritos anteriormente, y analizando el estado del arte en la actualidad, vemos justificada la necesidad de encontrar nuevas codificaciones posicionales con el objetivo de conseguir:
 
 \begin{enumerate}
-	\item Realizar una revisión exhaustiva del estado del arte sobre Transformer para series temporales, estudiando el funcionamiento de las diferentes técnicas y extrayendo el conocimiento útil para crear nuevas alternativas, destacando las debilidades y carencias de los modelos existentes.
+	\item Realizar una revisión exhaustiva del estado del arte sobre Transformer y positional encoding para series temporales, con el objetivo de comprender su funcionamiento e identificar las carencias de cada uno de ellos.
 	
-	\item Analizar las propuestas originales de positional encoding adaptadas a series temporales, realizando un análisis crítico y explorando diferentes vías alternativas que permitan mejorar la precisión y fiabilidad de los resultados.
+	\item Analizar las propuestas destacadas de positional encoding adaptadas a series temporales, midiendo su utilidad en problemas complejos de LTSF.
 	
-	\item Evaluar sistemáticamente la efectividad de los positional encoding estándar en tareas de forecasting sobre benchmarks de series temporales, haciendo uso de varios conjuntos de datos de diferente procedencia y estructura.
+	\item Evaluar sistemáticamente la efectividad del positional encoding en tareas de forecasting sobre benchmarks de series temporales, haciendo uso de varios conjuntos de datos de diferente procedencia y estructura.
 	
-	\item Establecer criterios claros para el diseño de nuevas codificaciones que permitan encontrar nuevas formas de incorporar información útil, pero además sirvan como guía para investigaciones futuras, identificando buenas prácticas, limitaciones comunes y condiciones bajo las cuales cada enfoque resulta más adecuado.
+	\item Establecer criterios claros para el diseño de nuevas codificaciones que permitan encontrar nuevas formas de incorporar información útil, profundizando en los mecanismos para incorporar la nueva información durante el proceso de aprendizaje del modelo.
 	
-	\item Comparar el impacto de las distintas codificaciones posicionales no solo en la precisión de las predicciones, sino también en aspectos como la capacidad de generalización y su eficiencia computacional.
 
 \end{enumerate}
 
