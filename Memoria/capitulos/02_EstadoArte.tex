@@ -691,7 +691,7 @@ Para tratar de reducir dicha complejidad, Reformer introduce varios conceptos fu
 
 \end{itemize}
 
-Ambas mejoras nos permiten realizar un mejor aprovechamiento de la memoria de video, mejorando la reutilización de cálculos y permitiendo así usar conjuntos de datos de mayor tamaño, aunque debemos de tener en cuenta que agrupar por similaridad introduce errores numéricos en el cálculo de la atención.
+Ambas mejoras nos permiten realizar un mejor aprovechamiento de la memoria de vídeo, mejorando la reutilización de cálculos y permitiendo así usar conjuntos de datos de mayor tamaño, aunque debemos de tener en cuenta que agrupar por similaridad introduce errores numéricos en el cálculo de la atención.
 
 \subsubsection{Informer (2020)}
 
@@ -802,19 +802,22 @@ A través de los mecanismos de enmascaramiento, ya presentes en el Transformer o
 Tras el paso por las capas de atención y normalización, una capa totalmente conectada proyecta directamente toda la secuencia objetivo de salida en un único cálculo, eliminando así la necesidad de decodificación iterativa. De esta forma, conseguimos, por un lado, reducir el tiempo de inferencia, y por otro, mitigar la acumulación de errores típica de modelos autoregresivos, mejorando la estabilidad y la precisión en predicciones de horizontes largos.
 
 \paragraph{Análisis crítico y conclusiones}
-Tras analizar el funcionamiento de este modelo, podemos apreciar que los avances realizados en su publicación fueron clave para realizar una adaptación de los Transformers a series temporales. Gracias al mecanismo de distillation, podemos simplificar progresivamente la arquitectura y encontrar patrones en diferentes grados de escala, y el mecanismo de predicción e inferencia tiene mucho más sentido que el mecanismo autoregresivo original, ya que así conseguimos resolver el problema del error acumulado que ya encontramos cuando aplicamos modelos clásicos como ARIMA.\\
 
-Sin embargo, siendo críticos, podemos encontrar algunas decisiones controvertidas. En primer lugar, Informer no altera el proceso de codificación posicional de los Transformer de manera significativa, ya que por defecto, opera con la tradicional codificación sinusoidal, la cual es bastante rígida. Sólo depende de la longitud de la secuencia, pero no se adapta a su comportamiento o entorno, por lo que no estamos añadiendo información útil a nivel local de la serie, dificultando la detección de patrones estacionales o elementos de interés como anomalías.\\
+Informer propuso uno de los primeros pasos en la adaptación de los Trasnsformers a su uso en series temporales. Sus características y estrategias aplicadas fueron pioneras en el estado del arte, y permitieron sentar las bases de los siguientes modelos para series temporales. El mecanismo de distillation permitió simplificar progresivamente la arquitectura y encontrar patrones en diferentes grados de escala, y el mecanismo de predicción e inferencia en un solo paso permitió resolver el problema del error acumulado que ya encontramos cuando aplicamos modelos clásicos como ARIMA, que usaban estrategias autoregresivas para dicho fin.\\
+
+A pesar de ello, podemos encontrar algunas decisiones controvertidas. En primer lugar, Informer no altera el proceso de codificación posicional de los Transformer de manera significativa, ya que por defecto, opera con la tradicional codificación sinusoidal, la cual es bastante rígida. Sólo depende de la longitud de la secuencia, pero no se adapta a su comportamiento o entorno, por lo que no estamos añadiendo información útil a nivel local de la serie, dificultando la detección de patrones estacionales o elementos de interés como anomalías.\\
 
 Por otro lado, la selección de instancias mediante LogSparse para simplificar la complejidad del cálculo de atención puede ser problemática. Aunque la teoría propuesta tiene sentido, ya que se afirma que no todos los puntos tienen la misma importancia, y que la selección probabilística da como resultado un vector ordenado de elementos por importancia \textit{M}, realmente es una asunción demasiado fuerte. Es posible que, en series temporales medidas en cortos períodos, como segundos o minutos, y duración extensa del fenómeno, como meses o años, los cambios apreciados en gran cantidad de puntos no sean especialmente relevantes, pues quizás la granularidad es demasiado pequeña. Pero en datasets que estudien fenómenos cortos y cambiantes, que ocurren a gran velocidad, como detección de fallos en tiempo real, o estudio de fenómenos como sistema de seguridad de centrales nucleares, (es decir, entornos industriales), puede que estemos eliminando puntos de interés.\\
 
 La selección aleatoria mediante una distribución logarítmica, si bien es útil e interesante desde el punto de vista de la complejidad computacional, a nivel semántico puede alejarse bastante del problema que se está estudiando. El muestreo aleatorio puede distanciar al modelo de la estructura real del problema, ignorando relaciones locales o patrones que podrían ser relevantes para nuestra tarea.\\
 
-Algo similar ocurre con los mecanismos de reducción temporal basados en \textit{Max Pooling}, en la etapa de \textit{distilling}. Reducir a la mitad la longitud de la secuencia en cada capa implica que, a la pérdida de información ya sufrida en el muestreo, se añade el riesgo de eliminar instancias que habían sido consideradas relevantes en pasos anteriores, y dar lugar a que ciertas posiciones del modelo mantengan valores por defecto o información incompleta y se desperdicie aún más información útil.
+Algo similar ocurre con los mecanismos de reducción temporal basados en \textit{Max Pooling}, en la etapa de \textit{distilling}. Reducir a la mitad la longitud de la secuencia en cada capa implica que, a la pérdida de información ya sufrida en el muestreo, se añade el riesgo de eliminar instancias que habían sido consideradas relevantes en pasos anteriores, y dar lugar a que ciertas posiciones del modelo mantengan valores por defecto o información incompleta y se desperdicie aún más información útil.\\
+
+Por tanto, multitud de variantes surgieron para tratar de dar solución a algunos de estos aspectos, con el objetivo de continuar el camino de adaptación de los Transformers al dominio de las series temporales. No obstante, Informer continúa manteniendo un lugar destacado en los rankings comparativos, lo que refleja su importancia y trascendencia en este ámbito.
 
 \subsubsection{Autoformer (2021)}
 
-Tras la formulación del Transformer original, siguen surgiendo modelos y adaptaciones de Transformer para aplicar con series temporales. Uno de los siguientes es Autoformer~\cite{wu2022autoformerdecompositiontransformersautocorrelation}, el cual realiza un cambio de vista total con respecto a Informer. A diferencia de este último, que trataba de eliminar la autocorrelación por el riesgo de errores acumulativos en el decoder, Autoformer basa su funcionamiento esencial precisamente en la autocorrelación, y recuperando uno de los elementos característicos de los primeros algoritmos de procesamiento de series temporales: la descomposición.\\
+Tras la formulación del Transformer original y sus adaptaciones propuestas por Informer, siguen surgiendo modelos y adaptaciones para su aplicación en series temporales. Uno de los siguientes es Autoformer~\cite{wu2022autoformerdecompositiontransformersautocorrelation}, el cual realiza un cambio de vista total con respecto a Informer. A diferencia de este último, que trataba de eliminar la autocorrelación por el riesgo de errores acumulativos en el decoder, Autoformer basa su funcionamiento esencial precisamente en la autocorrelación, y recuperando uno de los elementos característicos de los primeros algoritmos de procesamiento de series temporales: la descomposición.\\
 
 Continuando con la tarea de predicción LSTF, Autoformer trata de solucionar dos problemas particulares de esta tarea. En primer lugar, la dificultad para identificar dependencias fiables en horizontes extensos, donde los patrones temporales suelen estar entrelazados y la señal relevante tiende a diluirse entre ruido y fluctuaciones locales. Pero, también, persigue poner remedio a las limitaciones de eficiencia y aprovechamiento de la información asociadas a los mecanismos de \textit{self-attention} tradicionales, entre ellas, la anterior característica criticada de Informer, como lo era el muestreo de los tokens y la potencial pérdida de información para simplificar el producto de atención.\\
 
@@ -1005,11 +1008,10 @@ En los últimos dos años, podemos encontrar nuevos modelos que siguieron alejá
 
 Tras haber explorado algunas soluciones alternativas que vuelven a alejarse del Transformer tal y como lo conocemos, hemos finalizado la revisión de los principales modelos de procesado del estado del arte, partiendo de los algoritmos básicos y finalizando con complejas derivaciones del concepto original de atención.\\
 
-Cada uno de estos métodos posee sus ventajas e inconvenientes, y es crítico saber cuál de ellos emplear en cada caso. Los primeros modelos, como Informer, pueden ser a veces problemáticos si buscamos detalles de granularidad fina; Autoformer o FEDformer pueden funcionar mejor en ese aspecto, y facilitar la detección de patrones estacionales. Pero, por contra, se alejan un poco más de los mecanismos habitualmente usados en Transformers, y no podremos experimentar el impacto de diferentes encoding posicionales, que es el objetivo que estamos tratando. \\
+Cada uno de estos métodos posee sus ventajas e inconvenientes, y es crítico saber cuál de ellos emplear en cada caso. Los primeros modelos, como Informer, pueden ser a veces problemáticos si buscamos detalles de granularidad fina; Autoformer o FEDformer pueden funcionar mejor en ese aspecto, y facilitar la detección de patrones estacionales. Pero, por contra, se alejan un poco más de los mecanismos habitualmente usados en Transformers, y no podremos experimentar el impacto de diferentes encoding posicionales, que es el objetivo que estamos tratando.
+A modo de resumen, se muestra la tabla \ref{resumenmodelos}, donde se pueden apreciar las diferentes características de cada modelo.\\
 
-A modo de resumen, se muestra la tabla \ref{resumenmodelos}, donde se pueden apreciar las diferentes características de cada modelo.
-
-\begin{table}[H]
+\begin{table}[!ht]
     \centering
     \begingroup
     \renewcommand{\arraystretch}{1.15}
@@ -1017,8 +1019,8 @@ A modo de resumen, se muestra la tabla \ref{resumenmodelos}, donde se pueden apr
         \toprule
         \textbf{Modelo} & \textbf{Positional Encoding} & \textbf{¿Captura periodicidad?} & \textbf{Mecanismo principal} & \textbf{Uso destacado} \\
         \midrule
-        Transformer     & Sinusoidal / Aprendido       & Limitado                        & Atención completa                   & Modelo base, generalista para secuencias                    \\
-        Transformer-XL  & Aprendido relativo           & No explícitamente               & Atención recursiva con segmentación & Maneja dependencias a muy largo plazo con estado recurrente \\
+        Transformer     & Sinusoidal       & Limitado                        & Atención completa                   & Modelo base, generalista para secuencias                    \\
+        Transformer-XL  & Aprendido           & No explícitamente               & Atención recursiva con segmentación & Maneja dependencias a muy largo plazo con estado recurrente \\
         Reformer        & Sinusoidal                   & No explícitamente               & Atención local + hashing            & Escalabilidad para secuencias muy largas                    \\
         LogTrans        & Sinusoidal                   & No explícitamente               & Atención logarítmica                & Mejor manejo de dependencias a largo plazo                  \\
         Informer        & Sinusoidal                   & No explícitamente               & Atención ProbSparse                 & Eficiencia computacional para secuencias largas             \\
