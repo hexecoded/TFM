@@ -1,4 +1,4 @@
-\chapter{Selección y Estudio de los conjuntos de datos}
+\chapter{Selección y análisis de los conjuntos de datos empleados en el análisis experimental de las propuestas}
 
 En el anterior capítulo, hemos revisado el estado actual de los encodings en los modelos de series temporales, y hemos realizado cinco propuestas teniendo como principal concepto el uso de ventana para aumentar el contexto explícito de los datos, y la hibridación de diferentes métodos vistos mediante el uso de encodings ponderados. Pero con la formulación no es suficiente, ya que debemos comprobar su efectividad de manera empírica, realizando para ello diversos experimentos sobre diferentes conjuntos de datos.\\
 
@@ -65,7 +65,7 @@ De manera previa, a la vista de la información dada por los gráficos de autoco
 
 \subsection{Household Power Consumption (HPC)}
 
-El siguiente dataset seleccionado a analizar es Household Power Consumption, un conjunto bastante extendido que puede ser encontrado en el repositorio UCI~\cite{hebrail2006individual}. Contiene la evolución del consumo eléctrico de una vivienda localizada cerca de París, entre los años 2006 y 2010, con el objetivo de poder construir un modelo capaz de representar el consumo asociado a dicha vivienda y sus diferentes sub-mediciones.\\
+El siguiente dataset seleccionado para la experimentación es Household Power Consumption, un conjunto bastante extendido que puede ser encontrado en el repositorio UCI~\cite{hebrail2006individual}. Contiene la evolución del consumo eléctrico de una vivienda localizada cerca de París, entre los años 2006 y 2010, con el objetivo de poder construir un modelo capaz de representar el consumo asociado a dicha vivienda y sus diferentes sub-mediciones.\\
 
 Continuamos de esta forma en el mismo ámbito que el dataset anterior, pero en este caso, nuestro objetivo no está centrado en evaluar el correcto funcionamiento del sistema, sino en ser capaces de modelar el consumo de la vivienda, y así poder realizar ajustes en la tarifa para contratar la potencia necesaria, o bien comprender el ciclo de consumo. Esta tarea es de vital importancia, ya que si escalamos su modelado a una población completa, podríamos obtener un modelo fiel capaz de ajustar los recursos eléctricos necesarios para su abastecimiento, y nos alineamos de nuevo con las necesidades de ahorro y eficiencia a la cual hemos dado importancia a lo largo de los diferentes ejemplos vistos en el trabajo.\\
 
@@ -114,7 +114,7 @@ Por tanto, el análisis de la autocorrelación nos ha aportado información muy 
 
 \subsection{Yellow Trip Data}
 
-El tercer dataset a evaluar será Yellow Trip Data, cuya temática diverge del tema energético visto hasta el momento para estudiar nuevas semánticas de problemas. Este conjunto de datos podemos encontrarlo en la web de New York City Open Data~\cite{nycopendata}, donde se alojan multitud de datos públicos actualizados anualmente de diferentes sistemas de la ciudad. Basados en datos del año 2015, esta variante ha sido expandida artificialmente para aumentar el tamaño de la serie hasta sobrepasar las 2 millones de instancias.\\
+El tercer dataset seleccionado para nuestro análisis empírico de las propuestas será Yellow Trip Data, cuya temática diverge del tema energético visto hasta el momento para estudiar nuevas semánticas de problemas. Este conjunto de datos podemos encontrarlo en la web de New York City Open Data~\cite{nycopendata}, donde se alojan multitud de datos públicos actualizados anualmente de diferentes sistemas de la ciudad. Basados en datos del año 2015, esta variante ha sido expandida artificialmente para aumentar el tamaño de la serie hasta sobrepasar las 2 millones de instancias.\\
 
 El conjunto de datos contiene información sobre los viajes realizados mediante el servicio de taxi en la ciudad de Nueva York, con el propósito de modelar los patrones de comportamiento de los usuarios durante sus desplazamientos. Desde un enfoque analítico, estimar la demanda del servicio y la duración de los viajes resulta fundamental para optimizar la asignación de vehículos en circulación, evitando la existencia de conductores ociosos y contribuyendo a la reducción del tráfico en la ciudad. De este modo, no solo se mejora la fluidez vehicular, sino que también se disminuye el consumo energético y las emisiones contaminantes al eliminar vehículos innecesarios.\\
 
@@ -183,9 +183,7 @@ De esta forma, disponemos de un conjunto de datos variado y de mayor complejidad
 
 \section{Preprocesado de los datos}
 
-El preprocesado de los datos es un fase fundamental en el procesamiento previo de cualquier problema de aprendizaje. El significado semántico de cada variable, que es el contenido visto hasta ahora, nos permite entender todo el trasfondo necesario para estudiar su estructura e identificar posibles aspectos que requieren refinamiento, o ajustes para aprovechar al máximo la información que contienen en el modelo que queremos entrenar.\\
-
-En series temporales, las mayores dificultades que podemos encontrar son la diferencia de rangos entre atributos de la serie, y el formato de los timestamp que indexan las diferentes mediciones. Ambos aspectos los gestionaremos de la siguiente forma:
+Se trata de una fase fundamental de cualquier problema de aprendizaje sobre datos. El significado semántico de cada variable, que es el contenido visto hasta ahora, nos permite entender todo el trasfondo necesario para estudiar su estructura e identificar posibles aspectos que requieren refinamiento, o ajustes para aprovechar al máximo la información que contienen en el modelo que queremos entrenar. En series temporales, las mayores dificultades que podemos encontrar son la diferencia de rangos entre atributos de la serie, y el formato de los timestamp que indexan las diferentes mediciones. Ambos aspectos los gestionaremos de la siguiente forma:
 
 \begin{itemize}
 	\item Para la diferencia de rangos entre variables, debemos aplicar una técnica de normalización de datos. Si bien el dataset de TINA está normalizado de origen como parte de su procedimiento de anonimizado, el resto de conjuntos presentan grandes diferencias entre atributos. Por tanto, para mejorar la convergencia del modelo y evitar condiciones de dominancia, optaremos por aplicar estandarización: calcular la media y desviación típica para cada variable y lograr media 0 y varianza 1.
@@ -205,7 +203,7 @@ De esta forma, si bien se requerirán otros ajustes puntuales para cada uno de l
 	\item Guardado de cada uno de los elementos en la clase asociada al dataset para que puedan ser recuperados fácilmente.
 \end{enumerate}
 
-\begin{algorithm}[H]
+\begin{algorithm}[!ht]
 	\caption{Lectura y preparación de datos}
 	\begin{algorithmic}[1]
 		\Procedure{preprocesarDatos}{root\_path, data\_path, target, seq\_len, set\_type, features, scale}
@@ -251,7 +249,7 @@ De esta forma, si bien se requerirán otros ajustes puntuales para cada uno de l
 		\Else
 		\State data $\gets df\_data$
 		\EndIf
-
+		
 		
 		\State \texttt{df\_stamp} $\gets$ \texttt{df\_raw[['date']][border1:border2]}
 		\State \texttt{df\_stamp['date']}  $\gets$ $\Call{convertirDateTime}{df\_stamp['date']}$
@@ -268,6 +266,5 @@ De esta forma, si bien se requerirán otros ajustes puntuales para cada uno de l
 	\caption{Preprocesado de datos: función genérica para lectura, particionado y guardado}
 	\label{preproc}
 \end{algorithm}
-
 
 

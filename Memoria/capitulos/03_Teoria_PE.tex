@@ -1,10 +1,10 @@
 \chapter{Estudio teórico. Propuestas en Positional Encoding}
 
-En el capítulo anterior, presentamos los principales modelos de aprendizaje para series temporales, y así analizar las soluciones propuestas por cada uno. Al hacerlo, pudimos identificar un problema clave: la codificación posicional no recibe la atención necesaria, y en la mayoría de casos se usa la formulación original, con adaptaciones mínimas, o bien, es suprimido a favor de otras alternativas incorporadas en la propia arquitectura.\\
+Tras el análisis realizado en el capítulo anterior, donde presentamos los principales modelos de aprendizaje para series temporales, pudimos identificar un elemento común en todas las alternativas: la codificación posicional no recibe la atención necesaria, y prácticamente siempre se recurre a una misma solución: el empleo de la codificación sinusoidal como mecanismo de enriquecimiento de la secuencialidad y posición de los datos (ver \ref{resumenmodelos}).\\
 
-En este capítulo, teniendo presente los tipos anteriormente descritos de codificaciones (fijo, aprendible, adición de variables temporales, transformaciones), retomaremos esa clasificación para profundizar en las propuestas más recientes orientadas específicamente a series temporales, analizando su motivación, diseño y posibles ventajas frente a las formulaciones clásicas.\\
+Partiendo de la clasificación propuesta anteriormente (sección \ref{encodingsect}) para las codificaciones (fijo, aprendible, adición de variables temporales, transformaciones)~\cite{irani2025positionalencodingtransformerbasedtime}, nos adentraremos en las propuestas más recientes orientadas específicamente a series temporales, analizando su motivación, diseño y cambios frente a las formulaciones clásicas.\\
 
-Partiremos del esquema tradicional de codificación posicional heredado del Transformer original y examinaremos cómo distintos trabajos recientes han intentado superar sus limitaciones mediante adaptaciones de carácter local o dependientes del contenido. Nuestro objetivo será identificar las ventajas concretas que aporta cada enfoque, extraer de ellos la inspiración necesaria y, a partir de ahí, diseñar nuevos experimentos de codificación posicional que integren ideas capaces de mejorar el rendimiento del modelo.
+Comenzaremos a partir del esquema tradicional de codificación posicional definido en el Transformer original, y examinaremos cómo distintos trabajos recientes han intentado superar sus limitaciones mediante adaptaciones de carácter local o dependientes del contenido. Nuestro objetivo será identificar las ventajas concretas que aporta cada enfoque, extraer de ellos la inspiración necesaria y, a partir de ahí, diseñar nuevos experimentos de codificación posicional que integren ideas capaces de mejorar el rendimiento del modelo.
 
 \section{Análisis de propuestas existentes}
 
@@ -22,7 +22,7 @@ Para poder profundizar más en este aspecto, podemos adentrarnos en surveys como
 
 \subsection{Métodos aditivos}
 
-Comenzaremos el análisis por el positional encoding aditivo. Esta vertiente toma como referencia el mecanismo de adición de información empleado por el enfoque sinusoidal original, ya que todas estas codificaciones se añaden al embedding mediante suma, de forma que no es necesario realizar modificaciones adicionales a la arquitectura neural que los procesará, y facilita el uso de modelos preentrenados con el fin de ahorrar recursos de cómputo.\\
+Esta vertiente toma como referencia el mecanismo de adición de información empleado por el enfoque sinusoidal original, ya que todas estas codificaciones se añaden al embedding mediante suma, de forma que no es necesario realizar modificaciones adicionales a la arquitectura neural que los procesará, y facilita el uso de modelos preentrenados con el fin de ahorrar recursos de cómputo.\\
 
 En mayor detalle, estos métodos construyen un vector posicional $(P \in \mathbb{R}^{L \times d})$ y lo se suma directamente a los embeddings de entrada (X), obteniendo:
 
@@ -52,9 +52,9 @@ Donde cada variable indica:
 	\item \textbf{d}: dimensión total del embedding.
 \end{itemize}
 
-Basándonos simplemente en su formulación, fuimos capaces de distinguir ya sus ventajas y desventajas; como ventaja, podemos ver que se trata de una codificación no entrenable, por lo que para unas mismas dimensiones de entrada de datos, el resultado será siempre el mismo, y sus valores no se deben entrenar época a época de manera independiente. Esto lo hace más sencillo de usar, y más eficiente al no requerir parámetros adicionales. Sin embargo, como principal desventaja, estimamos que no permite modelar con suficiente adaptabilidad los períodos no estacionales de datos o con mayor número de irregularidades y valores anómalos.\\
+Analizando su formulación, es posible identificar claramente sus ventajas y desventajas. Entre los aspectos positivos, podemos destacar su simplicidad: los valores generados, y por tanto, sus dimensiones, serán siempre las mismas para conjuntos de datos con igual tamaño de entrada, sin necesidad de especificar parámetros adicional por parte del usuario. Por otro lado, su principal limitación radica en la escasa capacidad de adaptarse a patrones complejos: al ser una codificación no entrenable durante las sucesivas épocas, en series temporales con períodos no estacionales, irregularidades o valores anómalos, este enfoque puede resultar insuficiente para capturar las dinámicas reales de los datos.\\
 
-Su forma sencilla de acoplar al conjunto de datos de entrada nos sirve de inspiración para la creación de nuevas variantes que traten de incorporar más contexto semántico de los datos.
+A pesar de ello, su forma sencilla de acoplar al conjunto de datos de entrada como una simple suma nos sirve de inspiración para la creación de nuevas variantes que traten de incorporar más contexto semántico de los datos.
 
 \subsubsection{Time Absolute Positional Encoding (tAPE)}
 
@@ -131,7 +131,7 @@ Añadiéndose al encoding final de manera aditiva:
 $$T\text{-}PE(i) = PE(i) + S(i, j)$$
 
 
-La principal fortaleza de este enfoque, por tanto, radica en la combinación de un anclaje posicional absoluto con una componente semántica adaptativa, lo que le permite capturar, de forma natural y simultánea, tanto las relaciones temporales globales como las similitudes entre elementos, integrando información global y local en una única representación.\\
+La principal fortaleza de este enfoque, por tanto, radica en la combinación de una especificación posicional absoluta, con una componente semántica adaptativa, lo que le permite capturar, de forma simultánea tanto las relaciones temporales globales como las similitudes entre elementos, integrando información global y local en una única representación.\\
 
 Pero su implementación puede inducir problemas para la escalabilidad. La gaussiana entre todas las posiciones implica un coste cuadrático $O(L^2)$.- Además, su rendimiento está fuertemente condicionado por el grado de integración entre las dos componentes, ya que un desbalance podría anular las ventajas buscadas.\\
 
@@ -228,13 +228,11 @@ Una vez analizadas todas las propuestas más destacadas a fecha de 2025 \cite{ir
 
 \subsection{Criterios de partida}
 
-Para comenzar, estableceremos los criterios que vamos a seguir en la formulación de las alternativas, y la justificación de la toma de decisiones.\\
-
 La primera cuestión que nos puede emerger es el tipo de encoding que parece más conveniente: un encoding aditivo, más sencillo e intuitivo de formular, o bien, un encoding basado en modificar el mecanismo de atención. Con la experiencia recogida de los ejemplos vistos en subapartado anterior, responder a esta pregunta es sencillo; los mecanismos de modificación de la atención parecen una mejora razonable sobre el papel, pero el overhead introducido sobre el tiempo de entrenamiento puede ser excesivo, ralentizando en exceso los experimentos dados los recursos disponibles para realizar este proyecto. Además, hemos podido verificar que prácticamente todos los métodos recogidos en el survey funcionan especialmente mejor para tareas de clasificación, lo cual es un problema totalmente diferente frente a nuestro propósito de realizar forecasting. En definitiva, si bien ejecutaremos alguna prueba puntual con este tipo de algoritmos para verificar su eficiencia y rendimiento, no será nuestro camino a seguir.\\
 
 En su lugar, optaremos por modelos que modifiquen únicamente el embedding de entrada, pero no alteren la arquitectura del Transformer propiamente dicha, centrándonos en un objetivo clave: mejorar la semántica de los datos, empleando para ello la información local de los propios datos. A excepción de LPE y la parte semántica de T-PE, la mayoría de modelos de encoding son agnósticos al contenido del conjunto de entrenamiento, y debemos tratar de solucionar este problema. Para ello, podemos tomar inspiración de los primeros modelos de cálculo, como ARIMA y STL, y recuperar uno de los conceptos no empleados hasta ahora: el uso de ventanas. Pero no desde el punto de vista de troceado del conjunto de datos, sino como herramienta para construir localidad espacial.\\
 
-Podemos lograr que entornos locales de similares características tengan una codificación también muy parecida, y la propia arquitectura del Transformer sea capaz de identificar dichas entradas similares para construir patrones de estacionalidad y puntos de interés. Para ello, un modelo aditivo puro podría dificultar la percepción de qué información es la de contexto de entrada, y cual es la información posicional. Por tanto, a diferencia de lo visto hasta ahora, podemos plantear una solución alternativa: concatenar esta información al embedding de entrada, aumentando su dimensionalidad en cuanto a número de características, pero facilitando dicha separación.\\
+Podemos lograr que entornos locales de similares características tengan una codificación también muy parecida, y la propia arquitectura del Transformer sea capaz de identificar dichas entradas similares para construir patrones de estacionalidad y puntos de interés. Para ello, un modelo aditivo puro podría dificultar la percepción de qué información es la de contexto de entrada, y cual es la información posicional. Por tanto, a diferencia de lo visto hasta ahora, podemos plantear una solución alternativa: \emph{concatenar esta información al embedding de entrada, aumentando su dimensionalidad en cuanto a número de características, pero facilitando dicha separación}.\\
 
 Como contenido a añadir, la idea más simple consiste en utilizar estadísticos básicos: medidas fácilmente paralelizables y sencillas en cómputo que, evaluadas entorno a una ventana para cada valor, nos pueda ofrecer nuevas características. Pueden ser desde métricas básicas de dispersión y valores extremos, hasta diferencias entre el valor central $x$ y el lag de orden n, $x_n$. De esta forma, potenciamos el modelado de la información alrededor de cada punto, y es potencialmente probable que dos valores $x$ separados en la serie, con un mismo contexto de valores locales concatenados, realmente se encuentren en las mismas posiciones relativas a un período de una estación.\\
 
@@ -280,11 +278,11 @@ Para evaluar la utilidad de esta estrategia, diseñaremos una serie de modelos d
 Por tanto, el camino seguido para evaluar las diferentes alternativas, quedaría resumida de la siguiente forma:
 
 \begin{enumerate}
-	\item \textbf{WinStat}. Se trata de un modelo que usará el método de ventana deslizante para adjuntar valores estadísticos a los datos de entrada. Adjuntará media, std, y extremos, por lo que aumenta en 4 dimensiones el embedding resultante.
-	\item \textbf{WinStatLag}. Consiste en añadir, a la propuesta anterior, información acerca de un conjunto de lags anteriores, de manera que se calculan las diferencias y se agregan como una nueva característica a cada punto. De nuevo, se aumenta el tamaño del embedding, y depende del número de lags a incorporar.
-	\item \textbf{WinStatFlex}. Consiste en combinar el método anterior de WinStatLag con una ponderación de los diferentes postional encoding de tipo aditivo vistos, a excepción de TPE, que se trata de un método híbrido. Para ello, se emplea la arquitectura vista en la figura \ref{enhancedhybrid}.
-	\item \textbf{WinStatTPE}. Realiza la ponderación de los métodos aditivos con TPE, pero suprimiendo TAPE, cuya codificación podría incorporar demasiada redundancia.
-	\item \textbf{WinStatSPE}. Prueba la utilidad de un modelo combinado con encodings aditivos, valores estadísticos y un mecanismo de atención modificado, concretamente SPE, que es el que mejores resultados mostró en \cite{irani2025positionalencodingtransformerbasedtime}. 
+	\item \textbf{WinStat}. Se trata de un modelo que usará el método de ventana deslizante para adjuntar valores estadísticos a los datos de entrada. Adjuntará media, desviación estándar, y extremos, por lo que aumenta en 4 dimensiones el embedding resultante. El objetivo es incorporar, mediante información contextual sencilla de comprender, información que nos permita hacer corresponder puntos de un mismo entorno por su similaridad. Será nuestro modelo base para el resto de propuestas.
+	\item \textbf{WinStatLag}. Consiste en añadir, a la propuesta anterior, información acerca de un conjunto de lags anteriores, de manera que se calculan las diferencias y se agregan como una nueva característica a cada punto. De nuevo, se aumenta el tamaño del embedding, y depende del número de lags a incorporar. Basado en los modelos autorregresivos clásicos, busca reforzar aún más la caracterización de cada posición empleando la infomación de los valores inmediatos, sin hacer especialmente complejo el cálculo e interpretación.
+	\item \textbf{WinStatFlex}. Consiste en combinar el método anterior de WinStatLag con una ponderación de los diferentes postional encoding de tipo aditivo vistos, a excepción de TPE, que se trata de un método híbrido. Para ello, se emplea la arquitectura vista en la figura \ref{enhancedhybrid}. De esta forma, en combinación con la información contextual original, podemos emplear de forma flexible una combinación lineal de encodings aditivos destacados en el estado del arte, sin necesidad de especificar parámetros extra y reforzando la información global de orden y posición.
+	\item \textbf{WinStatTPE}. Realiza la misma operación que la variante Flex, pero en lugar de tAPE, emplea la codificación T-PE. La sustitución se debe a que ambas usan como base la información geométrica proporcionada por senos y cosenos, por lo que combinar ambas carece de sentido, aunque el modelo sea capaz de ajustar los pesos para hacer destacar a una de las dos. La elección de realizar esta operación se debe a que T-PE es capaz de vincular de manera más profunda la relación entre información de posición global mediante su componente geométrica, y local a través de su información semántica basada en el suavizado gaussiano y la correspondencia entre pares de posiciones.
+	\item \textbf{WinStatSPE}. Prueba la utilidad de un modelo combinado con encodings aditivos, valores estadísticos y un mecanismo de atención modificado, concretamente SPE, siendo dicho mecanismo el que mejor resultados ofrecía en \cite{irani2025positionalencodingtransformerbasedtime}. No obstante, su evaluación se realiza únicamente con fines de descarte, ya que dicha técnica es más indicada para problemas de clasificación, pero resulta de interés probar su uso en problemas de predicción, dada la falta de infornmación experimental ante su comportamiento en este contexto.
 \end{enumerate}
 
 En los siguientes puntos, examinaremos con detalle cada alternativa, atendiendo a la formulación propia de cada una de ellas.
@@ -355,7 +353,7 @@ que será la entrada de nuestro modelo de Transformer seleccionado.\\
 De manera algorítmica, su implementación es bastante sencilla (ver pseudocódigo \ref{winstat}). Al usar herramientas del lenguaje de programación que permitan cálculo en paralelo, las operaciones son fácilmente vectorizables, reduciendo así el tiempo necesario para la creación del vector.
 
 
-\begin{algorithm}[H]
+\begin{algorithm}[!ht]
 	\begin{algorithmic}[1]
 		\Require 
 		$X \in \mathbb{R}^{L \times d}$ \Comment{matriz de entrada}
@@ -382,7 +380,7 @@ De manera algorítmica, su implementación es bastante sencilla (ver pseudocódi
 
 \subsection{WinStatLag}
 
-Teniendo como base WinStat, este método puede verse como una ampliación. Conservando los valores estadísticos calculados para cada posición, este método introduce información proporcionada de lags anteriores, de manera que se evalúa la diferencia entre el valor actual y tantos valores anteriores como se desee. El objetivo sigue siendo el mismo: mejorar la semántica a través del contexto local.
+Teniendo como base WinStat, este método puede verse como una ampliación; conservando los valores estadísticos calculados para cada posición, este método introduce información proporcionada de lags anteriores, de manera que se evalúa la diferencia entre el valor actual y tantos valores anteriores como se desee. El objetivo sigue siendo el mismo: mejorar la semántica a través del contexto local.
 
 \subsubsection{Funcionamiento}
 
@@ -471,7 +469,7 @@ Anteriormente, empleamos la información otorgada por los estadísticos calculad
 
 Los métodos aditivos se caracterizan por añadir información absoluta de los datos, haciendo hincapié en crear una estructura que permita identificar el orden de los elementos de forma global, pero teniendo de cerca la eficiencia computacional como restricción a cumplir. Esta ha sido la estrategia seguida desde un primer comienzo por el Transformer original de Vaswani~\cite{vaswani2023attentionneed} y sus métodos de codificación sucesores vistos.\\
 
-Todos ellos se basan en el uso de la información geométrica proporcionada por los senos y cosenos: el PE original, TAPE, TPE... pero también existía la codificación posicional aprendible, LPE, que nos permite codificar la información de la forma más cercana posible a la semántica de los datos. Dada la similaridad de todos estos métodos, y a la falta de criterio exacto en la que usar cada una de estas variantes, resulta interesante permitir que el modelo, de alguna manera, escoja a qué metodología darle preferencia, y es así como surge la idea formulada anteriormente de ponderar mediante pesos: el modelo podrá aprender dichos pesos, que son normalizados, para ver a qué codificación dar preferencia.\\
+Todos ellos se fundamentan en el aprovechamiento de la información geométrica proporcionada por funciones seno y coseno, como ocurre en el PE original, TAPE y T-PE. Además, también destaca la codificación posicional aprendible (LPE), la cual permite representar la información de manera más cercana a la semántica intrínseca de los datos, ofreciendo un mayor grado de adaptabilidad a la semántica de los datos. Dada la similaridad de todos estos métodos, y a la falta de criterio exacto en la que usar cada una de estas variantes, resulta interesante permitir que el modelo, de alguna manera, escoja a qué metodología darle preferencia, y es así como surge la idea formulada anteriormente de ponderar mediante pesos: el modelo podrá aprender dichos pesos, que son normalizados, para ver a qué codificación dar preferencia.\\
 
 Dicho comportamiento nos permitirá adaptarnos a cada conjunto de entrada, y además, si estudiamos los valores finales de cada peso, ver cuáles son las necesidades del modelo: una mejora en la semántica, o por el contrario, una mayor necesidad de encoding absoluto. Recordando el funcionamiento de esta teoría de pesos, para este modelo concreto, necesitaremos 4 pesos: para PE, LPE, TAPE y para la propia información de valor, proporcionada por WinStat. De esta forma, logramos un enfoque flexible, el cual da nombre a esta estrategia.\\
 
