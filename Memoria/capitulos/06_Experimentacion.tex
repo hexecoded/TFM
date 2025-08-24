@@ -53,8 +53,6 @@ No obstante, la decisión de escoger un dataset únicamente para esta tarea vien
 
 \subsubsection{Análisis comparativo de las propuestas formuladas}
 
-
-
 Escoger un conjunto de datos como este, de aproximadamente 2 millones de mediciones, y 7 características, supone un interesante campo de pruebas para las codificaciones. Para la comparativa, realizaremos las siguientes ejecuciones:
 
 \begin{itemize}
@@ -250,7 +248,7 @@ En resumen, queda en evidencia que esta modificación, empleando SPE como varian
 
 Una pregunta especialmente relevante, tras todo el proceso visto hasta el momento, es la siguiente: ¿realmente resulta significativo el uso de positional encoding para la predicción de series temporales?\\
 
-La teoría indica que sí, dado que los datos de entrada por sí solos no contienen información explícita sobre el orden temporal, y el cálculo de atenciones, al basarse en productos de matrices, no puede inferirlo por sí solo.  No obstante, se ha comprobadoo empíricamente para así reafirmar esta idea. En la Tabla \ref{hpcorigs} se presentan los resultados del experimento. Tal y como se esperaba, el rendimiento sin positional encoding es inferior al de las codificaciones propuestas, tanto las basadas en geometría como las variantes de WinStat, a excepción de SPE, que claramente no correspondía a este ámbito de problemas.\\
+La teoría indica que sí, dado que los datos de entrada por sí solos no contienen información explícita sobre el orden temporal, y el cálculo de atenciones, al basarse en productos de matrices, no puede inferirlo por sí solo.  No obstante, se ha comprobado empíricamente para así reafirmar esta idea. En la Tabla \ref{hpcorigs} se presentan los resultados del experimento. Tal y como se esperaba, el rendimiento sin positional encoding es inferior al de las codificaciones propuestas, tanto las basadas en geometría como las variantes de WinStat, a excepción de SPE, que claramente no correspondía a este ámbito de problemas.\\
 
 Sin embargo, la diferencia con respecto a la arquitectura Informer original es mínima: el rendimiento es muy cercano, con valores de $0,5329$ frente a $0,5448$. Esto indica que la información posicional aportada por el positional encoding en este caso es limitada, ya que el empeoramiento relativo es prácticamente despreciable. Esta observación refuerza aún más la relevancia del trabajo realizado en la optimización y comparación de distintas codificaciones que se viene realizando hasta el momento.
 
@@ -338,9 +336,10 @@ Este dataset presenta una longitud bastante más reducida que el anterior, espec
  Para validar este efecto en diferentes contextos, se realizarán las pruebas sobre los dos transformadores, es decir, sobre los conjuntos de datos \textit{ETTh1} y \textit{ETTh2}, correspondientes a las variantes horarias, con el fin de comprobar si el comportamiento de ambos sistemas, medidos bajo las mismas condiciones, pero con diferentes comportamientos, nos aportan conclusiones similares. Comenzaremos el examen por la variante ETTh1 y posteriormente analizaremos ETTh2 para cada algoritmo.
 
 
-\subsubsection{Análisis y resultados}
+\subsubsection{Análisis comparativo de las propuestas formuladas}
 
-Una vez configurado el entorno de pruebas, podemos pasar a la evaluación del modelo. Al igual que se hizo con HPC, se han fijado todos los parámetros comunes a los algoritmos a los mismos valores con el objetivo de que la configuración de la arquitectura no afecte a los resultados, y sea el propio encoding el que determine la diferencia. La arquitectura y los parámetros asociados se pueden ver en la tabla \ref{ajustesett}. En este caso, el horizonte de predicción y el tamaño de ventana son menores, para así adecuarnos al tamaño de los datos disponibles, y teniendo en cuenta también que la granularidad es horaria.
+
+Una vez configurado el entorno de pruebas, podemos pasar a la evaluación del modelo. Al igual que se hizo con HPC, se han fijado todos los parámetros comunes a los algoritmos a los mismos valores con el objetivo de que la configuración de la arquitectura no afecte a los resultados, y sea el propio encoding el que determine la diferencia. La arquitectura y los parámetros asociados se pueden ver en la Tabla \ref{ajustesett}. En este caso, el horizonte de predicción y el tamaño de ventana son menores, para así adecuarnos al tamaño de los datos disponibles, y teniendo en cuenta también que la granularidad es horaria.
 
 \begin{table}[!ht]
 	\centering
@@ -350,7 +349,7 @@ Una vez configurado el entorno de pruebas, podemos pasar a la evaluación del mo
 		\midrule
 		{Modelo de atención} & Vanilla \\
 		{Tamaño de batch} & 32 \\
-		{Dropout} & 0.2 \\
+		{Dropout} & 0,2 \\
 		{Nº de ejecuciones} & 5 \\
 		{Tamaño de ventana} & 24 \\
 		{Longitud de secuencia} & 96 \\
@@ -362,348 +361,176 @@ Una vez configurado el entorno de pruebas, podemos pasar a la evaluación del mo
 	\label{ajustesett}
 \end{table}
 
+Siguiendo el mismo camino que el caso anterior, evaluaremos cada uno de los dos datasets por separado, comenzando por Informer como modelo de referencia y tomando las alternativas seleccionadas en el dataset anterior:
+
+\begin{itemize}
+	\item Informer con configuración por defecto.
+	\item PE sinusoidal.
+	\item Nuevas propuestas: WinStatFlex y WinStatTPE
+	\item Sin PE.
+\end{itemize}
+
+En la Tabla \ref{etth1tabla} se pueden encontrar los resultados finales para el conjunto ETTh1, mientras que en la \ref{etth2tabla} se representan los de ETTh2.
+
+\begin{landscape}
+	\clearpage
+	\setlength{\tabcolsep}{4pt}
+	\centering
+	
+	% --- Tabla ETTh1 ---
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{l *{5}{NN}}
+			\toprule
+			& \multicolumn{2}{c}{Informer} & \multicolumn{2}{c}{PE seno-coseno} & \multicolumn{2}{c}{WinStatFlex} & \multicolumn{2}{c}{WinStatTPE} & \multicolumn{2}{c}{Informer sin PE} \\
+			\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+			Métrica & Media & STD & Media & STD & Media & STD & Media & STD & Media & STD \\
+			\midrule
+			MSE          & 0,5458 & 0,0204 & 0,5775 & 0,0755 & 0,4676 & 0,1017 & 0,4896 & 0,0481 & 0,9234 & 0,0841 \\
+			MAE          & 0,5323 & 0,0170 & 0,5552 & 0,0530 & 0,5128 & 0,0651 & 0,5071 & 0,0312 & 0,7419 & 0,0509 \\
+			MAPE         & 11,7991 & 1,6264 & 11,8695 & 1,1729 & 3,3438 & 0,7678 & 11,0850 & 0,7300 & 14,2329 & 4,2950 \\
+			MSPE         & 48779,9515 & 13908,2080 & 47931,0582 & 10247,6900 & 1530,2028 & 410,7895 & 45770,9078 & 7129,3390 & 76807,5121 & 46287,2800 \\
+			RMSE         & 0,7386 & 0,0137 & 0,7583 & 0,0494 & 0,6797 & 0,0749 & 0,6988 & 0,0348 & 0,9600 & 0,0430 \\
+			TrainTime(s) & 16,8195 & 1,7489 & 25,5205 & 0,3850 & 32,9894 & 3,7753 & 52,7320 & 0,9542 & 17,3358 & 3,1498 \\
+			TestTime(s)  & 0,3835 & 0,0025 & 0,6075 & 0,0037 & 0,8347 & 0,0243 & 1,3399 & 0,0432 & 0,4510 & 0,0435 \\
+			\bottomrule
+		\end{tabular}
+		\caption{ETTh1: comparación de modelos}
+		\label{etth1tabla}
+	\end{table}
+	
+	\vspace{0.8cm}
+	
+	% --- Tabla ETTh2 ---
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{l *{5}{NN}}
+			\toprule
+			& \multicolumn{2}{c}{Informer} & \multicolumn{2}{c}{PE seno-coseno} & \multicolumn{2}{c}{WinStatFlex} & \multicolumn{2}{c}{WinStatTPE} & \multicolumn{2}{c}{Informer sin PE} \\
+			\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+			Métrica & Media & STD & Media & STD & Media & STD & Media & STD & Media & STD \\
+			\midrule
+			MSE          & 0,8866 & 0,1000 & 1,3881 & 0,1581 & 0,4659 & 0,0277 & 0,5963 & 0,0760 & 1,0132 & 0,2417 \\
+			MAE          & 0,7549 & 0,0539 & 0,9354 & 0,0513 & 0,4946 & 0,0195 & 0,5889 & 0,0496 & 0,7777 & 0,1199 \\
+			MAPE         & 5,9255 & 0,6455 & 3,7309 & 0,1987 & 10,5155 & 0,3473 & 4,0523 & 0,3550 & 6,7968 & 1,5589 \\
+			MSPE         & 2924,2255 & 475,5167 & 1794,1597 & 267,3987 & 40193,9492 & 2941,5654 & 1707,3835 & 527,4795 & 4086,2261 & 447,7785 \\
+			RMSE         & 0,9400 & 0,0536 & 1,1763 & 0,0656 & 0,6823 & 0,0202 & 0,7707 & 0,0483 & 0,9985 & 0,1266 \\
+			TrainTime(s) & 18,6765 & 1,9456 & 18,2906 & 0,4144 & 27,8224 & 2,5653 & 54,8328 & 4,5936 & 18,1968 & 2,3087 \\
+			TestTime(s)  & 0,4499 & 0,0240 & 0,4659 & 0,0399 & 0,7793 & 0,0089 & 1,3279 & 0,0685 &  1,0132 & 0,2417 \\
+			\bottomrule
+		\end{tabular}
+		\caption{ETTh2: comparación de modelos}
+		\label{etth2tabla}
+	\end{table}
+	
+\end{landscape}
+\clearpage
+
 \paragraph{Informer}
 
-Siguiendo el camino establecido, comenzaremos ejecutando Informer, nuestro algoritmo de referencia, incorporando la información de los timestamps mediante timeF. Aunque podríamos tomar los resultados registrados en su publicación original como referencia~\cite{zhou2021informerefficienttransformerlong}, desconocemos los detalles de bajo nivel sobre cómo obtuvieron los resultados finales, por lo que es preferible reejecutar el experimento para realizar una comparativa justa.
+Comenzamos el análisis por nuestro algoritmo de referencia, incorporando la información de los timestamps mediante timeF. Aunque podríamos tomar los resultados registrados en su publicación original como referencia~\cite{zhou2021informerefficienttransformerlong}, desconocemos los detalles de bajo nivel sobre cómo obtuvieron los resultados finales, por lo que ha sido preferible reejecutar el experimento para realizar una comparativa justa.\\
 
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|N|N}
-		\toprule
-		\text{Métrica} & \text{Media} & \text{STD} \\
-		\midrule
-		MSE & 0,545807 & 0,020421 \\
-		MAE & 0,532375 & 0,017099 \\
-		MAPE & 11,799151 & 1,626443 \\
-		MSPE & 48779,951562 & 13908,208000 \\
-		RMSE & 0,738659 & 0,013775 \\
-		TrainTime(s) & 16,819558 & 1,748976 \\
-		TestTime(s) & 0,383596 & 0,002506 \\
-		\bottomrule
-	\end{tabular}
-	\caption{ETTh1: métricas de rendimiento para Informer}
-	\label{etth1informer}
-\end{table}
+En la primera columna de la Tabla \ref{etth1tabla}, se recogen los resultados de las métricas para ETTh1. Podemos observar que, al igual que en HPC, las métricas distintas a MSE y MAE ofrecen un comportamiento bastate extremo, con tasas de error muy elevadas, potenciadas de nuevo por la cercanía a cero de buena parte de los valores, al estar estos normalizados y tener la serie extremos máximos bastante elevados. Si tomamos como referencia el MSE, obtenemos un valor bastante estable en cuanto a variabilidad del resultado, y con valor próximo al MAE.\\
 
-
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|N|N}
-		\toprule
-		\text{Métrica} & \text{Media} & \text{STD} \\
-		\midrule
-		MSE & 0,886627 & 0,100092 \\
-		MAE & 0,754907 & 0,053964 \\
-		MAPE & 5,925552 & 0,645586 \\
-		MSPE & 2924,225586 & 475,51672 \\
-		RMSE & 0,940080
-		 & 0,053635 \\
-		TrainTime(s) & 18,676547 & 1,945601 \\
-		TestTime(s) & 0,449962 & 0,024086 \\
-		\bottomrule
-	\end{tabular}
-	\caption{ETTh2: métricas de rendimiento para Informer}
-	\label{etth2informer}
-\end{table}
-
-
-
-
-En la tabla \ref{etth1informer}, se recogen los resultados de las métricas para ETTh1. Podemos observar que, al igual que en HPC, las métricas distintas a MSE y MAE ofrecen un comportamiento bastate extremo, con tasas de error muy elevadas, potenciadas de nuevo por la cercanía a cero de buena parte de los valores, al estar estos normalizados y tener la serie extremos máximos bastante elevados. Si tomamos como referencia el MSE, obtenemos un valor bastante estable en cuanto a variabilidad del resultado, y con valor próximo al MAE.\\
-
-En el caso de ETTh2 (tabla \ref{etth2informer}), los resultados son bastante diferentes, siendo las métricas de error superiores en valor. Por ejemplo, el MSE es de $0,886$, mientras que el MAE es de $0,7549$. Pero, aunque las variables de ambos fenómenos sean las mismas y compartan unidades de medición, sus comportamientos difieren notablemente, como se evidenció en el análisis realizado en capítulos anteriores. Por ello, realizar una comparación directa de los valores numéricos podría inducir a conclusiones erróneas. Estudiaremos si ambos mejoran o empeoran cuando se usa otra codificación, pero con respecto a sí mismos y no entre ellos.\\
+En el caso de ETTh2 (Tabla \ref{etth2tabla}), los resultados son bastante diferentes, siendo las métricas de error superiores en valor. Por ejemplo, el MSE es de $0,886$, mientras que el MAE es de $0,7549$. Pero, aunque las variables de ambos fenómenos sean las mismas y compartan unidades de medición, sus comportamientos difieren notablemente, como se evidenció en el análisis realizado en capítulos anteriores. Por ello, realizar una comparación directa de los valores numéricos podría inducir a conclusiones erróneas. Estudiaremos si ambos mejoran o empeoran cuando se usa otra codificación, pero con respecto a sí mismos y no entre ellos.\\
 
 Obtenida ya la primera referencia, procederemos a revisar el resto de encodings para determinar empíricamente si este resultado es bueno o puede ser mejorable.
  
  
 \paragraph{PE sinusoidal}
  
- Para volver a comprobar si la pequeña información de contexto proporcionada por timeF es relevante, reejecutaremos la implementación de informer eliminando dicha componente y ejecutando únicamente con la parte geométrica del encoding.\\
+ Para volver a comprobar si la pequeña información de contexto proporcionada por timeF es relevante, se ha ejecutado la implementación de Informer eliminando dicha componente y ejecutando únicamente con la parte geométrica del encoding.\\
   
- \begin{table}[!ht]
- 	\centering
- 	\begin{tabular}{l|N|N}
- 		\toprule
- 		\text{Métrica} & \text{Media} & \text{STD} \\
- 		\midrule
-	 	MSE & 0,577572 & 0,075510 \\
-		MAE & 0,555214 & 0,053092 \\
-		MAPE & 11,869595 & 1,172958 \\
-		MSPE & 47931,058203 & 10247,69 \\
-		RMSE & 0,758369 & 0,049472 \\
-		TrainTime(s) & 25,520506 & 0,385055 \\
-		TestTime(s) & 0,607528 & 0,003783 \\
- 		\bottomrule
- 	\end{tabular}
- 	\caption{ETTh1: resultados para encoding seno-coseno}
- 	\label{etth1fixed}
- \end{table}
- 
- 
+  Atendiendo a los valores dados por la tabla \ref{etth1tabla} para ETTh1, esta vez sí que encontramos una diferencia notable entre el modelo original y este; en el MSE encontramos una diferencia de $0,032$ ($0,5458$ vs $0,5775$), mientras que en MAE ronda una diferencia de 0,02 (valor de 0,$5323$ vs $0,5552$). Por lo tanto, parece que la información aportada por dicha componente de Informer parece aportar información relevante.\\
   
- \begin{table}[!ht]
- 	\centering
- 	\begin{tabular}{l|N|N}
- 		\toprule
- 		\text{Métrica} & \text{Media} & \text{STD} \\
- 		\midrule
- 		MSE & 1,388127 & 0,158151 \\
-		MAE & 0,935477 & 0,051373 \\
-		MAPE & 3,730952 & 0,198797 \\
-		MSPE & 1794,159741 & 267,398770 \\
-		RMSE & 1,176358 & 0,065637 \\
-		TrainTime(s) & 18,290615 & 0,414452 \\
-		TestTime(s) & 0,465952 & 0,039954 \\
- 		\bottomrule
- 	\end{tabular}
- 	\caption{ETTh2: resultados para encoding seno-coseno}
- 	\label{etth2fixed}
- \end{table}
- 
-  Atendiendo a los valores dados por la tabla \ref{etth1fixed} para ETTh1, esta vez sí que encontramos una diferencia notable entre el modelo original y este; en el MSE encontramos una diferencia de 0,032 (0,545807 vs 0,577572), mientras que en MAE ronda una diferencia de 0,02 (valor de 0,532375 vs 0,555214). Por lo tanto, parece que la información aportada por dicha componente de Informer parece aportar información relevante.\\
-  
-  Por otro lado, en el caso del segundo dataset, estamos ante un caso bastante curioso, ya que se ha producido un aumento bastante considerable en los valores de toda las métricas; en el caso de MSE, la diferencia es de 0,5, bastante alta, mientras que en MAE es de 0,38. Esto nos está indicando que el segundo dataset sea posiblemente más complejo de modelar, y se requiera un mayor contexto para modelar adecuadamente el comportamiento. De esta forma, sería razonable pensar que cuando apliquemos las propuestas Flex y TPE, el salto de rendimiento sea considerable.\\
+  Por otro lado, en el caso del segundo dataset (Tabla \ref{etth2tabla}), podemos encontrar una respuesta diferente, ya que ha aumentado sensiblemente la magnitud de todas las métricas, indicando un empeoramiento rendimiento; en el caso de MSE, la diferencia es de 0,5, bastante alta, mientras que en MAE es de 0,38. Esto nos está indicando que el segundo dataset sea posiblemente más complejo de modelar, y se requiera un mayor contexto para modelar adecuadamente el comportamiento. De esta forma, sería razonable pensar que cuando apliquemos las propuestas Flex y TPE, el salto de rendimiento sea considerable.\\
   
   En definitiva, este modelo difiere en comportamiento considerablemente entre los dos conjuntos de datos. En el caso de ETTh1, se obtiene una mejora del 5,8\%, mientras que en el caso de ETTh2, se obtiene un empeoramiento relativo del 56,5\%, siendo una degradación considerable.
  
  \paragraph{WinStatFlex}
  
-Ahora procedemos a evaluar WinStatFlex, para ver si conseguimos mejorar los resultados, de referencia gracias al enfoque flexible de la ponderación, en ambos datasets.
+Ahora procedemos a evaluar WinStatFlex, para ver si conseguimos mejorar los resultados de referencia gracias al enfoque flexible de la ponderación aditiva y los valores estadísticos, distinguiendo por separado cada dataset.\\
+
+
+% ===================== ETTh1 =====================
 \begin{table}[!ht]
 	\centering
-	\begin{minipage}{0.5\textwidth}
-		\centering
-		\begin{tabular}{l|N|N}
-			\toprule
-			\text{Métrica} & \text{Media} & \text{STD} \\
-			\midrule
-			MSE & 0,467676 & 0,101775 \\
-			MAE & 0,512808 & 0,065133 \\
-			MAPE & 3,343877 & 0,767829 \\
-			MSPE & 1530,202856 & 410,789550 \\
-			RMSE & 0,679749 & 0,074946 \\
-			TrainTime(s) & 32,989481 & 3,775380 \\
-			TestTime(s) & 0,834729 & 0,024313 \\
-			\bottomrule
-		\end{tabular}
-	\end{minipage}%
-	\hfill
-	\begin{minipage}{0.4\textwidth}
-		\centering
-			\begin{tabular}{l|N}
-			\toprule
-			Componente & \text{Peso aprendido} \\
-			\midrule
-			Stats & 0,2704 \\
-			PE & 0,2506 \\
-			LPE & 0,242 \\
-			tAPE & 0,2371 \\
-			\bottomrule
-		\end{tabular}
-	\end{minipage}
-	
-	\caption{ETTh1: resultados para encoding WinStatFlex}
-	\label{etth1flex}
+	\begin{tabular}{lNN}
+		\toprule
+		Componente & \text{WinStatFlex} & \text{WinStatTPE} \\
+		\midrule
+		Stats & 0,2704 & 0,258 \\
+		PE    & 0,2506 & 0,247 \\
+		LPE   & 0,242  & 0,232 \\
+		tAPE  & 0,2371 & —     \\
+		TPE   & —      & 0,263 \\
+		\bottomrule
+	\end{tabular}
+	\caption{ETTh1: Pesos aprendidos en los encodings WinStatFlex y WinStatTPE}
+	\label{etth1_pesos}
+\end{table}
+
+% ===================== ETTh2 =====================
+\begin{table}[!ht]
+	\centering
+	\begin{tabular}{lNN}
+		\toprule
+		Componente & \text{WinStatFlex} & \text{WinStatTPE} \\
+		\midrule
+		Stats & 0,2569 & 0,251 \\
+		PE    & 0,2504 & 0,249 \\
+		LPE   & 0,2513 & 0,249 \\
+		tAPE  & 0,2413 & —     \\
+		TPE   & —      & 0,251 \\
+		\bottomrule
+	\end{tabular}
+	\caption{ETTh2: Pesos aprendidos en los encodings WinStatFlex y WinStatTPE}
+	\label{etth2_pesos}
 \end{table}
 
 
-Comenzando por los resultados de ETTh1, podemos destacar los siguientes aspectos:
+Comenzando por los resultados de ETTh1 (tercera columna de la Tabla \ref{etth1tabla}), podemos destacar los siguientes aspectos:
 
 \begin{itemize}
 	\item El rendimiento obtenido, tomando como referencia la métrica MSE, da salto considerable hacia delante. En comparación con el modelo Informer original, se ha logrado una mejora absoluta de casi $0,08$, equivalente a un 17,1\% de mejora. Este incremento es bastante alto, considerando el rango de valores en el que nos situamos. Estos resultados reafirman la potencia de la combinación mediante pesos entrenables más allá del dataset visto anteriormente.
 	\item El tiempo de ejecución no se ha visto especialmente afectado en aspectos absolutos, ya que el incremento en tiempo es de apenas 16 segundos. Sin embargo a nivel relativo es considerable, ya que estamos hablando de que es doble del tiempo Informer.
-	\item Los valores de los pesos son bastante equilibrados en esta ocasión, aunque se muestra un mayor inclinación por la información apropiada por la ventana de estadísticos y las diferencias de lags, la cual es un 27,04\% de la suma final. tAPE es el método absoluto de codificación menos valorados, aunque con escasa diferencia de su valor inicial de 0,25.
+	\item Los valores de los pesos (Tabla \ref{etth1_pesos}) son bastante equilibrados en esta ocasión, aunque se muestra un mayor inclinación por la información apropiada por la ventana de estadísticos y las diferencias de lags, la cual es un 27,04\% de la suma final. tAPE es el método absoluto de codificación menos valorados, aunque con escasa diferencia de su valor inicial de $0,25$.
 \end{itemize}
 
+Por otro lado, tenemos el comportamiento de ETTh2 (Tabla \ref{etth2tabla}), el cual también muestra mejoras notables, siendo estas de mayor magnitud que en el caso del primer conjunto:
 
-Por otro lado, tenemos el comprotamiento de ETTh2, el cual también muestra mejoras notables, incluso de mayor relevancia:
-
-
-\begin{table}[!ht]
-	\centering
-	\begin{minipage}{0.5\textwidth}
-		\centering
-			\begin{tabular}{l|N|N}
-				\toprule
-				\text{Métrica} & \text{Media} & \text{STD} \\
-				\midrule
-			MSE & 0,465990 & 0,027734 \\
-			MAE & 0,494661 & 0,019507 \\
-			MAPE & 10,515547 & 0,347335 \\
-			MSPE & 40193,949219 & 2941,565400 \\
-			RMSE & 0,682334 & 0,020266 \\
-			TrainTime(s) & 27,822449 & 2,565389 \\
-			TestTime(s) & 0,779390 & 0,008920 \\
-			\bottomrule
-		\end{tabular}
-	\end{minipage}%
-	\hfill
-	\begin{minipage}{0.4\textwidth}
-		\centering
-			\begin{tabular}{l|N}
-			\toprule
-			Componente & \text{Peso aprendido} \\
-			\midrule
-			Stats & 0,2569 \\
-			PE & 0,2504 \\
-			LPE & 0,2513 \\
-			tAPE & 0,2413 \\
-			\bottomrule
-		\end{tabular}
-	\end{minipage}
-	
-	\caption{ETTh2: resultados para encoding WinStatFlex}
-	\label{etth2flex}
-\end{table}
- 
- 
  \begin{itemize}
  	\item El incremento en rendimiento es muy marcado: hemos pasado del bajo rendimiento del enfoque seno-coseno, a obtener una mejora de aproximadamente 0,42 de MSE con respecto a Informer. En términos relativos, es una mejora del resultado del 90,3\%, indicando que hemos reducido casi a la mitad el error medio. El bajo valor de la desviación además refuerza que este resultado es fácilmente reproducible.
  	
  	\item Aunque el tiempo de ejecución ha aumentado, podemos considerarlo un sobrecoste razonable, dado que hemos logrado casi duplicar el rendimiento sin duplicar el tiempo de entrenamiento. Por tanto, este incremento resulta asumible y no representa un inconveniente significativo.
  	
- 	\item El valor final de los pesos (tabla derecha de \ref{etth1flex}) es bastante equilibrado. Prácticamente, los valores han permanecido iguales al valor de partida, que recordemos que era 0,25 para cada uno de ellos. Por lo tanto, parece que las 4 componentes aportan información útil de manera equilibrada. Incluso TAPE, anteriormente en HPC la minoritaria, parece aportar información vinculante.
+ 	\item El valor final de los pesos (Tabla \ref{etth2_pesos}) es bastante equilibrado. Prácticamente, los valores han permanecido iguales al valor de partida, que recordemos que era 0,25 para cada uno de ellos. Por lo tanto, parece que las 4 componentes aportan información útil de manera equilibrada. Incluso TAPE, anteriormente en HPC la minoritaria, parece aportar información vinculante.
  \end{itemize}
  
  En definitiva, el uso de WinStatFlex ha resultado muy positivo en este conjunto de datos, proporcionando un notable aumento de rendimiento en ambos conjuntos, y especialmente en ETTh2, que parece reflejar una mayor complejidad en su modelado en comparación con ETTh1. En ambos casos, es llamativo el escaso ajuste de los pesos de ponderación respecto a los valores iniciales, lo cual podría deberse a que la cantidad de datos disponible es relativamente limitada y el entrenamiento se interrumpe pronto debido al early stopping. No obstante, esto no indica que este método de codificación sea inadecuado; por el contrario, demuestra que WinStatFlex también se adapta a conjuntos de datos cortos.
  
  \paragraph{WinStatTPE}
  
- La variante de WinStat con T-PE ha sido el siguiente encoding probado empíricamente. 
- \begin{table}[!ht]
- 	\centering
- 	\begin{minipage}{0.5\textwidth}
- 		\centering
- 		\begin{tabular}{l|N|N}
- 			\toprule
- 			\text{Métrica} & \text{Media} & \text{STD} \\
- 			\midrule
- 			MSE & 0,489647 & 0,048151 \\
-	 		MAE & 0,507179 & 0,031240 \\
-	 		MAPE & 11,085088 & 0,730064 \\
-	 		MSPE & 45770,907813 & 7129,339000 \\
-	 		RMSE & 0,698881 & 0,034805 \\
-	 		TrainTime(s) & 52,732013 & 0,954233 \\
-	 	 	TestTime(s) & 1,339969 & 0,043272 \\
- 			\bottomrule
- 		\end{tabular}
- 	\end{minipage}%
- 	\hfill
- 	\begin{minipage}{0.4\textwidth}
- 		\centering
- 			\begin{tabular}{l|N}
- 			\toprule
- 			Componente & \text{Peso aprendido} \\
- 			\midrule
- 			Stats & 0,258 \\
- 			PE & 0,247 \\
- 			LPE & 0,232 \\
- 			TPE & 0,263 \\
- 			\bottomrule
- 		\end{tabular}
- 	\end{minipage}
- 	
- 	\caption{ETTh1: resultados para encoding WinStatTPE}
- 	\label{etth1tpe}
- \end{table}
- 
- Procediendo de la manera habitual, comenzaremos analizando primero ETTh1 (tabla \ref{etth1tpe}):
+ La variante de WinStat con T-PE ha sido el siguiente encoding probado empíricamente. Procediendo de la manera habitual, comenzaremos analizando primero ETTh1 (Tabla \ref{etth1tabla}):
  
  \begin{itemize}
  	\item Nuestra métrica de referencia, MSE, muestra un rendimiento bastante cercano a la variante Flex, aunque ligeramente inferior. Si bien la diferencia con respecto a Informer sigue siendo notable, de $0,1146$, el desempeño frente a WinStatFlex resulta inferior en todas las demás métricas. Sin embargo, la varianza, uno de los puntos fuertes de T-PE, se mantiene especialmente en el cálculo del MSE, lo que sugiere que sigue siendo un elemento clave de esta variante.
  	
  	\item El tiempo de ejecución ha crecido hasta valores demasiado elevados, muy cercanos al minuto de duración. Si bien en conjuntos como este sigue siendo un tiempo bajo, estamos ante un algoritmo que ofrece un menor rendimiento que WinStatFlex, pero un tiempo 20 segundos superior, por lo que su utilización no se motivada en cuanto al equilibrio métricas-rendimiento.
- 	\item Los valores de los pesos vuelven a ser prácticamente equilibrados, siguiendo las tendencias vistas hasta ahora.
+ 	\item Los valores de los pesos vuelven a ser prácticamente equilibrados, siguiendo las tendencias vistas hasta ahora (Tabla \ref{etth1_pesos}).
  \end{itemize}
  
- Para ETTh2, la tónica es bastante similar (ver tabla \ref{etth2tpe}); las métricas reflejan un empeoramiento de los resultados en todas las medidas, destacando el 0,5963 de MSE, y el tiempo de ejecución es de 54 segundos de media, aumentando así considerablemente el coste de entrenar este modelo. Por lo tanto, el modelado del segundo transformador tiene un comportamiento similar a ETTh1, y WinStatTPE parece no adaptarse del todo a sus condiciones.
- 
-  \begin{table}[!ht]
- 	\centering
- 	\begin{minipage}{0.5\textwidth}
- 		\centering
- 		\begin{tabular}{l|N|N}
- 			\toprule
- 			\text{Métrica} & \text{Media} & \text{STD} \\
- 			\midrule
- 			MSE & 0,596380 & 0,076012 \\
- 			MAE & 0,588919 & 0,049605 \\
- 			MAPE & 4,052313 & 0,355036 \\
- 			MSPE & 1707,383569 & 527,479550 \\
- 			RMSE & 0,770738 & 0,048395 \\
-  			TrainTime(s) & 54,832880 & 4,593619 \\
- 			TestTime(s) & 1,327944 & 0,068589 \\
- 			\bottomrule
- 		\end{tabular}
- 	\end{minipage}%
- 	\hfill
- 	\begin{minipage}{0.4\textwidth}
- 		\centering
- 			\begin{tabular}{l|N}
- 			\toprule
- 			Componente & \text{Peso aprendido} \\
- 			\midrule
- 			Stats & 0,251 \\
- 			PE & 0,249 \\
- 			LPE & 0,249 \\
- 			TPE & 0,251 \\
- 			\bottomrule
- 		\end{tabular}
- 	\end{minipage}
- 	
- 	\caption{ETTh2: resultados para encoding WinStatTPE}
- 	\label{etth2tpe}
- \end{table}
+ Para ETTh2, la tónica es bastante similar (ver Tabla \ref{etth2tabla}); las métricas reflejan un empeoramiento de los resultados en todas las medidas, destacando el $0,5963$ de MSE, y el tiempo de ejecución es de 54 segundos de media, aumentando así considerablemente el coste de entrenar este modelo. Los pesos, por su lado, vuelven a mostrar un comportamiento equilibrado entre las 4 componentes (Tabla \ref{etth2pesos}). Por lo tanto, el modelado del segundo transformador tiene un comportamiento similar a ETTh1, y WinStatTPE parece no adaptarse del todo a sus condiciones.\\
  
  No obstante, es importante destacar que estos resultados continúan siendo significativamente superiores a los obtenidos con Informer, lo que confirma que hemos alcanzado el objetivo propuesto de mejorar los encodings analizados.
  
  \paragraph{Informer sin PE}
  
- Por último, nos volvemos a plantear de nuevo la siguiente pregunta: ¿marca la diferencia emplear encoding en este conjunto de datos? Aunque ya hemos demostrado teóricamente que siempre será necesario disponer de él, volveremos a comprobar cuál es el impacto de retirar la componente posicional al embedding, tomando como base el modelo Informer.\\
+Por último, nos volvemos a plantear de nuevo la siguiente pregunta: ¿marca la diferencia emplear encoding en este conjunto de datos? Aunque ya hemos demostrado teóricamente que siempre será necesario disponer de él, volveremos a comprobar cuál es el impacto de retirar la componente posicional al embedding, tomando como base el modelo Informer.\\
  
-  \begin{table}[!ht]
- 	\centering
- 	\begin{tabular}{l|N|N}
- 		\toprule
- 		\text{Métrica} & \text{Media} & \text{STD} \\
- 		\midrule
- 		MSE & 0,923467 & 0,084128 \\
-		MAE & 0,741918 & 0,050922 \\
-		MAPE & 14,232987 & 4,295049 \\
-		MSPE & 76807,512109 & 46287,280000 \\
-		RMSE & 0,960007 & 0,043059 \\
-		TrainTime(s) & 17,335851 & 3,149851 \\
-		TestTime(s) & 0,451098 & 0,043514 \\
- 		\bottomrule
- 	\end{tabular}
- 	\caption{ETTh1: métricas de rendimiento para Informer sin PE}
- 	\label{etth1nope}
- \end{table}
- 
- 
- 
-   \begin{table}[!ht]
- 	\centering
- 	\begin{tabular}{l|N|N}
- 		\toprule
- 		\text{Métrica} & \text{Media} & \text{STD} \\
- 		\midrule
- 	 	MSE & 1,013217 & 0,241743 \\
- 		MAE & 0,777736 & 0,119947 \\
- 		MAPE & 6,796825 & 1,558902 \\
- 		MSPE & 4086,226156 & 447,778530 \\
- 		RMSE & 0,998585 & 0,126672 \\
- 		TrainTime(s) & 18,196816 & 2,308764 \\
- 	 	MSE & 1,013217 & 0,241743 \\
- 		\bottomrule
- 	\end{tabular}
- 	\caption{ETTh2: métricas de rendimiento para Informer sin PE}
- 	\label{etth2nope}
- \end{table}
+En ambos casos, el empeoramiento es notable. Para ETTh1 (Tabla \ref{etth1tabla}), este modelo es el que peores resultados ha obtenido, demostrando así la necesidad indiscutible del encoding, pues ha pasado a aumentar el MSE $0,3776$ (teniendo en cuenta el $0,5458$ de Informer), provocando una caída relativa del rendimiento del 69,2\%.\\
 
-En ambos casos, el empeoramiento es notable. Para ETTh1, este modelo es el que peores resultados ha obtenido, demostrando así la necesidad indiscutible del encoding, pues ha pasado a aumentar el MSE $0,3776$ (teniendo en cuenta el $0,5458$ de Informer), provocando una caída relativa del rendimiento del 69,2\%.\\
-
-En ETTh2, por su parte, aunque el empeoramiento también es significativo, pasando a obtener $1,013217$ y $0,777736$ de MSE  y MAE, con respecto a los $0,886627$ y $0,754907$ de Informer, respectivamente, resulta curioso ver que aún así, el rendimiento es mejor que empleando únicamente Informer con encoding sinusoidal original sin TimeF. 
+En ETTh2 (Tabla \ref{etth2tabla}), por su parte, aunque el empeoramiento también es significativo, pasando a obtener $1,0132$ y $0,7777$ de MSE  y MAE, con respecto a los $0,8866$ y $0,7549$ de Informer, respectivamente, resulta curioso ver que aún así, el rendimiento es mejor que empleando únicamente Informer con encoding sinusoidal original sin TimeF. 
 
 \subsubsection{Elección del mejor modelo}
 
@@ -723,13 +550,13 @@ Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos de
 		\toprule
 		Modelo & \text{MAE (Media)} & \text{MAE (STD)} & \text{MSE (Media)} & \text{MSE (STD)} \\
 		\midrule
-		WinStatFlex            & 0.4947 & 0.0195 & 0.4660 & 0.0277 \\
-		WinStatTPE             & 0.5072 & 0.0312 & 0.4896 & 0.0482 \\
-		Informer               & 0.5324 & 0.0171 & 0.5458 & 0.0204 \\
-		PE (sin/cos)           & 0.5552 & 0.0531 & 0.5776 & 0.0755 \\
-		WinStatFlex (Shuf.)    & 0.6313 & 0.0276 & 0.6897 & 0.0461 \\
-		WinStatTPE (Shuf.)     & 0.6728 & 0.0358 & 0.8036 & 0.0667 \\
-		No PE                  & 0.7419 & 0.0509 & 0.9235 & 0.0841 \\
+		WinStatFlex            & 0,4947 & 0,0195 & 0,4660 & 0,0277 \\
+		WinStatTPE             & 0,5072 & 0,0312 & 0,4896 & 0,0482 \\
+		Informer               & 0,5324 & 0,0171 & 0,5458 & 0,0204 \\
+		PE (sin/cos)           & 0,5552 & 0,0531 & 0,5776 & 0,0755 \\
+		WinStatFlex (Shuf.)    & 0,6313 & 0,0276 & 0,6897 & 0,0461 \\
+		WinStatTPE (Shuf.)     & 0,6728 & 0,0358 & 0,8036 & 0,0667 \\
+		No PE                  & 0,7419 & 0,0509 & 0,9235 & 0,0841 \\
 		\bottomrule
 	\end{tabular}
 	\caption{ETTh1: resultados ordenados, incluyendo modelos barajados}
@@ -752,19 +579,18 @@ Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos de
 		\toprule
 		Modelo & \text{MAE (Media)} & \text{MAE (STD)} & \text{MSE (Media)} & \text{MSE (STD)} \\
 		\midrule
-		WinStatFlex            & 0.5128 & 0.0651 & 0.4677 & 0.1018 \\
-		WinStatTPE             & 0.5889 & 0.0496 & 0.5964 & 0.0760 \\
-		WinStatTPE (Shuf.)     & 0.6892 & 0.0714 & 0.8294 & 0.1418 \\
-		WinStatFlex (Shuf.)    & 0.6929 & 0.0671 & 0.8608 & 0.1625 \\
-		Informer               & 0.7549 & 0.0540 & 0.8866 & 0.1001 \\
-		No PE                  & 0.7777 & 0.1199 & 1.0132 & 0.2417 \\
-		PE (sin/cos)           & 0.9355 & 0.0514 & 1.3881 & 0.1582 \\
+		WinStatFlex            & 0,5128 & 0,0651 & 0,4677 & 0,1018 \\
+		WinStatTPE             & 0,5889 & 0,0496 & 0,5964 & 0,0760 \\
+		WinStatTPE (Shuf.)     & 0,6892 & 0,0714 & 0,8294 & 0,1418 \\
+		WinStatFlex (Shuf.)    & 0,6929 & 0,0671 & 0,8608 & 0,1625 \\
+		Informer               & 0,7549 & 0,0540 & 0,8866 & 0,1001 \\
+		No PE                  & 0,7777 & 0,1199 & 1,0132 & 0,2417 \\
+		PE (sin/cos)           & 0,9355 & 0,0514 & 1,3881 & 0,1582 \\
 		\bottomrule
 	\end{tabular}
 	\caption{ETTh2: resultados ordenados, incluyendo modelos barajados}
 	\label{etth2fintab}
 \end{table}
-
 
 
 
@@ -1262,7 +1088,7 @@ Se puede apreciar que la distancia entre los tres primeros modelos es muy peque�
 	\label{tinafinal2}
 \end{figure}
 
-Ordenando los modelos por MAE, la situación resulta mucho más cercana a todos los casos anteriores. Como se puede apreciar en la figura \ref{tinafinal2}, ahora los modelos barajados pasan al final de la lista, y los encodings WinStatTPE y WinStatFlex ocupan los dos primeros lugares en ese orden, con una escasa diferencia entre sí. Informer queda en tercera posición, seguido de cerca por el modelo no codificado y el de seno-coseno, poniendo así en jaque las propiedades del modelo original. Pero este efecto puede verse potenciado por las escasas diferencias, a nivel general, entre todos los modelos ejecutados, fruto de la extensa longitud y anchura del dataset, que dificulta su codificación.\\
+Ordenando los modelos por MAE, la situación resulta mucho más cercana a todos los casos anteriores. Como se puede apreciar en la Figura \ref{tinafinal2}, ahora los modelos barajados pasan al final de la lista, y los encodings WinStatTPE y WinStatFlex ocupan los dos primeros lugares en ese orden, con una escasa diferencia entre sí. Informer queda en tercera posición, seguido de cerca por el modelo no codificado y el de seno-coseno, poniendo así en jaque las propiedades del modelo original. Pero este efecto puede verse potenciado por las escasas diferencias, a nivel general, entre todos los modelos ejecutados, fruto de la extensa longitud y anchura del dataset, que dificulta su codificación.\\
 
 Por tanto, podemos concluir que los modelos WinStatTPE y WinStatFlex son los mejores para este conjunto de datos, siguiendo así la misma tendencia que los 3 anteriores datasets. Sin embargo, es importante destacar que, dada la distancia mínima entre los resultados de TPE y Flex, usar la segunda variante podría ser más razonable en caso de que el tiempo de entrenamiento sea clave, ya que el tiempo requerido para este es, en promedio, menor.
 
