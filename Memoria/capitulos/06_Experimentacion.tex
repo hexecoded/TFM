@@ -1,64 +1,15 @@
-\chapter{Análisis y estudio de los resultados obtenidos}
+\chapter{Análisis y estudio de los métodos de PE propuestos}
 
-Una vez expuestas todas las condiciones del entrenamiento, como los modelos a probar, las métricas, funciones de pérdida y presentados los datos, podemos dar paso al entrenamiento. Sin lugar a dudas, es la fase más lenta de todo el proceso, la cual ha prolongado su desarrollo considerablemente. El objetivo es claro: poner a prueba las 5 propuestas realizadas para establecer, en primer lugar, cuál o cuáles de ellas son competitivas, y posteriormente, evaluar todos los conjuntos de datos para medir la ganancia con respecto al conjunto de datos original.
-
-\section{Consideraciones previas}
-
-A la hora de realizar las pruebas, existen multitud de factores que pueden influir en los resultados, y los cuales debemos controlar minuciosamente para evitar problemas que alteren los resultados y nos den una idea equivocada del rendimiento. Entre ellos, podemos encontrar las inicializaciones aleatorias de los pesos, el riesgo de sobreaprendizaje y en casos de extremada similaridad de resultados, la calidad semántica aportada por la codificación que estamos evaluando.\\
-
-Para reducir el impacto de estos factores que pueden distorsionar la evaluación y, al mismo tiempo, facilitar un análisis más preciso de la calidad de los \textit{positional encodings} propuestos, tomaremos una serie de medidas que detallaremos a continuación. Estas acciones buscan garantizar que la comparación entre modelos sea lo más justa y representativa posible. Asimismo, dedicaremos especial atención a la elección de un parámetro fundamental en el rendimiento de algunos métodos: el tamaño de ventana, cuya correcta configuración resulta determinante para obtener los mejores resultados posibles.
+Una vez expuestas todas las condiciones del entrenamiento, como los modelos a probar, las métricas, funciones de pérdida y presentados los datos, podemos dar paso al entrenamiento. Sin lugar a dudas, es la fase más lenta de todo el proceso, la cual ha prolongado su desarrollo considerablemente. El objetivo es claro: poner a prueba las 5 propuestas realizadas para establecer, en primer lugar, cuál o cuáles de ellas son competitivas, y posteriormente, evaluar cada encoding sobre todos los conjuntos de datos para medir la ganancia con respecto a la propuesta original formulada por Informer~\cite{zhou2021informerefficienttransformerlong}.
 
 
-\subsection{Impacto de la inicialización aleatoria}
+\section{Experimentación previa. Elección del tamaño de ventana}
 
-Cuando entrenamos cualquier modelo de aprendizaje, en prácticamente cualquier ámbito de problema (datos tabulares, imágenes, secuencias,..) existe un paso el cual muchas veces es ignorado, y que puede afectar considerablemente a los resultados obtenidos: la inicialización de los parámetros del modelo. Aunque este paso podría parecer trivial y de escasa relevancia, debido a que los parámetros serán posteriormente ajustados mediante los mecanismos de aprendizaje, en realidad, puede desempeñar un papel determinante en el rendimiento final del modelo.\\
+Antes de comenzar con la comparativa de los encodings formulados, debemos tener en cuenta un parámetro clave en el rendimiento: ¿Qué tamaño de ventana es el adecuado?.\\
 
-En la práctica, la inicialización suele realizarse a partir de una distribución pseudoaleatoria generada mediante secuencias controladas por el sistema operativo o el propio lenguaje de programación. Este proceso asigna valores iniciales a cada una de las conexiones y pesos del modelo, y cada valor asignado puede influir considerablemente en la velocidad de convergencia y la estabilidad numérica, ya que los optimizadores que ajustan sus valores posteriormente, se basan en métodos de descenso de gradiente o búsqueda local para tratar de encontrar óptimos locales.\\
+Este valor es un parámetro de entrada común a las cinco variantes de encodings propuestas en este trabajo, y determina cuánta información del entorno se toma como parte del contexto de cada posición, enriqueciéndolo con información asociada a estadísticas y los rezagos anteriores. Un tamaño de ventana excesivamente grande puede provocar que los valores estadísticos sean demasiado genéricos, y no aporten información útil al mecanismo de atención, mientras que una ventana demasiado pequeña puede contener demasiado ruido, y no sea útil para el modelo, e incluso, dificulte la detección de patrones.\\
 
-Para mejorar la convergencia y eficiencia en entrenamiento, se han desarrollado numerosos optimizadores con el objetivo de evitar quedar atascado durante este proceso y tratar de escapar de óptimos locales de baja calidad que pudieran afectar al resultado final. Uno de los más empleados es Adam~\cite{kingma2017adammethodstochasticoptimization}, el cual utiliza momentum para dotar de cierta inercia a cada una de las dimensiones, ajustando una a una su tasa de aprendizaje, y así tratar de escapar de localidades subóptimas.\\
-
-Por ello, emplearemos este optimizador en el entrenamiento del Transformer, ya que nos permite un enfoque más estable y adaptativo en la actualización de los parámetros y reduciendo la sensibilidad a los pesos y la tasa de aprendizaje inicial.\\
- 
-Pero esta estrategia no nos exime de los problemas derivados de malas inicializaciones que, de forma fortuita, podrían producir un mal resultado en un modelo que, en condiciones normales, tendría un desempeño superior. Dicho fenómeno puede verse potenciado al emplear los diferentes encodings ponderados, ya que una mala inicialización de alguno de los pesos podría favorecer artificialmente una de las variantes desde el inicio. Aunque el encoding asociado no proporcione un buen rendimiento, la reducción de su valor podría ser lenta, sentenciando el experimento desde el inicio. Para evitarlo, aplicaremos las siguientes soluciones:
-
-\begin{itemize}
-	\item Ejecutar todos los experimentos múltiples veces utilizando diferentes semillas aleatorias. Esta práctica nos permitirá reducir el impacto de la aleatoriedad en los modelos, asegurando que los resultados reflejen de manera más fiel el comportamiento real del modelo.
-	\item Realizar un inicio uniforme de los pesos de ponderación de encodings. Esto se traduce en establecer como valor de partida a cada peso aprendible un valor equivalente a $1/n$, siendo $n$ el número de alternativas que se desea evaluar. De esta forma, el cálculo empieza sin condiciones de dominancia, y será el propio proceso de aprendizaje el que altere los pesos a su beneficio.
-\end{itemize}
-
- 
-Gracias a estas soluciones, paliaremos en gran medida el impacto en los resultados. No obstante, debemos tener cuidado con el número de ejecuciones de cada modelo, pues cada una puede requerir varios días de cómputo, lo que nos obliga a buscar un equilibrio entre estabilidad y tiempo. Por lo tanto, excepto si se indica lo contrario, se realizarán tres ejecuciones independientes para cada configuración experimental, calculando posteriormente el promedio estadístico de cada una de las métricas. De esta manera, logramos un \textit{trade-off} adecuado entre ambas condiciones. En conjunto con el uso de Adam, trataremos de maximizar la estabilidad y confiabilidad de los resultados.
- 
-\subsection{Sobreaprendizaje}
-
-Otro de los problemas destacados durante en el entrenamiento puede ser el sobreaprendizaje. Cuando usamos arquitecturas tan profundas y potentes como los Transformers, es sencillo que la arquitectura tome el conjunto de entrenamiento y lo aprenda de manera bastante próxima a la distribución de estos datos, es decir, la acabe ``memorizando'' y la capacidad de generalización del modelo sea pobre. Esto es especialmente notable en conjuntos de datos más sencillos o de menor longitud, en los que el modelo podría incluso verse algo sobredimensionado. Para evitarlo. se han seleccionado dos estrategias: regularización mediante \textit{dropout} y uso de \textit{early stopping}.
-
-\begin{itemize}
-	\item Con el \textbf{early-stopping}, estamos añadiendo un mecanismo de parada automática del entrenamiento, el cual, especificando una paciencia, en épocas, detendremos el modelo en ausencia de mejora. Para controlar esta parada, monitorizaremos el error de pérdida en validación. Para mantener tener una paciencia algo tolerante, escogeremos como valor 3 épocas; si en 3 épocas el error del modelo ha sido peor que el mejor resultado registrado, cancelaremos el proceso, ahorrando recursos de cómputo y evitando mala generalización.
-	\item Mediante \textbf{dropout}, evitaremos que la capas totalmente conectadas de la red se sobreespecialicen, desactivando aleatoriamente algunas neuronas en las diferentes iteraciones del entrenamiento. Por defecto, Informer ya incluye un parámetro de dropout, cuyo valor inicial es bastante bajo, 0.05. Este dropout se aplica no solo a las capas del encoder y decoder, sino también a la estructura del embedding de entrada cuando este contiene componentes aprendibles. Dado que ambos elementos presentan comportamientos distintos, y que regularizar los datos de manera excesiva no es conveniente, pues podría perderse información, se ha establecido como criterio aplicar un dropout mayor, de 0.2, para las capas del modelo, mientras que se mantiene el dropout del embedding en su valor original de 0.05. Así, de alguna forma estamos especificando una regla heurística, en la cual mantenemos el índice asociado al embedding 4 veces menor que el aplicado en las capas de la arquitectura.
-\end{itemize}
-
-Con el uso de estos dos factores, podremos minimizar el impacto del \textit{overfitting}, y evitar una mala capacidad de generalización del modelo.
-
-\subsection{Comparando la calidad semántica del encoding. Técnica del barajado}
-
-En los aparatados anteriores, hemos destacado constantemente la importancia semántica del positional encoding, y en la importancia de medir adecuadamente la calidad de las codificaciones a través de este aspecto. Sin embargo, la componente semántica es algo completamente externo para una arquitectura de este tipo, ya que las capas de esta solo entienden de valores numéricos y tensores, pero no es capaz de detectar información de significado. Sin embargo, esta puede encontrarse de manera implícita en los datos, en aspectos como la localidad y la detección de patrones, tareas las cuales hemos tratado de modelar en las propuestas de codificación formuladas.\\
-
-Existe una manera muy sencilla de verificar esta propiedad y evaluar la utilidad de la codificación añadida: mezclar la entrada del decoder durante la inferencia y analizar su impacto en la calidad del resultado final, en comparación con una entrada intacta, sin desordenar. Este procedimiento fue propuesto por la publicación \textit{``Are Transformers Effective for Time Series Forecasting?''}~\cite{zeng2022transformerseffectivetimeseries}, y nos permite evidenciar de manera intuitiva la presencia o ausencia de orden y localidad en la codificación.\\
-
-De manera inherente a su estructura, el mecanismo de self-attention de los Transformers es invariante al orden de los elementos de la secuencia. Cuando realizamos el cálculo de las matrices de atención, no estamos realizando más que un producto cruzado de todos los tokens con los demás, por lo que el orden de los productos no afectaría al resultado. Es por ello que se necesita un encoding posicional que permita incluir dicha relación de orden en los datos, y se cumpla esta propiedad esencial necesaria en las series temporales.\\
-
-Sin embargo, en el artículo mencionado se llega a la conclusión de que los mecanismos existentes para los principales modelos del estado del arte, como Informer, Autoformer y FEDformer, con sus respectivas codificaciones temporales, no son capaces de captar el orden natural de los datos. Y va incluso más allá: sustituir todo el mecanismo de atención por una capa totalmente conectada es capaz de ofrecer mejores resultados, y al aplicar el barajado, sí se ve afectada en mayor medida por el desorden. \\
-
-En nuestro caso, teniendo en cuenta que nuestra arquitectura se basa en la estructura de Informer, pero simplificando el mecanismo de atención al prescindir del muestreo y las convoluciones, la escasez mantenimiento del orden podría afectarnos de manera similar. Pero, en este caso, queremos evaluar la efectividad de los métodos de codificación propuestos en este trabajo, por lo que repetiremos el experimento, pero en lugar de hacerlo con la codificación por defecto, que ya conocemos sus resultados, con nuestras alternativas. El objetivo es claro: tratar de demostrar que permiten conservar una mayor semántica de los datos y se ven más perjudicados frente al desorden que la tradicional codificación seno-coseno.
-
-\subsection{Elección adecuada del tamaño de ventana}
-
-Otra de las preguntas clave que nos puede surgir a la hora de evaluar la familia de encodings propuesta es la siguiente: ¿Qué tamaño de ventana es el adecuado?.\\
-
-Este valor es un parámetro de entrada común a las cinco variantes de encodings propuestas en este trabajo, y determina cuánta información del entorno se toma como parte del contexto de cada posición, enriqueciéndolo con información asociada a estadísticas y los rezagos anteriores. Un mayor tamaño de ventana excesivamente grande puede provocar que los valores estadísticos sean demasiado genéricos, y no aporten información útil, mientras que una ventana demasiado pequeña puede contener demasiado ruido, y no sea útil para el modelo e incluso dificulte la detección de patrones.\\
-
-Por tanto, lo ideal sería emplear algún método de búsqueda de parámetros que nos permita probar con diferentes configuraciones y escoger la que mejor resultado ofrezca. Pero en conjuntos de datos de gran tamaño, esa tarea es prácticamente imposible debido al tiempo que sería necesario para realizar cada prueba. Por tanto, para disponer de una heurística a seguir, y que sea estimable en un tiempo reducido, podemos tomar las variantes horarias del dataset ETT, de tamaño reducido, y realizar un pequeño experimento: tomar los valores de longitud de secuencia, etiqueta y predicción empleados en el paper original de Informer y probar con diferentes tamaños de ventana entre 3 y longitud de secuencia.\\
+Por tanto, lo ideal es emplear algún método de búsqueda de parámetros que nos permita probar con diferentes configuraciones y escoger la que mejor resultado ofrezca. Pero en conjuntos de datos de gran tamaño, esa tarea es prácticamente imposible debido al tiempo que sería necesario para realizar cada prueba. Por tanto, para disponer de una heurística a seguir, y que sea estimable en un tiempo reducido, podemos tomar las variantes horarias del dataset ETT, de tamaño reducido, y realizar un pequeño experimento: tomar los valores de longitud de secuencia, etiqueta y predicción empleados en el paper original de Informer y probar con diferentes tamaños de ventana entre 3 y longitud de secuencia.\\
 
 Estos parámetros son:
 
@@ -68,13 +19,13 @@ Estos parámetros son:
 	\item Longitud de predicción: 24
 \end{itemize}
 
-Para realizar el estudio de forma intuitiva y visual, realizaremos el análisis de forma gráfica: ejecutando ETTh1 y ETTh2 con todos los valores de ventana entre 3 y 96, y realizando cada configuración 10 veces para obtener así un valor estable, pues al evaluar tamaños de ventana muy juntos las diferencias serán mínimas y así reducimos el ruido todo lo posible. Los resultados los podemos encontrar en las figuras \ref{mean_mse_vs_window_ETTh1} para ETTh1 y en la \ref{mean_mse_vs_window_ETTh2} para ETTh2, marcando en negrita los 5 mejores resultados obtenidos.\\
+Para realizar el estudio de forma intuitiva y visual, hemos recopilado los resultados del análisis de forma gráfica: se han ejecutado ETTh1 y ETTh2 con todos los valores de ventana entre 3 y 96, y ejecutado cada configuración 10 veces para obtener así un valor promedio estable, pues al evaluar tamaños de ventana muy juntos las diferencias serán mínimas y así reducimos el efecto del ruido sobre el MSE todo lo posible. Los resultados los podemos encontrar en las figuras \ref{mean_mse_vs_window_ETTh1} para ETTh1 y en la \ref{mean_mse_vs_window_ETTh2} para ETTh2, marcando en negrita los 5 mejores resultados obtenidos.\\
 
 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.475]{img/mean_mse_vs_window_ETTh1}
-	\caption{Estudio del tamaño de ventana (ETTh1)}
+	\caption{Estudio del tamaño de ventana mediante MSE (ETTh1)}
 	\label{mean_mse_vs_window_ETTh1}
 \end{figure}
 
@@ -82,21 +33,23 @@ Para realizar el estudio de forma intuitiva y visual, realizaremos el análisis 
 \begin{figure}[H]
 	\centering
 	\includegraphics[scale=0.475]{img/mean_mse_vs_window_ETTh2}
-	\caption{Estudio del tamaño de ventana (ETTh2)}
+	\caption{Estudio del tamaño de ventana mediante MSE (ETTh2)}
 	\label{mean_mse_vs_window_ETTh2}
 \end{figure}
 
-En ambos casos, los valores se sitúan entre el 24 y el 36, siendo el 24 exactamente $1/4$ del valor de longitud de secuencia, 96, y el 36 algo más de la tercera parte de este. Por tanto, una heurística razonable podría ser ubicar el valor de tamaño de ventana entre una cuarta o tercera parte de la longitud de secuencia. Si bien deducir este resultado tan solo de dos conjuntos de datos puede ser demasiado optimista, al menos nos permite tener un punto de partida, sabiendo que en el resto de conjuntos sería imposible realizar un experimento de este tipo en un tiempo razonable.
+En ambos casos, los valores se sitúan entre el 24 y el 36, siendo el 24 exactamente $1/4$ del valor de longitud de secuencia, 96, y el 36 algo más de la tercera parte de este. Por tanto, una heurística razonable podría ser ubicar el valor de tamaño de ventana entre una cuarta o tercera parte de la longitud de secuencia. Si bien deducir este resultado tan solo de dos conjuntos de datos puede ser demasiado optimista, al menos nos permite tener un punto de partida, sabiendo que en el resto de conjuntos sería imposible realizar un experimento de este tipo en un tiempo razonable.\\
 
-\section{Resultados de los experimentos}
+\section{Análisis experimental de los encodings propuestos}
 
-Una vez justificado el procedimiento de ejecución a seguir para los experimentos realizados, podemos comenzar a analizar los resultados obtenidos en el entrenamiento de los mismos. Tal y como se especificó en el capítulo \ref{cap5}, compararemos los resultados haciendo uso de las métricas de regresión especificadas, pero haciendo especial hincapié en el MAE y MSE.\\
+Una vez justificados los procedimientos de comparación, y determinada la heurística para el tamaño de ventana, podemos comenzar a analizar los resultados obtenidos en el entrenamiento de cada propuesta. \\
 
-La estructura seguida por los experimentos será la siguiente: primero, evaluaremos cuales de las cinco propuestas formuladas obtiene el mejor rendimiento sobre un conjunto de referencia, Household Power Consumption~\cite{hebrail2006individual}, y posteriormente, procederemos a analizar su utilidad en el resto de conjuntos de datos.
+La estructura seguida por los experimentos será la siguiente: primero, evaluaremos cuales de las cinco propuestas formuladas obtiene el mejor rendimiento sobre un conjunto de referencia, Household Power Consumption~\cite{hebrail2006individual}, para así descartar potenciales alternativas pobres, y posteriormente, procederemos a analizar su utilidad en el resto de conjuntos de datos.\\
 
 \subsection{HPC: Evaluación de PE}
 
-El dataset de Individual Household Power Consumption ha sido el conjunto escogido para evaluar, en primer lugar, las 5 variantes de nuestro método de encoding. Esta decisión viene motivada por dos aspectos; en primer lugar, este conjunto de datos dispone de una longitud suficiente para inferir la información relevante de la serie y realizar predicciones a largo plazo, y además, en el comportamiento de sus variables vimos aspectos como la estacionalidad, la cual es más difícil de modelar para un Transformer, y ausencia de estacionalidad, lo cual a priori podría suponer un problema para la aplicación de métodos clásicos. Pero, principalmente, la decisión de escoger un dataset viene motivada por le coste computacional: evaluar todas las alternativas en cada uno de los conjuntos de datos podría requerir semanas e incluso meses para completar por cada dataset, lo cual se escapa de los recursos y limitaciones temporales de las que disponemos.
+El dataset de Individual Household Power Consumption ha sido el conjunto escogido para discriminar en un primer instante los mejores métodos de los cinco propuestos. Esta decisión viene motivada por dos aspectos; en primer lugar, este conjunto de datos dispone de una longitud suficiente para inferir la información relevante de la serie y realizar predicciones a largo plazo, y además, en el comportamiento de sus variables vimos aspectos como la estacionalidad, la cual es más difícil de modelar para un Transformer, pero también la ausencia de estacionalidad en ciertas variables, lo cual ha sido tradicionalmente un problema para la aplicación de métodos clásicos.\\
+
+No obstante, la decisión de escoger un dataset únicamente para esta tarea viene motivada por el coste computacional: evaluar todas las alternativas en cada uno de los conjuntos de datos podría requerir semanas e incluso meses para completar por cada dataset, lo cual se escapa de los recursos y limitaciones temporales de las que disponemos.
 
 \subsubsection{Análisis y resultados}
 

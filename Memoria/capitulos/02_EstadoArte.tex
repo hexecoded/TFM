@@ -5,7 +5,7 @@ Antes de adentrarnos de lleno en el análisis del problema y la realización de 
 
 Hasta hace una década, buena parte de las técnicas diseñadas especialmente para series temporales y predicción a largo plazo, se basan principalmente en la descomposición las mismas en subcomponentes mucho más sencillas de procesar, las cuales pueden seguir un enfoque similar a divide y vencerás: descomponer la red en diferentes elementos, y mediante un mecanismo de agregación (aditivo, multiplicativo, o estadístico) recomponer la solución a la tarea~\cite{garg2022machinelearningalgorithmstime}. Sin embargo, se trata de una estrategia últimamente menos utilizada. \\
 
-Actualmente, una de las principales tendencias consiste en adaptar modelos originalmente desarrollados para otras modalidades. Un ejemplo de ello es el uso de convoluciones, ampliamente utilizadas en visión por computador, con el objetivo de capturar patrones locales en las secuencias y reducir la dimensionalidad del modelo~\cite{zeng2023financialtimeseriesforecasting}. Previamente, también se han explorado arquitecturas recurrentes, como las Recurrent Neural Networks (RNN) y sus variantes más avanzadas, como las Long Short-Term Memory (LSTM) \cite{6795963}, aunque estas presentaban ciertas limitaciones en cuanto a capacidad de paralelización y en la modelización de relaciones temporales de mayor alcance, ya que para lograrlo aumentaba en exceso el tamaño de la red para incorporar más conexiones.\\
+Actualmente, una de las principales tendencias consiste en adaptar modelos originalmente desarrollados para otras modalidades. Un ejemplo de ello es el uso de convoluciones, ampliamente utilizadas en visión por computador, con el objetivo de capturar patrones locales en las secuencias y reducir la dimensionalidad del modelo~\cite{zeng2023financialtimeseriesforecasting}. Previamente, también se han explorado arquitecturas recurrentes, como las Recurrent Neural Networks (RNN) y sus variantes más avanzadas, como las Long Short-Term Memory (LSTM) \cite{10.1162/neco.1997.9.8.1735}, aunque estas presentaban ciertas limitaciones en cuanto a capacidad de paralelización y en la modelización de relaciones temporales de mayor alcance, ya que para lograrlo aumentaba en exceso el tamaño de la red para incorporar más conexiones.\\
 
 Más recientemente, ha ganado protagonismo la adaptación de mecanismos provenientes del procesamiento de lenguaje natural, en particular los Transformers~\cite{wen2023transformerstimeseriessurvey}, debido a su capacidad para modelar dependencias a largo plazo de forma eficiente. Además, comparten una motivación estructural con las series temporales: la necesidad de preservar una secuencia ordenada y coherente en la entrada, lo que permite aprovechar su arquitectura basada en atención para tareas de predicción.\\
 
@@ -16,7 +16,122 @@ A continuación, nos adentraremos de lleno en dichas propuestas, con el fin de a
 
 En la Introducción, se han presentado brevemente las características fundamentales de las series temporales: su estructura temporal, caracterizada por muestreo, la importancia del orden de medición, y la necesidad de mantener las relaciones temporales para lograr aprender de forma efectiva.\\
 
-Pero, en esta sección, profundizaremos en los aspectos clave del preprocesamiento necesario para su análisis de manera más formal, ya que a diferencia de otros tipos de datos, las series temporales requieren una atención especial a la dimensión temporal, y cualquier alteración en su estructura puede afectar directamente la capacidad del modelo para aprender los patrones subyacentes en ella. Por ello, es fundamental centrarnos en cuestiones como la frecuencia de muestreo, la consistencia temporal, el tratamiento de valores faltantes, y la normalización de las variables.
+En esta Sección, profundizaremos en los aspectos clave del preprocesamiento necesario para su análisis y evaluación de resultados, ya que a diferencia de otros tipos de datos, las series temporales requieren una atención especial a la dimensión temporal, ya que cualquier alteración en su estructura puede afectar la capacidad del modelo para aprender sus patrones subyacentes. A continuación, veremos como afrontar los procesos de validación y test, las métricas más utilizadas y algunos de los modelos basados en estadística más utilizados.
+
+\subsection{Particionado y procesado de los datos}
+\label{particiones}
+
+En este punto, estudiaremos la importancia de un correcto fraccionado de los datos, teniendo especial cuidado en respetar la estructura propia de las series temporales, y analizando la importancia de disponer de un estimador no sesgado del modelo entrenado. Este aspecto es clave, ya que nos determinará la manera de evaluar el modelo utilizado.
+
+\subsubsection{Importancia de la separación train-test}
+
+En cualquier tarea de aprendizaje, ya sea aprendizaje automático tradicional, deep learning, y concretamente, en series temporales, disponer del mayor número de datos posible es el objetivo deseable, ya que aunque aumentan el coste del experimento, nos ofrecen unos resultados más fieles al fenómeno real que queremos modelar.\\
+
+Sin embargo, cuando realizamos un modelo de aprendizaje, realmente estamos creando una hipótesis: procedemos a la selección de un modelo concreto de entre un conjunto de estos, con el objetivo de que su resultado se acerque lo máximo posible al comportamiento real del problema, el cual está modelado a través de una función $f$ que desconocemos. Pero, para poder estimar la bondad de nuestro ajuste de forma fiable, necesitamos algún estimador no sesgado que nos refleje la calidad del modelo escogido y nos permita saber el error que comete nuestra hipótesis con respecto a la distribución de la población real, $E_{out}$. Cuando construimos un modelo, estamos empleando una muestra de la población, la cual es recorrida continuamente durante el proceso de entrenamiento para ir ajustando los filtros aplicados sobre el conjunto y que permite inferir el comportamiento del fenómeno modelo empleando métodos de gradiente, y en definitiva, fuerza bruta.\\
+
+Por tanto, buscamos conseguir un estimador no sesgado, separando un conjunto de datos del total, y obteniendo un conjunto de test, el cual no se haya visto involucrado en ninguna fase del proceso de aprendizaje. La hipótesis final, a la que llamaremos $g$, es evaluada en este subconjunto, y el resultado será un buen estimador del $E_{out}$. Normalmente, a este error se le denomina $E_{test}$, y al seleccionarlo como estimador de $E_{out}$, estamos afirmando de alguna manera de que éste se tratará de un estimador que generaliza muy bien el error fuera de la muestra.\\
+
+Este conjunto recibirá un número efectivo de hipótesis $|\mathcal H|= 1$, es decir, solamente se evaluará con el ajuste final realizado por el modelo, una vez finaliza su ajuste. Por tanto, la hipótesis se elige sin conocer el comportamiento de los datos que el conjunto de test contiene, ya que si la estimación de $g$ se viese afectada por instancias de entrenamiento estaríamos sesgando el resultado, y la ecuación de Hoeffding, la cual respalda esta teoría, no será aplicable. Dicha ecuación enuncia, que para muestras idénticamente distribuidas, e independientes entre sí, se cumple la desigualdad \ref{eqn:hoeffding}.
+
+\begin{equation}
+	\label{eqn:hoeffding}
+	\centering 
+	P(\mathcal{D}: | E_{out}(h) E_{in}(h) |  > \epsilon \leq 2e^{-2\epsilon^2	N}
+\end{equation}
+
+
+Donde, para cualquier valor de $\epsilon$:
+\begin{itemize}
+	\item $\mathcal{D}$ es el nombre que recibe el conjunto de entrenamiento.
+	\item $ E_{out}$ es el error out-of-sample, error teórico con respecto a distribución real de los datos.
+	\item  $E_{in}$ es el error in-sample, es decir, el error cometido durante el proceso de entrenamiento entre las etiquetas inferidas, y su valor real, también conocido como $y$ verdadero.
+	\item $N$ es el tamaño de la muestra de datos disponible.
+\end{itemize}
+
+Es decir, se cumple que $E_{out}$ resulta una estimación fiable del modelo. El valor del entrenamiento, $E_{in}$, sí que sería un estimador sesgado de manera optimista, pues dicho conjunto ha sido sometido al proceso de ajuste continuamente, y ha determinado la distribución final de pesos del modelo, por lo que quedarnos con su valor como estimación, sobre todo con arquitecturas tan profundas y potentes a nivel de cálculo como los Transformers, sería un grave error.\\
+
+Mantener un equilibrio para la proporción de la partición es clave; a mayor tamaño de la partición de test, más cercano será el valor de $E_{test}$ con respecto a $E_{out}$. Pero, cuantos menos datos para entrenar dispongamos, peor será la estimación al comportamiento real de la población $f$. Normalmente, los valores recomendados suelen ser entre un 10\%-30\% de porcentaje de los datos dedicados al conjunto de test, quedando entre un 70 \%-90\% de datos de entrenamiento.\\
+
+En nuestro contexto, es fundamental garantizar la independencia y la pertenencia a la misma distribución, lo que exige una correcta separación de los conjuntos. En series temporales, la secuencialidad de los datos resulta indispensable para preservar la semántica del problema y obtener resultados coherentes, ya que una de las principales diferencias de una serie temporal con respecto a un conjunto tabular tradicional es la dependencia de cada valor con los anteriores (el orden). Por tanto, realizar separaciones estocásticas del conjunto de datos para obtener las particiones de entrenamiento y test es inviable, y debemos realizar separaciones en las que se mantenga el orden original.\\
+
+Una estrategia simple y efectiva por la que se suele optar es la separación de tipo \textit{last-block}, en la que se extrae secuencialmente la parte final de la secuencia temporal para construir test, pero asegurándonos de no tomar algunas de las posiciones entorno al punto de separación, ya que estaríamos sesgando el resultado al incorporando contexto altamente correlado.\\
+
+Pero, aún nos resta realizar una segunda división, necesaria para el correcto ajuste del modelo: la partición de validación, una fracción de datos ligeramente más sesgada que test, pero que nos permitirá evaluar el rendimiento del modelo al final de cada época. En el siguiente punto, analizaremos su importancia y las diferentes estrategias.
+
+\subsubsection{Partición de validación. Estrategias de división para series temporales}
+
+Hasta este punto, disponemos de dos particiones de datos, train y test, siendo esta última reservada para la evaluación final de nuestra hipótesis. Por tanto, desde este punto, únicamente podremos operar con el conjunto de entrenamiento, y debemos realizar un uso adecuado que nos permita medir la mejora de rendimiento en cada época del proceso de entrenamiento, y facilite la elección de parámetros y la detección de posibles fenómenos como el sobreaprendizaje.\\
+
+La forma más sencilla de lograrlo es mediante el ya nombrado conjunto de validación. Este es similar al conjunto de test, pero como principal diferencia de uso, es extraído del conjunto de entrenamiento y se usa para evaluar el correcto ajuste del modelo y el rendimiento de los parámetros elegidos. Matemáticamente, el error asociado a esta partición, $E_{val}$, actúa como estimador directo del error \textit{out-of-sample}, ya que se calcula evaluando el modelo sobre los $K$ valores reservados para validación y que no se han utilizado durante el entrenamiento, tal y como se muestra en la ecuación \ref{eqn:equiv}.
+
+\begin{equation}
+	\label{eqn:equiv}
+	\centering
+	E_{out}(g) \approx E_{out}(g^-) \approx E_{val}(g^-)
+\end{equation}
+
+
+Siendo $E_{out}(g)$ el error final cuando se utiliza todo el conjunto de datos $\mathcal D$.\\
+
+La parte izquierda de la ecuación funciona mejor cuanto más pequeña sea k, mientras que por la derecha, un mayor valor de k permitirá una mejor estimación a través de $E_{val}$. El caso ideal sería, para acercarnos lo máximo posible entre $E_{out}(g)$ y $ E_{out}(g^-)$, elegir k lo más pequeño posible, cuyo caso extremo es k=1, pero esto no sería viable. Normalmente, se suelen optar por alternativas como validación cruzada de $v$ folds, donde los datos se dividen en k particiones, y el conjunto de validación rota por cada una de ellas, obteniendo $E_{val}$ como la media de los $v$ errores parciales. Sin embargo, normalmente su construcción se hace mediante un particionado aleatorio en $v$ conjuntos, rompiendo una vez más la condición estructural de las series temporales. Por lo tanto, en el estado del arte~\cite{bergmeir2012use} podemos encontrar varias alternativas (ver figura \ref{valid}):
+
+\begin{itemize}
+	\item \textbf{Validación cruzada ordenada}. Consiste en realizar el proceso de sondeo de manera aleatoria, pero respetando el orden de las instancias escogidas, es decir, ordenando por timestamp. De esta forma, si bien las diferentes muestras pueden estar distanciadas entre sí, respetan al menos el orden temporal. Realmente, no es un método especialmente deseable, ya que tomar valores aislados podría introducir sesgos al estimador al poder ser fácilmente obtenidos de su entorno. Se deberían suprimir el entorno para evitar esta problemática.
+	\item \textbf{Validación cruzada no dependiente}. Propone una solución simple al problema de las dependencias visto en la CV estándar: eliminar los valores cercanos a los puntos seleccionados. Sin embargo, esto supone una gran pérdida de información útil.
+	\item \textbf{Validación cruzada por bloques}. Para evitar la pérdida excesiva de información que resulta al eliminar valores dependientes aislados, se realiza la propuesta de seleccionar, en lugar de valores únicos, bloques completos, de forma que sólo sea necesario eliminar el contexto de antes y después de cada bloque. Conseguimos así conjuntos de observaciones contiguas, respetando el orden temporal y permitiendo estimaciones más robustas aprovechando mejor la información.
+	\item \textbf{Last-block / particionado tradicional}. Es el particionado tradicional, en el que se escoge el último conjunto de valores eliminando el contexto cercano con el resto del conjunto de entrenamiento. Es la estrategia ya seguida al realizar la partición train-test.
+\end{itemize}
+
+\begin{figure}[!ht]
+	\centering
+	\includegraphics[scale=0.35]{img/valid}
+	\caption{Partición de datos: estrategias de validación cruzada en series temporales \cite{bergmeir2012use}}
+	\label{valid}
+\end{figure}
+
+En todos los casos, debemos tener presente la necesidad de eliminar el contexto inmediato compartido con el conjunto de entrenamiento para evitar problemas de contaminación entre particiones.
+
+\subsection{Función de pérdida y métricas}
+\label{metricassd}
+Cuando entrenamos el modelo, obtenemos una hipótesis final, la cual nos permitirá modelar una aproximación del conjunto de test, de manera que podremos comparar y evaluar la calidad del modelo con respecto a dichos datos. Pero, también necesitamos una referencia durante el entrenamiento que nos permita, de forma sencilla, comprender si el entrenamiento evoluciona favorablemente. El objetivo es simple: que dichos valores sean lo más cercano a cero, lo que se traduce como condición deseable que tanto $E_{in}$ como $E_{val}$ tiendan a cero.\\
+
+En el caso de las series temporales, las funciones de evaluación empleadas coinciden con las utilizadas en problemas de regresión, dado que el objetivo es cuantificar el error continuo entre los valores predichos y los valores reales a lo largo de toda la secuencia temporal. Este enfoque se justifica porque la predicción de series temporales implica estimar variables continuas en función del tiempo, lo que la enmarca formalmente como un problema de regresión, pero en el dominio temporal.\\
+
+Por lo tanto, podemos hacer uso de las siguientes métricas:
+
+\begin{itemize}
+	\item \textbf{MSE}. Es la función de pérdida para regresión por excelencia, así como una adecuada métrica de rendimiento, debido a su simplicidad de cálculo y a que su formulación cuadrática permite un tratamiento analítico mediante técnicas de cálculo diferencial, Mide la distancia de cada punto real de la serie hasta el valor estimado, de forma que se penaliza por cada punto de forma equivalente a la magnitud de esa distancia. Se puede expresar como:
+	
+	$$\mathrm{MSE} = \frac{1}{n} \sum_{i=1}^n (y_i - \hat{y}_i)^2$$ 
+	
+	donde \(y_i\) es el valor observado, \(\hat{y}_i\) es el valor predicho y \(n\) es el número de observaciones.  
+	
+	
+	\item \textbf{MAE}. Es una métrica bastante similar al MSE. Calcula el error entre cada par de puntos real y estimado, pero se basa en realizar la diferencia entre el valor actual y la predicción del error para un punto dado:
+	$$abs(y_i - \lambda (x_i))$$
+	
+	Estos errores posteriormente son sumados para quedarnos con su valor medio, y así obtener la distancia promedio:
+	$$\mathrm{MAE} = \frac{1}{n} \sum_{i=1}^n \left| y_i - \hat{y}_i \right|$$
+	
+	
+	\item \textbf{MAPE}. Expresa el error promedio de la estimación en términos relativos, expresándolo como un porcentaje respecto al valor real de cada observación. Al ser un valor en porcentaje, nos permite obtener una tasa de error normalizada. Sin embargo, debemos tener especial cuidado con los valores cercanos a cero, ya que los errores en dichos valores pueden inflar artificialmente el porcentaje de error.
+	
+	$$
+	\mathrm{MAPE} = \frac{100}{n} \sum_{i=1}^n \left| \frac{y_i - \hat{y}_i}{y_i} \right|
+	$$
+	
+	
+	\item \textbf{MSPE}. Puede entender como la versión cuadrática del MAPE, la cual penaliza de manera más severa los errores relativos grandes al elevar al cuadrado los errores relativos. De esta forma, se potencia la influencia de predicciones que se alejan significativamente del valor real. Al igual que MAPE, permite comparar errores entre series de diferentes escalas, pero también comparte la inestabilidad frente a valores cercanos a cero. Se define como:
+	
+	$$
+	\mathrm{MSPE} = \frac{100}{n} \sum_{i=1}^n \left( \frac{y_i - \hat{y}_i}{y_i} \right)^2
+	$$
+	
+	\item \textbf{RMSE}. Es la raíz cuadrada del MSE. A diferencia del MAE, RMSE penaliza más fuertemente los errores grandes debido a la elevación al cuadrado, lo que lo hace útil cuando se quieren evitar grandes desviaciones. Sin embargo, esta misma característica lo hace más sensible a valores atípicos, por lo que si bien es útil a nivel informativo, puede ser crítica si se usa en series temporales, donde esto es un fenómeno frecuente. Su expresión es:
+	$$
+	\mathrm{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^n (y_i - \hat{y}_i)^2}
+	$$
+\end{itemize}
 
 \subsection{Modelos basados en descomposición}
 
@@ -53,7 +168,7 @@ Frecuentemente, podemos encontrar 3 comportamientos, los cuales son fácilmente 
 
     En la figura \ref{ciclo} podemos un ejemplo de este comportamiento con los permisos concedidos para la construcción de viviendas en EEUU \cite{techcharts2012housing}, donde no podemos encontrar patrones claros como en Air Passengers.
 
-    \begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
+    \begin{figure}[!ht] %con el [H] le obligamos a situar aquí la figura
         \centering
         \includegraphics[scale=0.55]{img/ciclo}
         \caption{Estudio de ciclos en USA building permits}
@@ -139,7 +254,7 @@ Para obtener un modelo para cada una de ellas,  normalmente se sigue un proceso 
 
 En su publicación original, podemos encontrar un ejemplo de ejecución sobre el conjunto de datos \textit{Daily Carbon Dioxide Data} (ver \ref{stl}), que recoge información sobre las emisiones de $CO_2$ desde el 17 de abril de 1974 hasta el 31 de diciembre de 1986, y permite observar la información recogida por cada una de las componentes.
 
-\begin{figure}[!htp] %con el [H] le obligamos a situar aquí la figura
+\begin{figure}[!ht] %con el [H] le obligamos a situar aquí la figura
     \centering
     \includegraphics[scale=0.35]{img/stl}
     \caption{STL: Ejemplo de caso de estudio, Daily Carbon Dioxide Data \cite{cleveland1990stl}}
@@ -339,7 +454,7 @@ A lo largo de este apartado, hemos analizado tres de los enfoques más relevante
 
 \end{itemize}
 
-\begin{table}[H]
+\begin{table}[!ht]
     \centering
     \begingroup
     \renewcommand{\arraystretch}{1.055}
@@ -606,6 +721,7 @@ Posteriormente, estos valores se concatenan, y podemos obtener el resultado que 
 En multitud de publicaciones, podemos encontrar propuestas para modificar este proceso, ya que se trata de la fase más costosa del aprendizaje del model. Esto se debe a que se trata de un producto de orden cuadrático y de gran tamaño, donde todos los valores son multiplicados por todos, y reducir dicho número puede lograr grandes mejoras de rendimiento. Normalmente, para conseguirlo, se emplean técnicas de muestreado, y se buscan mecanismos para lograr un compromiso entre precisión y coste computacional. Posteriormente, cuando analicemos los principales modelos del estado del arte, podremos apreciar este tipo de estrategia.
 
 \subsection{Importancia del Positional Encoding}
+\label{encodingsect}
 
 Dado que el Transformer no incorpora mecanismos recurrentes ni convolucionales, carece de una forma intrínseca para captar el orden relativo o absoluto de los elementos que recibe como entrada. Para superar esta limitación, los autores del modelo original introdujeron el concepto de \textit{positional encodings}, vectores que se suman a las representaciones embebidas de cada token en función de su posición dentro de la secuencia. Estos vectores proporcionan una señal explícita de la ubicación de cada elemento, permitiendo que el modelo incorpore información posicional en el cálculo de la atención.\\
 
@@ -725,7 +841,7 @@ A continuación, haremos énfasis en cada una de estas 3 propuestas, y analizare
 \end{figure}
 
 \paragraph{Mecanismo de atención}
-
+\label{attinf}
 El mecanismo de \textit{self-attention} tradicional se definía como:
 \begin{equation}
     A(Q,K,V) = \operatorname{Softmax}\!\left( \frac{QK^\top}{\sqrt{d}} \right) V,
@@ -1033,6 +1149,6 @@ A modo de resumen, se muestra la tabla \ref{resumenmodelos}, donde se pueden apr
     \endgroup
 \end{table}
 
-Tal y como ya adelantábamos en los análisis realizados tras estudiar cada modelo, podemos ver que la codificación posicional ha sido un aspecto no especialmente atendido en la formulación de cada modelo. Si bien modelos como Autoformer y FEDformer tratan de compensar esto mediante sus propios mecanismos de atención o equivalentes más elaborados, la construcción del embedding permanece igual a prácticamente como se realizaba en los Transformer vanilla. Por tanto, esto justifica y muestra la necesidad de probar una nueva vía de investigación que trate de verificar si, incluso empleando modelos de aprendizaje más sencillos, como lo es el Transformer original o Informer, se pueden obtener buenos resultados de por sí trabajando con la codificación posicional.\\
+Tal y como ya adelantábamos en los análisis realizados tras estudiar cada modelo, podemos ver que la codificación posicional ha sido un aspecto no especialmente atendido en la formulación de cada modelo. Si bien modelos como Autoformer y FEDformer tratan de compensar esto mediante sus propios mecanismos de atención o equivalentes más elaborados, la construcción del embedding permanece igual a prácticamente como se realizaba en los Transformer vanilla: siempre se emplea codificación basada en senos y cosenos. Por tanto, esto justifica y muestra la necesidad de probar una nueva vía de investigación que trate de verificar si, incluso empleando modelos de aprendizaje más sencillos, como lo es el Transformer original o Informer, se pueden obtener buenos resultados de por sí trabajando únicamente con la codificación posicional.\\
 
 En el próximo capítulo, nos centraremos en el contexto teórico que rodea este concepto, analizando en detalle las propuestas más recientes aplicadas a series temporales \cite{irani2025positionalencodingtransformerbasedtime}, y a partir de ello, formularemos y compararemos distintas variantes, con el objetivo de extraer conclusiones relevantes sobre su eficacia y aplicabilidad.
