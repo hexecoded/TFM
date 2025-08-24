@@ -19,7 +19,7 @@ Estos parámetros son:
 	\item Longitud de predicción: 24
 \end{itemize}
 
-Para realizar el estudio de forma intuitiva y visual, hemos recopilado los resultados del análisis de forma gráfica: se han ejecutado ETTh1 y ETTh2 con todos los valores de ventana entre 3 y 96, y ejecutado cada configuración 10 veces para obtener así un valor promedio estable, pues al evaluar tamaños de ventana muy juntos las diferencias serán mínimas y así reducimos el efecto del ruido sobre el MSE todo lo posible. Los resultados los podemos encontrar en las figuras \ref{mean_mse_vs_window_ETTh1} para ETTh1 y en la \ref{mean_mse_vs_window_ETTh2} para ETTh2, marcando en negrita los 5 mejores resultados obtenidos.\\
+Para realizar el estudio de forma intuitiva y visual, hemos recopilado los resultados del análisis de forma gráfica: se han ejecutado ETTh1 y ETTh2 con todos los valores de ventana entre 3 y 96, y ejecutado cada configuración 10 veces para obtener así un valor promedio estable, pues al evaluar tamaños de ventana muy juntos las diferencias serán mínimas y así reducimos el efecto del ruido sobre el MSE todo lo posible. Los resultados los podemos encontrar en la Figura \ref{mean_mse_vs_window_ETTh1} para ETTh1 y en la Figura \ref{mean_mse_vs_window_ETTh2} para ETTh2, destacando mediante flechas y textos en negrita los 5 mejores resultados obtenidos.\\
 
 
 \begin{figure}[H]
@@ -62,7 +62,7 @@ Escoger un conjunto de datos como este, de aproximadamente 2 millones de medicio
 	\item Sin PE.
 \end{itemize}
 
-Para realizar una comparativa justa de los resultados, se han empleado en todos los casos los mismos parámetros, de forma que criterios como la longitud de secuencia, la longitud de contexto o la longitud de predicción no afecten a los resultados. La arquitectura y los parámetros asociados se pueden ver en la tabla \ref{ajustes}.
+Para realizar una comparativa justa de los resultados, se han empleado en todos los casos los mismos parámetros, de forma que criterios como la longitud de secuencia, la longitud de contexto o la longitud de predicción no afecten a los resultados. La arquitectura y los parámetros asociados se pueden ver en la Tabla \ref{ajustes}.
 
 \begin{table}[!ht]
 	\centering
@@ -166,7 +166,7 @@ A modo de resumen, se pueden encontrar los resultados de los PE en las tablas \r
 
 En primer lugar, comenzaremos por el modelo original de Informer. De esta forma, tendremos una referencia de partida que nos sirva para comparar las propuestas siguientes, y ver si están siendo efectivas. Por defecto, Informer usa codificación de tipo seno-coseno, pero adicionalmente, incorpora información de los timestamps a través de un mecanismo llamado timeF. Son características adicionales que tratan de ayudar al modelo a capturar patrones periódicos y estacionales en la serie temporal, aunque de manera bastante limitada.\\
 
-Los resultados de la ejecución pueden apreciarse en la primera columna de la tabla \ref{hpcorigs}. En ella, podemos notar que la varianza en los resultados, tras ejecutar 3 iteraciones, es bastante pequeña, e inferior a la centésima tanto para MAE como MSE. Sin embargo, las tasas de error en las métricas de MAPE y MSPE se disparan: esto se debe a su gran sensibilidad a valores pequeños, ya que todas las mediciones han sido normalizadas, por lo que no deberían ser consideradas como una forma de comparación debida su inestabilidad. En el caso de RMSE, el error también es bastante alto, de un 73\%, fruto de la misma debilidad que la mostrada en MAPE y MSPE.\\
+Los resultados de la ejecución pueden apreciarse en la primera columna de la Tabla \ref{hpcorigs}. En ella, podemos notar que la varianza en los resultados, tras ejecutar 3 iteraciones, es bastante pequeña, e inferior a la centésima tanto para MAE como MSE. Sin embargo, las tasas de error en las métricas de MAPE y MSPE se disparan: esto se debe a su gran sensibilidad a valores pequeños, ya que todas las mediciones han sido normalizadas, por lo que no deberían ser consideradas como una forma de comparación debida su inestabilidad. En el caso de RMSE, el error también es bastante alto, de un 73\%, fruto de la misma debilidad que la mostrada en MAPE y MSPE.\\
 
 En términos de eficiencia computacional, podemos utilizar el tiempo medio de ejecución como referencia. En promedio, una ejecución del modelo por defecto requiere aproximadamente 7817 segundos, equivalentes a casi 2,17 horas. Aunque este tiempo resulta razonable considerando la longitud del conjunto de datos, su utilidad real es servir como valor de referencia para evaluar el coste adicional que implican las operaciones introducidas en los modelos alternativos que veremos a continuación.
 
@@ -174,7 +174,7 @@ En términos de eficiencia computacional, podemos utilizar el tiempo medio de ej
 
 Continuando con el modelo de referencia, daremos un segundo paso. Teniendo en cuenta el impacto limitado de la información añadida por timeF, ¿es realmente relevante frente a la información proporcionada por el encoding de tipo seno-coseno?. Para conocerlo, hemos realizado una ejecución suprimiendo esta componente, convirtiendo la arquitectura en prácticamente la definición de un Transformer vanilla para procesamiento de lenguaje.\\
 
-Los resultados obtenidos, visibles en la tabla \ref{hpcorigs} son muy similares a los vistos en el modelo original: la pérdida de rendimiento en métricas es prácticamente despreciable, con una diferencia de rendimiento inferior a la centésima para el MSE (0,5329 vs 0,5377) y un caso similar en MAE (0,4152 vs 0,414), obteniendo incluso un mejor el resultado para esta codificación. Esto nos indica que la información adicional aportada en el modelo original no estaba aumentando considerablemente el rendimiento del modelo.\\
+Los resultados obtenidos, visibles en la Tabla \ref{hpcorigs} son muy similares a los vistos en el modelo original: la pérdida de rendimiento en métricas es prácticamente despreciable, con una diferencia de rendimiento inferior a la centésima para el MSE (0,5329 vs 0,5377) y un caso similar en MAE (0,4152 vs 0,414), obteniendo incluso un mejor el resultado para esta codificación. Esto nos indica que la información adicional aportada en el modelo original no estaba aumentando considerablemente el rendimiento del modelo.\\
 
 Sin embargo, resulta relevante destacar que el tiempo de ejecución aumenta significativamente, alcanzando aproximadamente 10741 segundos (cerca de 3 horas) en el entrenamiento. Aunque este resultado pueda parecer contraintuitivo, ya que eliminar componentes debería reducir el coste, al emplear esta variante el proceso de convergencia del modelo se desarrolla de forma más lenta, y provoca un aumento del tiempo de ejecución. En defintiva, suprimir la información contextual adicional de Informer no empeora gravemente los resultados, pero disminuye la velocidad de convergencia durante el aprendizaje.\\
 
@@ -184,13 +184,13 @@ A continuación, comenzaremos a analizar las nuevas alternativas, para ver si co
 
 Comenzamos por la primera de las propuestas, la cual se basa únicamente en la adición información estadística a través de una ventana deslizante. Recordando su funcionamiento, este método requiere especificar el tamaño de la ventana que recorre los datos para extraer y concatenar información local sobre la media, la desviación estándar y los valores extremos en su entorno. Por tanto, la elección de un tamaño de ventana adecuado resulta crítico para garantizar un rendimiento óptimo. Para ello, utilizaremos nuestro criterio heurístico, empleando en este caso, 60, que es un tercio de la longitud de secuencia.\\
 
-Los resultados para esta alternativa son significativamente mejores y más estables (primera columna de la tabla \ref{hpcwinstatvariants}) que en los casos anteriores, ya que hemos conseguido reducir tanto MAE como MSE, reduciendo además la varianza de los resultados. Tomando esta última como referencia, podemos apreciar que la mejora es superior a las tres centésimas ($0,502$ vs $0,537$), aportando una mejora considerable del 6\%. Sin embargo, esta mejora de rendimiento ha tenido un gran impacto en el tiempo de cómputo: este es ahora mucho mayor que en casos anteriores, con una variabilidad además mucho más alta, de casi una hora.\\
+Los resultados para esta alternativa son significativamente mejores y más estables (primera columna de la Tabla \ref{hpcwinstatvariants}) que en los casos anteriores, ya que hemos conseguido reducir tanto MAE como MSE, reduciendo además la varianza de los resultados. Tomando esta última como referencia, podemos apreciar que la mejora es superior a las tres centésimas ($0,502$ vs $0,537$), aportando una mejora considerable del 6\%. Sin embargo, esta mejora de rendimiento ha tenido un gran impacto en el tiempo de cómputo: este es ahora mucho mayor que en casos anteriores, con una variabilidad además mucho más alta, de casi una hora.\\
 
-En promedio, se ha requerido $17697$ segundos, unas 4,9 horas, para completar cada ejecución, lo cual es aumento del tiempo de ejecución a prácticamente el doble de Informer original (tabla \ref{hpcorigs}). Si bien la mejora ha sido notable, sería deseable observar si alguna de las siguientes alternativas consigue mejorar la estabilidad numérica y la convergencia de los resultados.
+En promedio, se ha requerido $17697$ segundos, unas 4,9 horas, para completar cada ejecución, lo cual es aumento del tiempo de ejecución a prácticamente el doble de Informer original (Tabla \ref{hpcorigs}). Si bien la mejora ha sido notable, sería deseable observar si alguna de las siguientes alternativas consigue mejorar la estabilidad numérica y la convergencia de los resultados.
 
 \paragraph{WinStatLags}
 
-WinStatLags es la siguiente propuesta de encoding a evaluar, siguiendo la estrategia especificada de ir aumentando de manera creciente la complejidad de los modelos. La principal característica de este modelo consistía en la incorporación de diferencias mediante lags, las cuales potencian el contexto local. Siguiendo las misma configuración que en los casos anteriores, obtenemos los resultados de segunda columna de la tabla \ref{hpcwinstatvariants}.\\
+WinStatLags es la siguiente propuesta de encoding a evaluar, siguiendo la estrategia especificada de ir aumentando de manera creciente la complejidad de los modelos. La principal característica de este modelo consistía en la incorporación de diferencias mediante lags, las cuales potencian el contexto local. Siguiendo las misma configuración que en los casos anteriores, obtenemos los resultados de segunda columna de la Tabla \ref{hpcwinstatvariants}.\\
 
 Volvemos a obtener una mejora pequeña, esta vez del $0,01$ sobre el modelo de ventana sin lags para el MSE, y una reducción del resto de métricas de error, aunque con un empeoramiento marginal registrado en MAE. Aunque dicha diferencia parezca mínima, es significativa si la tenemos en cuenta con respecto al modelo original. Además, en cuestiones de tiempo de ejecución, hemos conseguido unos tiempos de entrenamiento inferiores, sobre todo, gracias a la reducción de la variabilidad de los resultados. Podemos observar que hemos pasado de una varianza cercana a la hora por cada ejecución, a aproximadamente 24 minutos, reduciendo así casi en un tercio la variabilidad del resultado. Esto justifica por tanto la inclusión de esta nueva componente, que se mantiene como estaba previsto en el resto de codificaciones.
 
@@ -198,12 +198,12 @@ Volvemos a obtener una mejora pequeña, esta vez del $0,01$ sobre el modelo de v
 
 WinStatFlex, el siguiente modelo a examinar, combina estadísticos calculados mediante ventanas, diferencias con rezagos anteriores y codificaciones aditivas ponderadas. Su principal ventaja radica en que los pesos de ponderación entrenables, lo que permite una adaptación más precisa al conjunto de datos y ejerce un impacto crítico en el rendimiento final. En este caso, al incorporar PE, LPE y TAPE, junto con la variante basada en ventanas, se dispone de un total de cuatro pesos. Estos fueron inicializados con un valor uniforme de $0,25$, con el fin de evitar problemas de dominancia inicial y garantizar una contribución equilibrada entre componentes.\\
 
-Los resultados de este algoritmo requieren una mayor atención, dada la multitud de resultados que podemos extraer de su rendimiento (ver tabla \ref{hpcwinstatvariants}):
+Los resultados de este algoritmo requieren una mayor atención, dada la multitud de resultados que podemos extraer de su rendimiento (ver Tabla \ref{hpcwinstatvariants}):
 
 \begin{itemize}
 	 \item El rendimiento obtenido, tomando como referencia la métrica MSE, es notable. En comparación con el modelo basado en lags y estadísticos, se ha logrado una mejora absoluta de $0,03$, equivalente a un 5,9\%. Este incremento es prácticamente idéntico al observado entre {WinStat} y la codificación original de {Informer}. En términos acumulados, la mejora con respecto a este último alcanza el 13,4\%, lo que representa un avance significativo en el desempeño del modelo. Estos valores demuestran la eficacia de la combinación mediante pesos entrenables.
 	\item El tiempo de ejecución, por contra, es el más alto medido hasta el momento, siendo necesario un promedio de 18652 segundos, o 5,2 horas de ejecución, frente a las algo más de 2 horas requeridas por la versión original de Informer. Esta configuración incrementa el tiempo medio de ejecución a más del doble, lo que supone un coste computacional significativamente mayor. No se trata de un enfoque que sobresalga por su rapidez en las fases de entrenamiento e inferencia, pero, sin embargo, la mejora de rendimiento podría convertir esta diferencia en un coste asumible.
-	\item El valor final de los pesos (tabla \ref{hpc_pesos_combinados}) tras el entrenamiento nos ofrece información muy valiosa sobre las necesidades de los datos. Las proporciones en promedio alcanzadas por estos indican una mayor inclinación hacia la información semántica de los valores estadísticos, con un 32,41\% de contribución. En el caso de los encodings aditivos, destaca especialmente la componente aprendida por LPE, la cual se adapta lo máximo posible a los datos, y ha adquirido una relevancia del 28,09\%. Tan solo con estas componentes, se cubre una ponderación de 0,605 de los datos, indicando que el modelo tiene una mayor preferencia por aumenta el contexto local de los datos.ç
+	\item El valor final de los pesos (Tabla \ref{hpc_pesos_combinados}) tras el entrenamiento nos ofrece información muy valiosa sobre las necesidades de los datos. Las proporciones en promedio alcanzadas por estos indican una mayor inclinación hacia la información semántica de los valores estadísticos, con un 32,41\% de contribución. En el caso de los encodings aditivos, destaca especialmente la componente aprendida por LPE, la cual se adapta lo máximo posible a los datos, y ha adquirido una relevancia del 28,09\%. Tan solo con estas componentes, se cubre una ponderación de 0,605 de los datos, indicando que el modelo tiene una mayor preferencia por aumenta el contexto local de los datos.ç
 	
 	 El resto de codificaciones presentan valores inferiores, destacando tAPE como la de menor relevancia. Este resultado se explica principalmente por su alta similitud con el resto de codificaciones ponderadas, reduciendo su aporte diferencial dentro del modelo.
 	
@@ -213,7 +213,7 @@ En resumen, este modelo supone un salto considerable frente a todas las alternat
 
 \paragraph{WinStatTPE}
 
-Una vez estudiado el excelente rendimiento de WinStatFlex, es el turno de su variante cercana WinStatTPE, la cual sustituye el uso de tAPE por T-PE, que dispone de mayor riqueza semántica, manteniendo una base geométrica tradicional. El funcionamiento se basa en los mismos principios, por lo que pasaremos directamente a los resultados (ver cuarta columna tabla \ref{hpcwinstatvariants}):
+Una vez estudiado el excelente rendimiento de WinStatFlex, es el turno de su variante cercana WinStatTPE, la cual sustituye el uso de tAPE por T-PE, que dispone de mayor riqueza semántica, manteniendo una base geométrica tradicional. El funcionamiento se basa en los mismos principios, por lo que pasaremos directamente a los resultados (ver cuarta columna Tabla \ref{hpcwinstatvariants}):
 
 \begin{itemize}
 	\item Las métricas de rendimiento muestran un resultado bastante similar al modelo proporcionado por la variante Flex, aunque marginalmente peores a este. 
@@ -222,14 +222,14 @@ Una vez estudiado el excelente rendimiento de WinStatFlex, es el turno de su var
 	
 	\item El tiempo de ejecución vuelve a ser el principal lastre de la propuesta, siendo, en este caso, aún mayor que la codificación anterior, convirtiéndose en el peor tiempo de ejecución visto hasta el momento, llegando a las 5 horas y cuarto.
 	
-	\item Los pesos obtenidos al final del aprendizaje, visibles en la tabla \ref{hpc_pesos_combinados}, reflejan un ajuste bastante equiparado entre las diferentes componentes del modelo. En este caso, el lugar anteriormente ocupado por tAPE logra remontar su peso hasta el 23,1\%, restando algo de relevancia al peso asociado a la componente estadística, que desciende hasta el 24\%. El resto de componentes permanece similar, pero ahora, la colaboración de las diferentes partes es bastante más equilibrada.
+	\item Los pesos obtenidos al final del aprendizaje, visibles en la Tabla \ref{hpc_pesos_combinados}, reflejan un ajuste bastante equiparado entre las diferentes componentes del modelo. En este caso, el lugar anteriormente ocupado por tAPE logra remontar su peso hasta el 23,1\%, restando algo de relevancia al peso asociado a la componente estadística, que desciende hasta el 24\%. El resto de componentes permanece similar, pero ahora, la colaboración de las diferentes partes es bastante más equilibrada.
 \end{itemize}
 
 En definitiva, este modelo presenta grandes ventajas frente a las codificaciones tradicionales, pero en comparación a la propuesta realizada por WinStatFlex, la diferencia en métricas es marginal, y el coste es superior. Su principal característica parece ser su gran estabilidad numérica, por lo que se mantiene como una alternativa atractiva junto a WinStatFlex.
 
 \paragraph{WinStatSPE}
 
-WinStatSPE será nuestra última variante a probar de las propuestas por este trabajo, y se centrará en evaluar el funcionamiento de un modelo ponderado donde interviene un mecanismo de modificación de atención explícito como es SPE. Las expectativas de rendimiento son bastante bajas, ya que en su definición se destacó su fortaleza en problemas de clasificación, y no mencionan conclusiones acerca de sus resultados en forecasting. Pero debido, a que no se estipularon restricciones acerca de una posible aplicación de un problema de predicción como este, consideramos relevante probar su comportamiento. Por tanto, tomando como codificación posicional estándar la empleada en WinStatFlex, se ha combinado con un modelo alternativo que modifica la atención para incluir SPE. Teniendo de nuevo como referencia la tabla \ref{hpcwinstatvariants}, podemos observar que:
+WinStatSPE será nuestra última variante a probar de las propuestas por este trabajo, y se centrará en evaluar el funcionamiento de un modelo ponderado donde interviene un mecanismo de modificación de atención explícito como es SPE. Las expectativas de rendimiento son bastante bajas, ya que en su definición se destacó su fortaleza en problemas de clasificación, y no mencionan conclusiones acerca de sus resultados en forecasting. Pero debido, a que no se estipularon restricciones acerca de una posible aplicación de un problema de predicción como este, consideramos relevante probar su comportamiento. Por tanto, tomando como codificación posicional estándar la empleada en WinStatFlex, se ha combinado con un modelo alternativo que modifica la atención para incluir SPE. Teniendo de nuevo como referencia la Tabla \ref{hpcwinstatvariants}, podemos observar que:
 
 \begin{itemize}
 	\item Las métricas proporcionadas por el modelo contienen peores resultados que el modelo de referencia. Esto indica que evidentemente, algo no esta funcionando adecuadamente a la hora de modificar la atención, ya que de por sí sola, la codificación complementaria que se ha utilizado sí que ofrece buenos resultados. Esto confirma las intuiciones anteriores, y muestra que posiblemente SPE sea efectivamente un método propio de clasificación.
@@ -238,7 +238,7 @@ WinStatSPE será nuestra última variante a probar de las propuestas por este tr
 	
 	El resultado es sorprendente, dado que la definición original de este método lo proponía como una aproximación de la atención completa mediante una distribución normal. Sin embargo, debido probablemente a limitaciones de memoria o de capacidad de cómputo de la CPU, esta alternativa ha mostrado ser más lenta que el cálculo directo de la atención completa. Incluso el tiempo de inferencia ha crecido rozando un rendimiento casi 20 veces más lento.
 	
-	\item En este caso, los pesos obtenidos presentan un comportamiento inusual (tabla \ref{hpc_pesos_combinados}), probablemente debido a la alteración del mecanismo de atención. Se observa una mayor potenciación de la componente tAPE, anteriormente inferior, alcanzando una contribución del 31,86\%, y reduciendo la relevancia de los datos en sí hasta el 25,05\%. 
+	\item En este caso, los pesos obtenidos presentan un comportamiento inusual (Tabla \ref{hpc_pesos_combinados}), probablemente debido a la alteración del mecanismo de atención. Se observa una mayor potenciación de la componente tAPE, anteriormente inferior, alcanzando una contribución del 31,86\%, y reduciendo la relevancia de los datos en sí hasta el 25,05\%. 
 	
 \end{itemize}
 
@@ -254,7 +254,7 @@ Sin embargo, la diferencia con respecto a la arquitectura Informer original es m
 
 \subsubsection{Elección del mejor encoding}
 
-Tras la ejecución de los ocho experimentos anteriores, hemos obtenido resultados valiosos que nos permiten comparar el rendimiento de todas las codificaciones analizadas. Debido a que las tablas pueden ser algo densas, con el objetivo de visualizar de forma más intuitiva estas diferencias, se ha elaborado un gráfico (figura \ref{hpcgraph}) que resume las métricas principales de cada modelo, MAE y MSE, permitiendo observar de un vistazo el ranking de alternativas ordenadas por MSE.\\
+Tras la ejecución de los ocho experimentos anteriores, hemos obtenido resultados valiosos que nos permiten comparar el rendimiento de todas las codificaciones analizadas. Debido a que las tablas pueden ser algo densas, con el objetivo de visualizar de forma más intuitiva estas diferencias, se ha elaborado un gráfico (Figura \ref{hpcgraph}) que resume las métricas principales de cada modelo, MAE y MSE, permitiendo observar de un vistazo el ranking de alternativas ordenadas por MSE.\\
 
 \begin{figure}[!ht]
 	\centering
@@ -269,7 +269,7 @@ Si bien todos los modelos propuestos (a excepción de SPE) obtienen mejores resu
 
 Y ahora, debemos volver a hacer hincapié sobre el objetivo que estamos persiguiendo: verificar si los nuevos encodings añaden de verdad información semántica. Para ello, realizaremos el experimento anteriormente mencionado del barajado del decoder. Volveremos a ejecutar los dos mejores algoritmos seleccionados e Informer, y ver si realmente se repite la problemática vista en \cite{zeng2022transformerseffectivetimeseries}.\\
 
-En la tabla \ref{hpcresultados_modelos}, podemos encontrar los resultados, del cual podemos extraer varias conclusiones:
+En la Tabla \ref{hpcresultados_modelos}, podemos encontrar los resultados, del cual podemos extraer varias conclusiones:
 \begin{table}[ht]
 	\centering
 	\begin{tabular}{l|N|N|N|N}
@@ -315,7 +315,7 @@ En la tabla \ref{hpcresultados_modelos}, podemos encontrar los resultados, del c
 	\item WinStatTPE muestra un efecto similar; al aplicar el barajado, pasamos de $0,463651$ a $0,851115$, sufriendo incluso un mayor empeoramiento que la variante Flex. En valores relativos, la diferencia es de un 83,5\%, indicando por tanto que la información semántica aportada por T-PE es aún más sensible a barajado que el resto de codificaciones.
 \end{itemize}
 
-Estos resultados refuerzan, por tanto, un mejor aprovechamiento del contexto local y semántico de los datos, siendo ahora una parte clave del modelo que se ve tremendamente afectada cuando realizamos alteraciones que manipulen la estructura y rompan el contexto temporal. Gracias a este experimento, hemos podido verificarlo de manera sencilla y poner en valor los resultados obtenidos. Los tiempos de ejecución han crecido, como era de esperar, en los modelos mezclados (representados como variantes \textit{Shuffled} en la tabla \ref{hpc_tiempos_modelos}), pero dicho sobrecoste asociado es asumible dada la utilidad del procedimiento.\\
+Estos resultados refuerzan, por tanto, un mejor aprovechamiento del contexto local y semántico de los datos, siendo ahora una parte clave del modelo que se ve tremendamente afectada cuando realizamos alteraciones que manipulen la estructura y rompan el contexto temporal. Gracias a este experimento, hemos podido verificarlo de manera sencilla y poner en valor los resultados obtenidos. Los tiempos de ejecución han crecido, como era de esperar, en los modelos mezclados (representados como variantes \textit{Shuffled} en la Tabla \ref{hpc_tiempos_modelos}), pero dicho sobrecoste asociado es asumible dada la utilidad del procedimiento.\\
 
 \begin{figure}[!ht]
 	\centering
@@ -324,7 +324,7 @@ Estos resultados refuerzan, por tanto, un mejor aprovechamiento del contexto loc
 	\label{hpcgraphshuffled}
 \end{figure}
 
-A modo de resumen final, en la figura \ref{hpcgraphshuffled} se representan los resultados de los modelos comparados con el barajado, para apreciar de manera visual que las diferencias entre pares de modelos ahora son bastante notables en comparación con Informer original.
+A modo de resumen final, en la Figura \ref{hpcgraphshuffled} se representan los resultados de los modelos comparados con el barajado, para apreciar de manera visual que las diferencias entre pares de modelos ahora son bastante notables en comparación con Informer original.
 
 
 \subsection{ETT: Evaluación de PE}
@@ -441,7 +441,7 @@ Obtenida ya la primera referencia, procederemos a revisar el resto de encodings 
  
  Para volver a comprobar si la pequeña información de contexto proporcionada por timeF es relevante, se ha ejecutado la implementación de Informer eliminando dicha componente y ejecutando únicamente con la parte geométrica del encoding.\\
   
-  Atendiendo a los valores dados por la tabla \ref{etth1tabla} para ETTh1, esta vez sí que encontramos una diferencia notable entre el modelo original y este; en el MSE encontramos una diferencia de $0,032$ ($0,5458$ vs $0,5775$), mientras que en MAE ronda una diferencia de 0,02 (valor de 0,$5323$ vs $0,5552$). Por lo tanto, parece que la información aportada por dicha componente de Informer parece aportar información relevante.\\
+  Atendiendo a los valores dados por la Tabla \ref{etth1tabla} para ETTh1, esta vez sí que encontramos una diferencia notable entre el modelo original y este; en el MSE encontramos una diferencia de $0,032$ ($0,5458$ vs $0,5775$), mientras que en MAE ronda una diferencia de 0,02 (valor de 0,$5323$ vs $0,5552$). Por lo tanto, parece que la información aportada por dicha componente de Informer parece aportar información relevante.\\
   
   Por otro lado, en el caso del segundo dataset (Tabla \ref{etth2tabla}), podemos encontrar una respuesta diferente, ya que ha aumentado sensiblemente la magnitud de todas las métricas, indicando un empeoramiento rendimiento; en el caso de MSE, la diferencia es de 0,5, bastante alta, mientras que en MAE es de 0,38. Esto nos está indicando que el segundo dataset sea posiblemente más complejo de modelar, y se requiera un mayor contexto para modelar adecuadamente el comportamiento. De esta forma, sería razonable pensar que cuando apliquemos las propuestas Flex y TPE, el salto de rendimiento sea considerable.\\
   
@@ -534,7 +534,7 @@ En ETTh2 (Tabla \ref{etth2tabla}), por su parte, aunque el empeoramiento tambié
 
 \subsubsection{Elección del mejor encoding}
 
-Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos definitivamente escoger el modelo de codificación que mejores resultados ha obtenido. Para contrastarlo también visualmente, se han creado los gráficos \ref{etth1fin} y \ref{etth2fin} (así como las tablas \ref{etth1fintab} y \ref{etth2fintab}), los cuales recogen los resultados de los subconjuntos ETTh1 y ETTh2, respectivamente, ordenados de mejor a peor resultado. En ambos, se muestran también los resultados de barajar la entrada del decoder tanto para WinStatFlex como para WinStatTPE.\\
+Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos definitivamente escoger el modelo de codificación que mejores resultados ha obtenido. Para contrastarlo también visualmente, se han creado los gráficos de las Figuras \ref{etth1fin} y \ref{etth2fin} (así como las tablas \ref{etth1fintab} y \ref{etth2fintab}), los cuales recogen los resultados de los subconjuntos ETTh1 y ETTh2, respectivamente, ordenados de mejor a peor resultado. En ambos, se muestran también los resultados de barajar la entrada del decoder tanto para WinStatFlex como para WinStatTPE.\\
 
 
 \begin{figure}[!ht]
@@ -611,7 +611,7 @@ En los siguientes apartados, analizaremos los resultados, teniendo especial cuid
 
 \subsubsection{Análisis comparativo de las propuestas formuladas}
 
-Una vez presentados los aspectos relevantes, podemos pasar a realizar las ejecuciones. Ante de comenzar, fijaremos todos los parámetros de la arquitectura, tal y como venimos haciendo hasta el momento. En la tabla \ref{ajustestaxi}, se muestra la configuración, la cual es bastante similar a la vista en HPC, pues a nivel estructural, ambos conjuntos muestran una dimensionalidad similar, aunque con la diferencia de que en este caso los datos son de intervalo horario y no minuto a minuto. Recuperamos, por tanto, una mayor longitud de secuencia (180), y un mayor tamaño de ventana (60), de forma que podamos captar la localidad de los datos correctamente.
+Una vez presentados los aspectos relevantes, podemos pasar a realizar las ejecuciones. Ante de comenzar, fijaremos todos los parámetros de la arquitectura, tal y como venimos haciendo hasta el momento. En la Tabla \ref{ajustestaxi}, se muestra la configuración, la cual es bastante similar a la vista en HPC, pues a nivel estructural, ambos conjuntos muestran una dimensionalidad similar, aunque con la diferencia de que en este caso los datos son de intervalo horario y no minuto a minuto. Recuperamos, por tanto, una mayor longitud de secuencia (180), y un mayor tamaño de ventana (60), de forma que podamos captar la localidad de los datos correctamente.
 
 \begin{table}[!ht]
 	\centering
@@ -698,13 +698,13 @@ A modo de referencia, se pueden apreciar los resultados para estas codificacione
 
 \paragraph{Informer}
 
-Comenzaremos con el análisis de la configuración de referencia, Informer. Al igual que en los casos anteriores, la ejecución se ha realizado empleando la configuración de entrada dada por timeF, y sus correspondientes 3 ejecuciones para obtener el promedio. En la tabla \ref{taxitabla}, se muestran los resultados obtenidos para esta configuración. 
+Comenzaremos con el análisis de la configuración de referencia, Informer. Al igual que en los casos anteriores, la ejecución se ha realizado empleando la configuración de entrada dada por timeF, y sus correspondientes 3 ejecuciones para obtener el promedio. En la Tabla \ref{taxitabla}, se muestran los resultados obtenidos para esta configuración. 
 
 Como ya se adelantaba en la introducción de este experimento, las métricas están en una escala muy baja, del orden de $10^{-5}$ para el MSE y $10^{-3}$ para MAE. El resto de métricas también se han visto afectadas por este escalado, aunque muestran sorprendentemente valores razonables; por ejemplo, RMSE muestra valores muy cercanos a MAE. No podemos decir lo mismo del tiempo, que en este caso es bastante alto, con un promedio de $13989$ segundos (aproximadamente 3,9 horas).
 
 \paragraph{PE sinusoidal}
 
-Para evaluar el rendimiento de un modelo de Transformer casi puramente vanilla, procedemos a realizar el mismo experimento, pero empleando codificación tradicional de tipo seno-coseno. El resultado, como era razonable, se ve afectado negativamente por este cambio (tabla \ref{taxitabla}), ya que hemos eliminado prácticamente toda la información relativa a la componente temporal, más allá de la información de posición absoluta aportada por la geometría.\\
+Para evaluar el rendimiento de un modelo de Transformer casi puramente vanilla, procedemos a realizar el mismo experimento, pero empleando codificación tradicional de tipo seno-coseno. El resultado, como era razonable, se ve afectado negativamente por este cambio (Tabla \ref{taxitabla}), ya que hemos eliminado prácticamente toda la información relativa a la componente temporal, más allá de la información de posición absoluta aportada por la geometría.\\
 
 A pesar de que la escala se encuentra en valores pequeños, la diferencia de error no es especialmente exagerada, pues empeoramos un 26\% el error en MSE. Si nos fijamos en MAE, algo más estable ante escalas tan pequeñas, podemos ver que también muestra un peor valor, confirmando la tendencia. Sin embargo, sí que es importante destacar que la desviación de los resultados si es considerablemente más alta, indicando que los resultados no son igual de estables numéricamente que en la proposición original de Informer, y se obtiene una peor convergencia.\\
 
@@ -728,7 +728,7 @@ Para cerrar la fase de evaluación, se ha ejecutado el dataset con el modelo sin
 
 \subsubsection{Elección del mejor encoding}
 
-Una vez obtenidas y analizadas las tablas de métricas correspondientes a cada uno de los experimentos realizados, debemos realizar un análisis conjunto, ordenando de mayor a menor rendimiento, de manera que podamos comprender las diferencias existentes entre cada uno. Para ello, podemos tener como referencia tanto la tabla \ref{taxifinal} como la representación gráfica, siguiendo el esquema empleado hasta ahora. Para facilitar la lectura, se ha decidido separar por un lado, el error medio absoluto \ref{taxifinalmae}, y por otro, el MSE \ref{taxifinalmse}, debido a la diferencia de escalas de $10^{-2}$ entre ambas. Además, las barras marcadas con una doble línea oblicua de color rojo indican barras que sobresalen sensiblemente por encima el eje del gráfico, y que ha sido cortada para no distorsionar la escala.\\
+Una vez obtenidas y analizadas las tablas de métricas correspondientes a cada uno de los experimentos realizados, debemos realizar un análisis conjunto, ordenando de mayor a menor rendimiento, de manera que podamos comprender las diferencias existentes entre cada uno. Para ello, podemos tener como referencia tanto la Tabla \ref{taxifinal} como la representación gráfica, siguiendo el esquema empleado hasta ahora. Para facilitar la lectura, se ha decidido separar por un lado, el error medio absoluto (Figura \ref{taxifinalmae}), y por otro, el MSE (Figura \ref{taxifinalmse}), debido a la diferencia de escalas de $10^{-2}$ entre ambas. Además, las barras marcadas con una doble línea oblicua de color rojo indican barras que sobresalen sensiblemente por encima el eje del gráfico, y que ha sido cortada para no distorsionar la escala.\\
 
 
 \begin{table}[!ht]
@@ -784,7 +784,7 @@ A la hora de analizar los experimentos, debemos de tener este aspecto claro, y c
 
 A continuación, se mostrarán los resultados de los modelos evaluados, siendo de nuevo los 5 modelos ya valorados en conjuntos de datos anteriores.\\
 
-En este caso, los parámetros del modelo empleados han requerido algunas modificaciones para adquirir mayor información de contexto, ya que este dataset tiene un intervalo de medición más pequeño, de 30 segundos. En la tabla \ref{ajustestina}, podemos ver los valores, donde destaca especialmente la longitud de secuencia de 288. Sin embargo, la ventana empleada es de 60, indicando que tomamos únicamente la última media hora. Esto se debe a que aumentar el tamaño hasta alcanzar la heurística comentada en HPC de 1/3 o 1/4 de la longitud de secuencia generaba problemas de reserva de memoria.
+En este caso, los parámetros del modelo empleados han requerido algunas modificaciones para adquirir mayor información de contexto, ya que este dataset tiene un intervalo de medición más pequeño, de 30 segundos. En la Tabla \ref{ajustestina}, podemos ver los valores, donde destaca especialmente la longitud de secuencia de 288. Sin embargo, la ventana empleada es de 60, indicando que tomamos únicamente la última media hora. Esto se debe a que aumentar el tamaño hasta alcanzar la heurística comentada en HPC de 1/3 o 1/4 de la longitud de secuencia generaba problemas de reserva de memoria.
 
 \begin{table}[!ht]
 	\centering
@@ -869,12 +869,12 @@ En la segunda columna de la Tabla \ref{tinacomparacion} se muestran los resultad
 
 \paragraph{WinStatFlex}
 
-Para WinStatFlex, podemos encontrar los resultados para las métricas en la Tabla \ref{tinacomparacion}, mientras que los pesos de la suma ponderada se ubican en la tabla \ref{tinapesos}:
+Para WinStatFlex, podemos encontrar los resultados para las métricas en la Tabla \ref{tinacomparacion}, mientras que los pesos de la suma ponderada se ubican en la Tabla \ref{tinapesos}:
 
 \begin{itemize}
 	\item El rendimiento del modelo requiere un análisis cuidadoso de las métricas. Si tomamos como referencia el MSE, su valor, $1,148$, nos hace entender que este modelo es considerablemente peor a Informer, que arrojaba $1,0965$. Sin embargo, si nos fijamos en el MAE, que por definición es más estable para este problema, apreciamos una mejora, pues pasamos del $0,3566$ de Informer a $0,317$, siendo una mejora de 0,038 aproximadamente (11,9\%). Teniendo en cuenta la suposición realizada sobre MAE, estableceremos que el rendimiento de este modelo es, por tanto, positivo.
 	
-	\item Los pesos del modelo (tabla \ref{tinapesos}) arrojan resultados relevantes de comentar. La componente asociada a estadísticos y lags parece ser la más relevante de todas, siendo el 38,14\% de la ponderación. La codificación fija es el encoding absoluto que más predomina de los 3, alcanzando una aportación del 27,52\%. Las variantes LPE, pero especialmente tAPE, cobran un menor protagonismo en los resultados.
+	\item Los pesos del modelo (Tabla \ref{tinapesos}) arrojan resultados relevantes de comentar. La componente asociada a estadísticos y lags parece ser la más relevante de todas, siendo el 38,14\% de la ponderación. La codificación fija es el encoding absoluto que más predomina de los 3, alcanzando una aportación del 27,52\%. Las variantes LPE, pero especialmente tAPE, cobran un menor protagonismo en los resultados.
 	
 	\item Por último, el tiempo promedio de entrenamiento ha aumentado hasta las 7 horas, siendo muy más alto que el visto en Informer, concretamente 4 veces más. Observando la escasa distancia entre modelos, Informer ofrece un resultado más equilibrado tiempo-resultados, indicando a priori, a falta de confirmar en TPE, que en series de mayor extensión el impacto de la semántica ayuda, pero el sobrecoste a pagar puede ser demasiado elevado.
 \end{itemize}
@@ -901,7 +901,7 @@ Por último se ha ejecutado un modelo sin ningún tipo de codificación posicion
 
 \subsubsection{Elección del mejor encoding}
 
-Ahora que disponemos de todas las métricas recopiladas para cada modelo, podemos proceder a ordenar los resultados y ver las diferencias entre todas las propuestas. Al igual que en los conjuntos anteriores, podemos observar los resultados en la tabla \ref{tinafinal}, donde los modelos han sido ordenados por MSE. Adicionalmente, se han incluido las variantes barajadas de WinStatFlex y WinStatTPE para verificar el comportamiento de los modelos cuando se rompe el orden temporal. Para una comparación más intuitiva, se ha incluido adicionalmente el gráfico de barras \ref{tinafinal1}.
+Ahora que disponemos de todas las métricas recopiladas para cada modelo, podemos proceder a ordenar los resultados y ver las diferencias entre todas las propuestas. Al igual que en los conjuntos anteriores, podemos observar los resultados en la Tabla \ref{tinafinal}, donde los modelos han sido ordenados por MSE. Adicionalmente, se han incluido las variantes barajadas de WinStatFlex y WinStatTPE para verificar el comportamiento de los modelos cuando se rompe el orden temporal. Para una comparación más intuitiva, se ha incluido adicionalmente el gráfico de barras \ref{tinafinal1}.
 
 \begin{table}[h!]
 	\centering
@@ -944,7 +944,7 @@ Por tanto, podemos concluir que los modelos WinStatTPE y WinStatFlex son los mej
 
 \section{Resumen final}
 
-Con la finalización del análisis y experimentación sobre el dataset TINA, disponemos de los resultados para todos los modelos evaluados, lo que nos permite ver, de manera global, el funcionamiento de cada uno de ellos, y su consistencia en cuanto a resultados sobre el resto de modelos. En la tabla \ref{resumenfinal}, se puede encontrar en formato apaisado los valores obtenidos tanto para MAE como para MSE, destacando en negrita los mejores resultados, para así distinguir fácilmente el mejor modelo en cada dataset. A modo de síntesis, de manera general podemos extraer las siguientes conclusiones:
+Con la finalización del análisis y experimentación sobre el dataset TINA, disponemos de los resultados para todos los modelos evaluados, lo que nos permite ver, de manera global, el funcionamiento de cada uno de ellos, y su consistencia en cuanto a resultados sobre el resto de modelos. En la Tabla \ref{resumenfinal}, se puede encontrar en formato apaisado los valores obtenidos tanto para MAE como para MSE, destacando en negrita los mejores resultados, para así distinguir fácilmente el mejor modelo en cada dataset. A modo de síntesis, de manera general podemos extraer las siguientes conclusiones:
 
 \begin{itemize}
 	\item Aunque no estén explícitamente ejecutados, los modelos WinStat y más concretamente, WinStatLag, han sido la base de este experimento. Podemos ver que en todos los datasets, el modelo con mejor rendimiento era uno de los que empleaba WinStatLag como primera componente aditiva del producto ponderado, demostrando que este concepto ha permitido capturar una mayor información local y contextual del problema, permitiendo reducir al falta de semántica que tanto caracterizan a los encodings tradicionales geométricos. 
@@ -960,7 +960,7 @@ Con la finalización del análisis y experimentación sobre el dataset TINA, dis
 	 \item WinStatTPE resulta una alternativa interesante para WinStatFlex, pero se ve lastrado por su rendimiento. Los resultados generados por este encoding son también atractivos, dejándolo en segunda posición en cuanto a lo que rendimiento respecta. Su baja varianza en los resultados indica que se trata de un algoritmo muy estable numéricamente y que suele converger en puntos similares en sucesivas ejecuciones. Sin embargo, su tiempo de ejecución es considerablemente más elevado, por lo que en problemas donde la estabilidad numérica es crítica, como vimos en Yellow Trip o TINA, su rendimiento destaca, pero por lo general, se recomendaría el uso de WinStatFlex.
 \end{itemize}
 
-Por tanto, tal y como se puede apreciar en la tabla \ref{resumenfinal}, siguiendo la metodología aplicada en el paper de Informer\cite{zhou2021informerefficienttransformerlong} y realizando el recuento de ejecuciones en primer lugar, obtenemos el siguiente orden por rendimiento:
+Por tanto, tal y como se puede apreciar en la Tabla \ref{resumenfinal}, siguiendo la metodología aplicada en el paper de Informer\cite{zhou2021informerefficienttransformerlong} y realizando el recuento de ejecuciones en primer lugar, obtenemos el siguiente orden por rendimiento:
 
 \begin{enumerate}
 	\item \textit{WinStatFlex}

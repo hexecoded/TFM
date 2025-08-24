@@ -73,7 +73,7 @@ La forma más sencilla de lograrlo es mediante el ya nombrado conjunto de valida
 
 Siendo $E_{out}(g)$ el error final cuando se utiliza todo el conjunto de datos $\mathcal D$.\\
 
-La parte izquierda de la ecuación funciona mejor cuanto más pequeña sea k, mientras que por la derecha, un mayor valor de k permitirá una mejor estimación a través de $E_{val}$. El caso ideal sería, para acercarnos lo máximo posible entre $E_{out}(g)$ y $ E_{out}(g^-)$, elegir k lo más pequeño posible, cuyo caso extremo es k=1, pero esto no sería viable. Normalmente, se suelen optar por alternativas como validación cruzada de $v$ folds, donde los datos se dividen en k particiones, y el conjunto de validación rota por cada una de ellas, obteniendo $E_{val}$ como la media de los $v$ errores parciales. Sin embargo, normalmente su construcción se hace mediante un particionado aleatorio en $v$ conjuntos, rompiendo una vez más la condición estructural de las series temporales. Por lo tanto, en el estado del arte~\cite{bergmeir2012use} podemos encontrar varias alternativas (ver figura \ref{valid}):
+La parte izquierda de la ecuación funciona mejor cuanto más pequeña sea k, mientras que por la derecha, un mayor valor de k permitirá una mejor estimación a través de $E_{val}$. El caso ideal sería, para acercarnos lo máximo posible entre $E_{out}(g)$ y $ E_{out}(g^-)$, elegir k lo más pequeño posible, cuyo caso extremo es k=1, pero esto no sería viable. Normalmente, se suelen optar por alternativas como validación cruzada de $v$ folds, donde los datos se dividen en k particiones, y el conjunto de validación rota por cada una de ellas, obteniendo $E_{val}$ como la media de los $v$ errores parciales. Sin embargo, normalmente su construcción se hace mediante un particionado aleatorio en $v$ conjuntos, rompiendo una vez más la condición estructural de las series temporales. Por lo tanto, en el estado del arte~\cite{bergmeir2012use} podemos encontrar varias alternativas (ver Figura \ref{valid}):
 
 \begin{itemize}
 	\item \textbf{Validación cruzada ordenada}. Consiste en realizar el proceso de sondeo de manera aleatoria, pero respetando el orden de las instancias escogidas, es decir, ordenando por timestamp. De esta forma, si bien las diferentes muestras pueden estar distanciadas entre sí, respetan al menos el orden temporal. Realmente, no es un método especialmente deseable, ya que tomar valores aislados podría introducir sesgos al estimador al poder ser fácilmente obtenidos de su entorno. Se deberían suprimir el entorno para evitar esta problemática.
@@ -144,7 +144,7 @@ Frecuentemente, podemos encontrar 3 comportamientos, los cuales son fácilmente 
 
     A veces, se requieren procesos de suavizado para así poder eliminar el efecto de otras componentes ruidosas que rodean la tendencia real de la serie. Esto se puede conseguir, de manera similar a la convolución, desplazando una ventana a lo largo de la serie, de manera que los valores dentro de ella sean suavizado. La forma más habitual de lograrlo es con una media móvil, la cual, cuanto mayor amplitud tenga, mayor reducción de ruido conseguiremos.
 
-    En la figura \ref{trend}, podemos ver un ejemplo de su cálculo representado gráficamente sobre el dataset Air Passengers \cite{box1976time}.
+    En la Figura \ref{trend}, podemos ver un ejemplo de su cálculo representado gráficamente sobre el dataset Air Passengers \cite{box1976time}.
 
     \begin{figure}[h] %con el [H] le obligamos a situar aquí la figura
         \centering
@@ -155,7 +155,7 @@ Frecuentemente, podemos encontrar 3 comportamientos, los cuales son fácilmente 
 
     \item \textbf{Estacionalidad}. Son fluctuaciones periódicas y predecibles dentro de la serie temporal, las cuales siguen una determinada frecuencia y que pueden ser fácilmente modelables una vez se observa al menos un periodo. Normalmente, coinciden con unidades de medida de calendario, pudiendo encontrar así frecuecias semanales, mensuales, trimestrales, anuales... etc. Normalmente, son un factor visualmente sencillo de identificar, el cual apenas varía ente períodos, y que nos permite obtener información muy valiosa para el modelado.
 
-    Podemos encontrar este comportamiento, por ejemplo, en los desplazamientos realizados durante las épocas vacacionales: podremos observar un patrón de crecimiento en estas en Navidad y las vacaciones de verano, principalmente julio y agosto; y en el resto de meses el comportamiento será a la baja. Y eso ocurrirá con un período anual, ya que dichas fechas se ubican siempre en el mismo lugar. Diferente caso sería con Semana Santa, ya que su fecha no es coincidente todos los años y no cumple al 100\% de estacionalidad como las otras dos, ya que aunque es acotable en calendario, no es exactamente coincidente anualmente. En el caso del dataset anterior, se puede observar esta estacionalidad claramente (figura \ref{season}).
+    Podemos encontrar este comportamiento, por ejemplo, en los desplazamientos realizados durante las épocas vacacionales: podremos observar un patrón de crecimiento en estas en Navidad y las vacaciones de verano, principalmente julio y agosto; y en el resto de meses el comportamiento será a la baja. Y eso ocurrirá con un período anual, ya que dichas fechas se ubican siempre en el mismo lugar. Diferente caso sería con Semana Santa, ya que su fecha no es coincidente todos los años y no cumple al 100\% de estacionalidad como las otras dos, ya que aunque es acotable en calendario, no es exactamente coincidente anualmente. En el caso del dataset anterior, se puede observar esta estacionalidad claramente (Figura \ref{season}).
 
     \begin{figure}[h] %con el [H] le obligamos a situar aquí la figura
         \centering
@@ -166,7 +166,7 @@ Frecuentemente, podemos encontrar 3 comportamientos, los cuales son fácilmente 
 
     \item \textbf{Ciclo}. Son también fluctuaciones de la serie temporal, pero, a diferencia de ser regulares, siguen un período irregular de longitud fija; normalmente, está vinculado a eventos que no siguen de manera estricta un período de calendario definido. Tienen tanto tramos de crecimiento como decrecimiento, pero sin una duración regular. El ejemplo más representativo podría ser la tendencia de crecimiento económico de un país, o el comportamiento de las acciones en bolsa de una sociedad anónima.
 
-    En la figura \ref{ciclo} podemos un ejemplo de este comportamiento con los permisos concedidos para la construcción de viviendas en EEUU \cite{techcharts2012housing}, donde no podemos encontrar patrones claros como en Air Passengers.
+    En la Figura \ref{ciclo} podemos un ejemplo de este comportamiento con los permisos concedidos para la construcción de viviendas en EEUU \cite{techcharts2012housing}, donde no podemos encontrar patrones claros como en Air Passengers.
 
     \begin{figure}[!ht] %con el [H] le obligamos a situar aquí la figura
         \centering
@@ -298,7 +298,7 @@ Este proceso puede repetirse tantas veces como sea necesario. El orden \( d \) i
 Por tanto, es esencial de aplicarlo en casos no estacionarios, pero sin pasarse para evitar pérdida de información. Para saber cuando deja de ser necesario aplicar el proceso iterativo de integración, podemos hacer uso de dos posibles mecanismos: uno gráfico, basado en el gráfico de autocorrelación de valores, y otro estadístico, basado en el test de Dickey-Fuller aumentado (ADF).
 
 \begin{itemize}
-    \item El análisis gráfico consiste en observar el comportamiento de la función de autocorrelación (ACF) tras aplicar una o varias diferenciaciones. Si la serie es no estacionaria, las valores siguientes de autocorrelación decaen lentamente, indicando que queda información relevante en dichas componentes. Por el contrario, si la serie es estacionaria, la ACF suele caer rápidamente a cero, estableciendo que no es necesario continuar diferenciando (ver figura \ref{acf}).
+    \item El análisis gráfico consiste en observar el comportamiento de la función de autocorrelación (ACF) tras aplicar una o varias diferenciaciones. Si la serie es no estacionaria, las valores siguientes de autocorrelación decaen lentamente, indicando que queda información relevante en dichas componentes. Por el contrario, si la serie es estacionaria, la ACF suele caer rápidamente a cero, estableciendo que no es necesario continuar diferenciando (ver Figura \ref{acf}).
 
     \begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
         \centering
@@ -397,7 +397,7 @@ Como alternativa más reciente de los modelos aditivos, disponemos de Prophet \c
 \paragraph{Funcionamiento}
 
 
-A diferencia de los modelos anteriores, que definían la necesidad de cumplir ciertas restricciones, como la estacionariedad, Prophet nos permite trabajar con entornos más cambiantes, al estar diseñado para recibir datos de al menos varios meses de duración, donde si bien existen patrones estacionales claros por la estructura de tipo calendario, es capaz de adaptarse a cambios e imprevistos. Es decir, es capaz de modelar días festivos o de caracter especial sobre el impacto del desarrollo de la serie (como el lanzamiento de un nuevo servicio o producto de una empresa) y es más robusto frente a outliers que los modelos que vimos anteriormente. (ver figura \ref{prophetex}).\\
+A diferencia de los modelos anteriores, que definían la necesidad de cumplir ciertas restricciones, como la estacionariedad, Prophet nos permite trabajar con entornos más cambiantes, al estar diseñado para recibir datos de al menos varios meses de duración, donde si bien existen patrones estacionales claros por la estructura de tipo calendario, es capaz de adaptarse a cambios e imprevistos. Es decir, es capaz de modelar días festivos o de caracter especial sobre el impacto del desarrollo de la serie (como el lanzamiento de un nuevo servicio o producto de una empresa) y es más robusto frente a outliers que los modelos que vimos anteriormente. (ver Figura \ref{prophetex}).\\
 
 La descomposición se basa en una suma de tres componentes, de manera similar a los modelos anteriores:
 
@@ -441,7 +441,7 @@ Finalmente, Prophet no incluye de manera nativa mecanismos autorregresivos ni pe
 
 \subsubsection{Comparativa final y limitaciones}
 
-A lo largo de este apartado, hemos analizado tres de los enfoques más relevantes para la descomposición de series temporales: {STL}, {ARIMA} y {Prophet}. Aunque todos comparten el mismo objetivo, que es separar la serie en componentes interpretables como tendencia, estacionalidad y ruido, cada uno lo aborda desde una perspectiva distinta, lo que se traduce en ventajas e inconvenientes específicos (ver tabla \ref{tab:modelsadit}).
+A lo largo de este apartado, hemos analizado tres de los enfoques más relevantes para la descomposición de series temporales: {STL}, {ARIMA} y {Prophet}. Aunque todos comparten el mismo objetivo, que es separar la serie en componentes interpretables como tendencia, estacionalidad y ruido, cada uno lo aborda desde una perspectiva distinta, lo que se traduce en ventajas e inconvenientes específicos (ver Tabla \ref{tab:modelsadit}).
 
 \begin{itemize}
 
@@ -492,7 +492,7 @@ En los métodos basados en descomposición, hemos podido apreciar que nos basamo
 
 \subsubsection{Funcionamiento de las RNN}
 
-Las RNN, al igual que las redes neuronales tradicionales, son capaces de procesar una entrada y arrojar una salida, modelando los datos internamente mediante sus capas ocultas. Pero la diferencia radica en la necesidad de establecer conexiones entre la salida anterior y la entrada actual. Esto se consigue con conexiones recurrentes que permiten que la información fluya de un instante al siguiente dentro de la propia red (ver figura \ref{rnn}).
+Las RNN, al igual que las redes neuronales tradicionales, son capaces de procesar una entrada y arrojar una salida, modelando los datos internamente mediante sus capas ocultas. Pero la diferencia radica en la necesidad de establecer conexiones entre la salida anterior y la entrada actual. Esto se consigue con conexiones recurrentes que permiten que la información fluya de un instante al siguiente dentro de la propia red (ver Figura \ref{rnn}).
 
 \begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
     \centering
@@ -602,7 +602,7 @@ El comportamiento interno de una célula LSTM se puede describir mediante las si
 
 Donde $\sigma$ representa la función sigmoide, $\tanh$ la tangente hiperbólica, y $\odot$ la multiplicación elemento a elemento. Esta arquitectura permite mantener y actualizar información relevante a lo largo del tiempo, mitigando los problemas habituales en el aprendizaje de secuencias largas.\\
 
-Cada compuerta dentro de una celda LSTM desempeña una función específica en la regulación del flujo de información. La compuerta de entrada controla cuánta información del nuevo vector de entrada $x_t$ se incorpora al estado de la celda $c_t$; la compuerta de olvido determina qué parte del estado anterior $c_{t-1}$ se retiene, y, finalmente, la compuerta de salida decide cuánta información del estado actual $c_t$ se utiliza para calcular el estado oculto $h_t$ (ver figura \ref{lstm}).
+Cada compuerta dentro de una celda LSTM desempeña una función específica en la regulación del flujo de información. La compuerta de entrada controla cuánta información del nuevo vector de entrada $x_t$ se incorpora al estado de la celda $c_t$; la compuerta de olvido determina qué parte del estado anterior $c_{t-1}$ se retiene, y, finalmente, la compuerta de salida decide cuánta información del estado actual $c_t$ se utiliza para calcular el estado oculto $h_t$ (ver Figura \ref{lstm}).
 
 \begin{figure}[H] %con el [H] le obligamos a situar aquí la figura
     \centering
@@ -634,7 +634,7 @@ A modo de conclusión, aunque las LSTM representaron un avance fundamental en el
 
 \section{Transformers}
 
-Los Transformes~\cite{vaswani2023attentionneed} son una de las mayores invenciones de los últimos años en el tratamiento de datos secuenciales, como el lenguaje natural, y en series temporales. Su estructura (ver figura \ref{trans}), la cual propone el uso de mecanismos basados en atención, ha permitido prescindir de los algoritmos basados en recurrencia, y simplificar el proceso complejo de aprendizaje que teníamos debido a los problemas con la propagación y los gradientes.\\
+Los Transformes~\cite{vaswani2023attentionneed} son una de las mayores invenciones de los últimos años en el tratamiento de datos secuenciales, como el lenguaje natural, y en series temporales. Su estructura (ver Figura \ref{trans}), la cual propone el uso de mecanismos basados en atención, ha permitido prescindir de los algoritmos basados en recurrencia, y simplificar el proceso complejo de aprendizaje que teníamos debido a los problemas con la propagación y los gradientes.\\
 
 A diferencia de las redes RNN o LSTM, que procesan la información de forma secuencial y requieren mantener estados ocultos a lo largo del tiempo, los Transformers permiten procesar todas las posiciones de la secuencia en paralelo, lo que mejora drásticamente la eficiencia computacional y la capacidad de modelar relaciones a largo plazo. Esto nos permite también aprovechar arquitecturas de computación con gran capacidad para la paralelización, como el uso de GPUs, y así reducir tiempos de ejecución, o bien, aprovechar la capacidad extra de paralelización para enfrentarnos a problemas mucho más complejos, con mayor número de parámetros y dependencias a largo plazo.\\
 
@@ -792,7 +792,7 @@ Reformer \cite{kitaev2020reformerefficienttransformer} aborda otro de los cuello
 Para tratar de reducir dicha complejidad, Reformer introduce varios conceptos fundamentales que mejoran la eficiencia sin sacrificar la calidad del aprendizaje.
 
 \begin{itemize}
-    \item \textbf{Locality-Sensitive Hashing (LSH):} Esta técnica permite aproximar el cálculo de la atención agrupando tokens similares mediante el uso de funciones hash, diseñadas para preservar la proximidad en el espacio vectorial. En lugar de calcular la atención entre todos los pares de tokens, el modelo solo la calcula dentro de unos grupos, llamados \textit{buckets}, que están formados por tokens cercanos en su representación (ver figura \ref{reformer}).
+    \item \textbf{Locality-Sensitive Hashing (LSH):} Esta técnica permite aproximar el cálculo de la atención agrupando tokens similares mediante el uso de funciones hash, diseñadas para preservar la proximidad en el espacio vectorial. En lugar de calcular la atención entre todos los pares de tokens, el modelo solo la calcula dentro de unos grupos, llamados \textit{buckets}, que están formados por tokens cercanos en su representación (ver Figura \ref{reformer}).
 
     Gracias a ello, podemos reducir el coste de \(O(n^2)\) a aproximadamente \(O(n \log n)\), al limitar las interacciones a subconjuntos relevantes. Además, LSH favorece que la atención se concentre en relaciones locales y semánticamente relevantes, lo cual favorece también colateralmente a su aplicación en series temporales y la detección de estacionalidad.
 
@@ -831,7 +831,7 @@ Para mitigar estas limitaciones, Informer introduce tres innovaciones clave:
 
 En conjunto, estas mejoras convierten a \textbf{Informer} en un modelo especialmente interesante para escenarios de predicción multivariados y datos de gran volumen, manteniendo la capacidad de capturar tanto dependencias locales como globales reduciendo el impacto en memoria y mejorando la eficiencia.\\
 
-A continuación, haremos énfasis en cada una de estas 3 propuestas, y analizaremos por partes su arquitectura (ver figura \ref{informer}).
+A continuación, haremos énfasis en cada una de estas 3 propuestas, y analizaremos por partes su arquitectura (ver Figura \ref{informer}).
 
 \begin{figure}
     \centering
@@ -887,7 +887,7 @@ Tras cada capa de atención, se aplica el bloque de \textit{distilling}, compues
     X^{t}_{j+1} = \text{MaxPool} \left( \text{ELU} \left( \text{Conv1d}([X^t_j]_{AB}) \right) \right),
 \end{equation}
 
-donde \([X^t_j]_{AB}\) denota la salida del bloque de atención multi-cabeza \textit{ProbSparse} combinada con conexiones residuales y normalización por capas (ver figura \ref{distilling})
+donde \([X^t_j]_{AB}\) denota la salida del bloque de atención multi-cabeza \textit{ProbSparse} combinada con conexiones residuales y normalización por capas (ver Figura \ref{distilling})
 
 \begin{figure}[!ht]
     \centering
@@ -897,7 +897,7 @@ donde \([X^t_j]_{AB}\) denota la salida del bloque de atención multi-cabeza \te
 \end{figure}
 Este proceso cumple dos funciones clave; por un lado, trata de filtrar las relaciones importantes. Al reducir la longitud temporal, se atenúan las interacciones menos relevantes, conservando únicamente las representaciones que concentran la mayor parte de la atención. Como se aplica un MaxPooling de 2,  la reducción de la secuencia a la mitad en cada paso disminuye el coste espacial hasta \(O((2 - \varepsilon) L \log L)\), reduciendo notablemente la complejjidad del encoder. \\
 
-Para mejorar aún más la capacidad de capturar relaciones en distintas escalas temporales, se utilizan réplicas de \textit{stacks} del encoder con diferentes longitudes de entrada (por ejemplo, en la figura \ref{distilling}, \(L\), \(L/2\) y \(L/4\)), cuyos resultados se concatenan antes de las etapas finales. Este enfoque multi-escala es especialmente útil para detectar patrones que se repiten en diferentes horizontes.
+Para mejorar aún más la capacidad de capturar relaciones en distintas escalas temporales, se utilizan réplicas de \textit{stacks} del encoder con diferentes longitudes de entrada (por ejemplo, en la Figura \ref{distilling}, \(L\), \(L/2\) y \(L/4\)), cuyos resultados se concatenan antes de las etapas finales. Este enfoque multi-escala es especialmente útil para detectar patrones que se repiten en diferentes horizontes.
 
 \paragraph{Decodificación. Inferencia en un solo paso}
 
@@ -939,7 +939,7 @@ Continuando con la tarea de predicción LSTF, Autoformer trata de solucionar dos
 
 Para abordar estas barreras, Autoformer introduce dos innovaciones principales:
 \begin{itemize}
-    \item \textbf{Arquitectura de descomposición progresiva}: no trata la descomposición de la serie como un preprocesamiento independiente, sino que la integra como un bloque interno del modelo (ver figura \ref{autformer}). De esta forma, las componentes estacionales y de tendencia se separan de manera iterativa a lo largo de todo el proceso de predicción, permitiendo un refinamiento progresivo.
+    \item \textbf{Arquitectura de descomposición progresiva}: no trata la descomposición de la serie como un preprocesamiento independiente, sino que la integra como un bloque interno del modelo (ver Figura \ref{autformer}). De esta forma, las componentes estacionales y de tendencia se separan de manera iterativa a lo largo de todo el proceso de predicción, permitiendo un refinamiento progresivo.
     \item \textbf{Mecanismo de autocorrelación} (\textit{Auto-Correlation}). En lugar de usar un mecanismo de atención, se explota la periodicidad presente implícitamente en las series para detectar dependencias y agregar información a nivel de subseries. Este enfoque no solo mejora la utilización de la información, sino que también reduce la complejidad computacional a $O(L \log L)$, favoreciendo la escalabilidad en secuencias extensas.
 \end{itemize}
 
@@ -961,7 +961,7 @@ En primer lugar, se produce la descomposición progresiva, que está constituida
 \]
 donde \(\operatorname{MA}_w\) es una media móvil de ventana \(w\). Al aplicar este procedimiento iterativamente, las oscilaciones lentas se capturan en \(X_t\) y las variaciones rápidas permanecen en \(X_s\), reduciendo ruido y separando dinámicas.\\
 
-Tras la descomposición progresiva en tendencia y estacionalidad, Autoformer aplica el módulo de autocorrelación (figura \ref{autocorrelacion}) sobre la componente estacional, con el objetivo de identificar retardos (\textit{lags}) que representen dependencias temporales significativas.
+Tras la descomposición progresiva en tendencia y estacionalidad, Autoformer aplica el módulo de autocorrelación (Figura \ref{autocorrelacion}) sobre la componente estacional, con el objetivo de identificar retardos (\textit{lags}) que representen dependencias temporales significativas.
 
 \begin{figure}[!ht]
     \centering
@@ -1009,7 +1009,7 @@ Las mejoras propuestas por Autoformer suponen un salto considerable sobre los m�
 
 El mecanismo de descomposición, el cual puede parecer simple e intuitivo, permite al modelo centrarse en encontrar patrones ocultos más complejos dentro de la serie, y facilita el proceso de detección de patrones estacionales en una complejidad computacional equivalente a \(O(L \log L)\).\\
 
-En cuanto a la autocorrelación, esta se trata de una de las principales ventajas. Si bien se aleja como tal de lo podría ser considerado un Transformer canónico, en el que destacó su mecanismo de atención punto a punto, emplear autocorrelación a modo de mecanismo de ordenación ha ofrecido buenos resultados experimentales en los conjuntos probados. La mejora es evidente, principalmente, frente a cualquier método de atención basado en muestreo, ya que de esta forma no estamos sometidos a la probabilidad a la hora de realizar el muestreo (ver figura \ref{muestreo}). Hemos eliminado el riesgo de suprimir puntos de gran interés dentro de la serie temporal, ya que la autocorrelación nos permite encontrar patrones de manera bastante intuitiva, recurriendo a conceptos tradicionalmente empleados en este ámbito en los modelos AR.
+En cuanto a la autocorrelación, esta se trata de una de las principales ventajas. Si bien se aleja como tal de lo podría ser considerado un Transformer canónico, en el que destacó su mecanismo de atención punto a punto, emplear autocorrelación a modo de mecanismo de ordenación ha ofrecido buenos resultados experimentales en los conjuntos probados. La mejora es evidente, principalmente, frente a cualquier método de atención basado en muestreo, ya que de esta forma no estamos sometidos a la probabilidad a la hora de realizar el muestreo (ver Figura \ref{muestreo}). Hemos eliminado el riesgo de suprimir puntos de gran interés dentro de la serie temporal, ya que la autocorrelación nos permite encontrar patrones de manera bastante intuitiva, recurriendo a conceptos tradicionalmente empleados en este ámbito en los modelos AR.
 
 \begin{figure}[!ht]
     \centering
@@ -1040,7 +1040,7 @@ Por otro lado, la descomposición Wavelet nos permite realizar un análisis mult
 \end{figure}
 
 
-A continuación, examinaremos en mayor detalle la arquitectura, la cual incluye la incorporación de 4 nuevos módulos, sustitutos de los módulos de atención y autocorrelación, y que trabajan de manera independiente mediante Fourier y Wavelet para posteriormente combinarse para el resultado final, dando lugar a lo que sus autores consideran un procedimiento de ``hibridación de expertos''~\cite{zhou2022fedformerfrequencyenhanceddecomposed} (ver figura \ref{fedformer}).
+A continuación, examinaremos en mayor detalle la arquitectura, la cual incluye la incorporación de 4 nuevos módulos, sustitutos de los módulos de atención y autocorrelación, y que trabajan de manera independiente mediante Fourier y Wavelet para posteriormente combinarse para el resultado final, dando lugar a lo que sus autores consideran un procedimiento de ``hibridación de expertos''~\cite{zhou2022fedformerfrequencyenhanceddecomposed} (ver Figura \ref{fedformer}).
 
 \paragraph{Módulo Fourier}
 
@@ -1053,7 +1053,7 @@ Una vez seleccionadas, estas frecuencias se procesan mediante un módulo de aten
 Para explotar esta estructura, el modelo introduce dos módulos que trabajan de manera conjunta sobre la entrada relacionados: el \textit{Frequency Enhanced Attention de Fourier} (FEA-f) y el \textit{Frequency Enhanced Block de Fourier} (FEB-f).
 
 \begin{itemize}
-    \item El módulo \textbf{FEA-f}(figura \ref{feaf}) es el encargado de transformar las representaciones estacionales al dominio espectral utilizando la transformada rápida de Fourier (FFT), seleccionando las \textit{K} frecuencias con mayor magnitud. Sobre este conjunto reducido de componentes se aplica un mecanismo de atención espectral que, en lugar de evaluar similitudes entre posiciones temporales, compara directamente las frecuencias seleccionadas. Esta atención se ejecuta sobre un número pequeño y fijo de entradas, como 64 o 128, por lo trata de acotarse así su complejidad. Tras esta operación, se deshacen los cambios de la FFT para volver al dominio temporal.
+    \item El módulo \textbf{FEA-f}(Figura \ref{feaf}) es el encargado de transformar las representaciones estacionales al dominio espectral utilizando la transformada rápida de Fourier (FFT), seleccionando las \textit{K} frecuencias con mayor magnitud. Sobre este conjunto reducido de componentes se aplica un mecanismo de atención espectral que, en lugar de evaluar similitudes entre posiciones temporales, compara directamente las frecuencias seleccionadas. Esta atención se ejecuta sobre un número pequeño y fijo de entradas, como 64 o 128, por lo trata de acotarse así su complejidad. Tras esta operación, se deshacen los cambios de la FFT para volver al dominio temporal.
 
     \begin{figure}[!ht]
         \centering
@@ -1078,7 +1078,7 @@ El módulo basado en \textit{wavelets} busca realizar un procedimiento similar e
 
 Aplicando la DWT sobre la componente estacional, se obtiene una representación jerárquica que separa componentes de baja y alta frecuencia, permitiendo escoger de manera equilibrada entre ambos mediante selección de coeficientes. Al igual que en el módulo anterior, se tratarán de escoger los más informativos y se procesan mediante un mecanismo de atención adaptado, que comparará las relaciones entre escalas y fases en lugar de posiciones temporales, para finalizar reconvirtiendo al espacio temporal mediante la transformada inversa (IDWT).\\
 
-Para articular esta lógica dentro del modelo, se adaptan los módulos FEA y FEB a su uso con Wavelet (ver figura \ref{wavelet}):
+Para articular esta lógica dentro del modelo, se adaptan los módulos FEA y FEB a su uso con Wavelet (ver Figura \ref{wavelet}):
 
 \begin{itemize}
     \item El módulo \textbf{FEA-w} (\textit{Frequency Enhanced Attention - wavelet}) se encarga de transformar la representación estacional al dominio wavelet mediante DWT, seleccionar un subconjunto reducido de coeficientes relevantes y aplicar una atención jerárquica sobre estas componentes, todo ello acotando la complejidad computacional, y la localidad temporal.
@@ -1125,7 +1125,7 @@ En los últimos dos años, podemos encontrar nuevos modelos que siguieron alejá
 Tras haber explorado algunas soluciones alternativas que vuelven a alejarse del Transformer tal y como lo conocemos, hemos finalizado la revisión de los principales modelos de procesado del estado del arte, partiendo de los algoritmos básicos y finalizando con complejas derivaciones del concepto original de atención.\\
 
 Cada uno de estos métodos posee sus ventajas e inconvenientes, y es crítico saber cuál de ellos emplear en cada caso. Los primeros modelos, como Informer, pueden ser a veces problemáticos si buscamos detalles de granularidad fina; Autoformer o FEDformer pueden funcionar mejor en ese aspecto, y facilitar la detección de patrones estacionales. Pero, por contra, se alejan un poco más de los mecanismos habitualmente usados en Transformers, y no podremos experimentar el impacto de diferentes encoding posicionales, que es el objetivo que estamos tratando.
-A modo de resumen, se muestra la tabla \ref{resumenmodelos}, donde se pueden apreciar las diferentes características de cada modelo.\\
+A modo de resumen, se muestra la Tabla \ref{resumenmodelos}, donde se pueden apreciar las diferentes características de cada modelo.\\
 
 \begin{table}[!ht]
     \centering
