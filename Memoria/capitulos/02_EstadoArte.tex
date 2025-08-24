@@ -91,6 +91,47 @@ La parte izquierda de la ecuación funciona mejor cuanto más pequeña sea k, mi
 
 En todos los casos, debemos tener presente la necesidad de eliminar el contexto inmediato compartido con el conjunto de entrenamiento para evitar problemas de contaminación entre particiones.
 
+\subsection{Función de pérdida y métricas}
+\label{metricassd}
+Cuando entrenamos el modelo, obtenemos una hipótesis final, la cual nos permitirá modelar una aproximación del conjunto de test, de manera que podremos comparar y evaluar la calidad del modelo con respecto a dichos datos. Pero, también necesitamos una referencia durante el entrenamiento que nos permita, de forma sencilla, comprender si el entrenamiento evoluciona favorablemente. El objetivo es simple: que dichos valores sean lo más cercano a cero, lo que se traduce como condición deseable que tanto $E_{in}$ como $E_{val}$ tiendan a cero.\\
+
+En el caso de las series temporales, las funciones de evaluación empleadas coinciden con las utilizadas en problemas de regresión, dado que el objetivo es cuantificar el error continuo entre los valores predichos y los valores reales a lo largo de toda la secuencia temporal. Este enfoque se justifica porque la predicción de series temporales implica estimar variables continuas en función del tiempo, lo que la enmarca formalmente como un problema de regresión, pero en el dominio temporal.\\
+
+Por lo tanto, podemos hacer uso de las siguientes métricas:
+
+\begin{itemize}
+	\item \textbf{MSE}. Es la función de pérdida para regresión por excelencia, así como una adecuada métrica de rendimiento, debido a su simplicidad de cálculo y a que su formulación cuadrática permite un tratamiento analítico mediante técnicas de cálculo diferencial, Mide la distancia de cada punto real de la serie hasta el valor estimado, de forma que se penaliza por cada punto de forma equivalente a la magnitud de esa distancia. Se puede expresar como:
+	
+	$$\mathrm{MSE} = \frac{1}{n} \sum_{i=1}^n (y_i - \hat{y}_i)^2$$ 
+	
+	donde \(y_i\) es el valor observado, \(\hat{y}_i\) es el valor predicho y \(n\) es el número de observaciones.  
+	
+	
+	\item \textbf{MAE}. Es una métrica bastante similar al MSE. Calcula el error entre cada par de puntos real y estimado, pero se basa en realizar la diferencia entre el valor actual y la predicción del error para un punto dado:
+	$$abs(y_i - \lambda (x_i))$$
+	
+	Estos errores posteriormente son sumados para quedarnos con su valor medio, y así obtener la distancia promedio:
+	$$\mathrm{MAE} = \frac{1}{n} \sum_{i=1}^n \left| y_i - \hat{y}_i \right|$$
+	
+	
+	\item \textbf{MAPE}. Expresa el error promedio de la estimación en términos relativos, expresándolo como un porcentaje respecto al valor real de cada observación. Al ser un valor en porcentaje, nos permite obtener una tasa de error normalizada. Sin embargo, debemos tener especial cuidado con los valores cercanos a cero, ya que los errores en dichos valores pueden inflar artificialmente el porcentaje de error.
+	
+	$$
+	\mathrm{MAPE} = \frac{100}{n} \sum_{i=1}^n \left| \frac{y_i - \hat{y}_i}{y_i} \right|
+	$$
+	
+	
+	\item \textbf{MSPE}. Puede entender como la versión cuadrática del MAPE, la cual penaliza de manera más severa los errores relativos grandes al elevar al cuadrado los errores relativos. De esta forma, se potencia la influencia de predicciones que se alejan significativamente del valor real. Al igual que MAPE, permite comparar errores entre series de diferentes escalas, pero también comparte la inestabilidad frente a valores cercanos a cero. Se define como:
+	
+	$$
+	\mathrm{MSPE} = \frac{100}{n} \sum_{i=1}^n \left( \frac{y_i - \hat{y}_i}{y_i} \right)^2
+	$$
+	
+	\item \textbf{RMSE}. Es la raíz cuadrada del MSE. A diferencia del MAE, RMSE penaliza más fuertemente los errores grandes debido a la elevación al cuadrado, lo que lo hace útil cuando se quieren evitar grandes desviaciones. Sin embargo, esta misma característica lo hace más sensible a valores atípicos, por lo que si bien es útil a nivel informativo, puede ser crítica si se usa en series temporales, donde esto es un fenómeno frecuente. Su expresión es:
+	$$
+	\mathrm{RMSE} = \sqrt{\frac{1}{n} \sum_{i=1}^n (y_i - \hat{y}_i)^2}
+	$$
+\end{itemize}
 
 \subsection{Modelos basados en descomposición}
 

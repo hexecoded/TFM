@@ -1,4 +1,4 @@
-\chapter{Análisis y estudio de los resultados obtenidos}
+\chapter{Análisis y estudio de los métodos de PE propuestos}
 
 Una vez expuestas todas las condiciones del entrenamiento, como los modelos a probar, las métricas, funciones de pérdida y presentados los datos, podemos dar paso al entrenamiento. Sin lugar a dudas, es la fase más lenta de todo el proceso, la cual ha prolongado su desarrollo considerablemente. El objetivo es claro: poner a prueba las 5 propuestas realizadas para establecer, en primer lugar, cuál o cuáles de ellas son competitivas, y posteriormente, evaluar todos los conjuntos de datos para medir la ganancia con respecto al conjunto de datos original.
 
@@ -88,7 +88,7 @@ Para realizar el estudio de forma intuitiva y visual, realizaremos el análisis 
 
 En ambos casos, los valores se sitúan entre el 24 y el 36, siendo el 24 exactamente $1/4$ del valor de longitud de secuencia, 96, y el 36 algo más de la tercera parte de este. Por tanto, una heurística razonable podría ser ubicar el valor de tamaño de ventana entre una cuarta o tercera parte de la longitud de secuencia. Si bien deducir este resultado tan solo de dos conjuntos de datos puede ser demasiado optimista, al menos nos permite tener un punto de partida, sabiendo que en el resto de conjuntos sería imposible realizar un experimento de este tipo en un tiempo razonable.
 
-\section{Resultados de los experimentos}
+\section{Análisis experimental de los encodings propuestos}
 
 Una vez justificado el procedimiento de ejecución a seguir para los experimentos realizados, podemos comenzar a analizar los resultados obtenidos en el entrenamiento de los mismos. Tal y como se especificó en el capítulo \ref{cap5}, compararemos los resultados haciendo uso de las métricas de regresión especificadas, pero haciendo especial hincapié en el MAE y MSE.\\
 
