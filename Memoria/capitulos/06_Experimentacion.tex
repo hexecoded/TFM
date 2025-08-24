@@ -367,7 +367,7 @@ Siguiendo el mismo camino que el caso anterior, evaluaremos cada uno de los dos 
 	\item Informer con configuración por defecto.
 	\item PE sinusoidal.
 	\item Nuevas propuestas: WinStatFlex y WinStatTPE
-	\item Sin PE.
+	\item Informer sin PE.
 \end{itemize}
 
 En la Tabla \ref{etth1tabla} se pueden encontrar los resultados finales para el conjunto ETTh1, mientras que en la \ref{etth2tabla} se representan los de ETTh2.
@@ -395,7 +395,7 @@ En la Tabla \ref{etth1tabla} se pueden encontrar los resultados finales para el 
 			TestTime(s)  & 0,3835 & 0,0025 & 0,6075 & 0,0037 & 0,8347 & 0,0243 & 1,3399 & 0,0432 & 0,4510 & 0,0435 \\
 			\bottomrule
 		\end{tabular}
-		\caption{ETTh1: comparación de modelos}
+		\caption{ETTh1: métricas de rendimiento para los encodings ejecutados}
 		\label{etth1tabla}
 	\end{table}
 	
@@ -419,7 +419,7 @@ En la Tabla \ref{etth1tabla} se pueden encontrar los resultados finales para el 
 			TestTime(s)  & 0,4499 & 0,0240 & 0,4659 & 0,0399 & 0,7793 & 0,0089 & 1,3279 & 0,0685 &  1,0132 & 0,2417 \\
 			\bottomrule
 		\end{tabular}
-		\caption{ETTh2: comparación de modelos}
+		\caption{ETTh2: métricas de rendimiento para los encodings ejecutados}
 		\label{etth2tabla}
 	\end{table}
 	
@@ -532,7 +532,7 @@ En ambos casos, el empeoramiento es notable. Para ETTh1 (Tabla \ref{etth1tabla})
 
 En ETTh2 (Tabla \ref{etth2tabla}), por su parte, aunque el empeoramiento también es significativo, pasando a obtener $1,0132$ y $0,7777$ de MSE  y MAE, con respecto a los $0,8866$ y $0,7549$ de Informer, respectivamente, resulta curioso ver que aún así, el rendimiento es mejor que empleando únicamente Informer con encoding sinusoidal original sin TimeF. 
 
-\subsubsection{Elección del mejor modelo}
+\subsubsection{Elección del mejor encoding}
 
 Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos definitivamente escoger el modelo de codificación que mejores resultados ha obtenido. Para contrastarlo también visualmente, se han creado los gráficos \ref{etth1fin} y \ref{etth2fin} (así como las tablas \ref{etth1fintab} y \ref{etth2fintab}), los cuales recogen los resultados de los subconjuntos ETTh1 y ETTh2, respectivamente, ordenados de mejor a peor resultado. En ambos, se muestran también los resultados de barajar la entrada del decoder tanto para WinStatFlex como para WinStatTPE.\\
 
@@ -593,7 +593,6 @@ Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos de
 \end{table}
 
 
-
 Se puede observar claramente que WinStatFlex y WinStatTPE alcanzan los mejores resultados, destacando especialmente el primero. Informer, en cambio, ofrece un desempeño intermedio, que se ve reducido cuando se emplea la codificación fija de senos/cosenos, pero es mejor a la hora de prescindir de cualquier encoding. La magnitud de estas diferencias se vuelve aún más evidente en el segundo conjunto de datos, tal y como se mostró numéricamente en el subpunto anterior.\\
 
 En el subconjunto ETTh1, podemos ver que el barajado de las dos propuestas analizadas, a pesar de empeorar gravemente los resultados tanto para MAE como para MSE (aumentándolos en $0,2$ en ambos métricas para Flex; 0,31 y 0,169 para MSE y MAE de la variante T-PE, respectivamente) sigue ofreciendo mejores resultados que no utilizar ningún tipo de codificación. Este comportamiento resulta interesante, ya que normalmente podríamos esperar que desordenar la información semántica dificultara aún más el aprendizaje que no disponer de ella.\\
@@ -610,7 +609,7 @@ Aunque esta expansión podría parecer beneficiosa desde el punto de vista del e
 
 En los siguientes apartados, analizaremos los resultados, teniendo especial cuidado con la escala del MSE y contrastando con el error absoluto con los resultados sean confusos.
 
-\subsubsection{Análisis y resultados}
+\subsubsection{Análisis comparativo de las propuestas formuladas}
 
 Una vez presentados los aspectos relevantes, podemos pasar a realizar las ejecuciones. Ante de comenzar, fijaremos todos los parámetros de la arquitectura, tal y como venimos haciendo hasta el momento. En la tabla \ref{ajustestaxi}, se muestra la configuración, la cual es bastante similar a la vista en HPC, pues a nivel estructural, ambos conjuntos muestran una dimensionalidad similar, aunque con la diferencia de que en este caso los datos son de intervalo horario y no minuto a minuto. Recuperamos, por tanto, una mayor longitud de secuencia (180), y un mayor tamaño de ventana (60), de forma que podamos captar la localidad de los datos correctamente.
 
@@ -634,173 +633,100 @@ Una vez presentados los aspectos relevantes, podemos pasar a realizar las ejecuc
 	\label{ajustestaxi}
 \end{table}
 
-Los modelos evaluados serán los habituales: Informer, Informer sin PE, Informer con codificación seno-coseno, WinStatFlex, WinStatTPE, y las variantes barajadas de estos dos últimos con vistas al análisis final.
+Los modelos evaluados serán los habituales: 
+
+\begin{itemize}
+	\item Informer con configuración por defecto.
+	\item PE sinusoidal.
+	\item WinStatFlex y WinStatTPE
+	\item Informer sin PE.
+\end{itemize}
+
+A modo de referencia, se pueden apreciar los resultados para estas codificaciones en la Tabla \ref{taxitabla}, pero procederemos a continuación a profundizar su rendimiento también de manera individualizada.
+
+
+
+
+\begin{landscape}
+	\begin{table}[H]
+		\centering
+		\resizebox{\linewidth}{!}{%
+			\begin{tabular}{l *{5}{cc}}
+				\toprule
+				& \multicolumn{2}{c}{Informer} & \multicolumn{2}{c}{PE seno-coseno} & \multicolumn{2}{c}{WinStatFlex} & \multicolumn{2}{c}{WinStatTPE} & \multicolumn{2}{c}{Informer sin PE} \\
+				\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+				Métrica & Media & STD & Media & STD & Media & STD & Media & STD & Media & STD \\
+				\midrule
+				MSE & $1,9\times 10^{-5}$ & $7,0\times 10^{-6}$ & $2,4\times 10^{-5}$ & $1,0\times 10^{-5}$ & $1,7\times 10^{-5}$ & $8,0\times 10^{-6}$ & $1,0\times 10^{-5}$ & $5,0\times 10^{-6}$ & $4,6\times 10^{-5}$ & $6,0\times 10^{-5}$ \\
+				MAE & $3,987\times 10^{-3}$ & $7,95\times 10^{-4}$ & $4,307\times 10^{-3}$ & $1,044\times 10^{-3}$ & $3,529\times 10^{-3}$ & $1,027\times 10^{-3}$ & $2,547\times 10^{-3}$ & $9,37\times 10^{-4}$ & $4,626\times 10^{-3}$ & $3,954\times 10^{-3}$ \\
+				MAPE & $3,902\times 10^{-2}$ & $9,835\times 10^{-3}$ & $3,929\times 10^{-2}$ & $5,720\times 10^{-3}$ & $3,885\times 10^{-2}$ & $1,358\times 10^{-2}$ & $4,867\times 10^{-2}$ & $3,270\times 10^{-2}$ & $4,494\times 10^{-2}$ & $3,426\times 10^{-2}$ \\
+				MSPE & $1,833\times 10^{-3}$ & $1,036\times 10^{-3}$ & $1,740\times 10^{-3}$ & $3,010\times 10^{-4}$ & $2,482\times 10^{-3}$ & $1,715\times 10^{-3}$ & $1,290\times 10^{-2}$ & $1,578\times 10^{-2}$ & $3,702\times 10^{-3}$ & $3,965\times 10^{-3}$ \\
+				RMSE & $4,259\times 10^{-3}$ & $8,18\times 10^{-4}$ & $4,718\times 10^{-3}$ & $1,149\times 10^{-3}$ & $3,964\times 10^{-3}$ & $9,70\times 10^{-4}$ & $3,009\times 10^{-3}$ & $9,54\times 10^{-4}$ & $5,113\times 10^{-3}$ & $4,488\times 10^{-3}$ \\
+				TrainTime(s) & $1,399\times 10^{4}$ & $5,935\times 10^{3}$ & $1,594\times 10^{4}$ & $4,134\times 10^{3}$ & $1,379\times 10^{4}$ & $3,978\times 10^{3}$ & $5,893\times 10^{4}$ & $2,992\times 10^{4}$ & $2,288\times 10^{4}$ & $8,549\times 10^{3}$ \\
+				TestTime(s) & $8,254\times 10^{1}$ & $5,489\times 10^{0}$ & $1,330\times 10^{2}$ & $1,084\times 10^{1}$ & $1,269\times 10^{2}$ & $2,414\times 10^{-1}$ & $4,151\times 10^{2}$ & $2,353\times 10^{0}$ & $1,063\times 10^{2}$ & $9,637\times 10^{-1}$ \\
+				\bottomrule
+		\end{tabular}}
+	
+		\caption{Yellow Trip: métricas de rendimiento para los encodings ejecutados}
+		\label{taxitabla}
+		\end{table}
+	
+		\vspace{1cm} % espacio entre tablas
+	
+		% --- Tabla 2: WinStat ---
+		\begin{table}[H]
+				\centering
+				\begin{tabular}{lNN}
+					\toprule
+					Componente & \text{WinStatFlex} & \text{WinStatTPE} \\
+					\midrule
+					Stats & 0,2657 & 0,278 \\
+					PE    & 0,2137 & 0,238 \\
+					LPE   & 0,2409 & 0,202 \\
+					tAPE  & 0,2798 & —     \\
+					TPE   & —      & 0,282 \\
+					\bottomrule
+				\end{tabular}
+				\caption{Yellow Trio: Pesos aprendidos en los encodings WinStatFlex y WinStatTPE.}
+				\label{taxi_pesos}
+		\end{table}
+
+	
+	
+\end{landscape}
+
 
 \paragraph{Informer}
 
-Comenzaremos con la ejecución del modelo de partida, Informer. Al igual que en los casos anteriores, la ejecución se realiza empleando la configuración de entrada dada por timeF, y sus correspondientes 3 ejecuciones para obtener el promedio. En la tabla \ref{taxiinformer}, se muestran los resultados obtenidos para esta configuración. 
+Comenzaremos con el análisis de la configuración de referencia, Informer. Al igual que en los casos anteriores, la ejecución se ha realizado empleando la configuración de entrada dada por timeF, y sus correspondientes 3 ejecuciones para obtener el promedio. En la tabla \ref{taxitabla}, se muestran los resultados obtenidos para esta configuración. 
 
 Como ya se adelantaba en la introducción de este experimento, las métricas están en una escala muy baja, del orden de $10^{-5}$ para el MSE y $10^{-3}$ para MAE. El resto de métricas también se han visto afectadas por este escalado, aunque muestran sorprendentemente valores razonables; por ejemplo, RMSE muestra valores muy cercanos a MAE. No podemos decir lo mismo del tiempo, que en este caso es bastante alto, con un promedio de $13989$ segundos (aproximadamente 3,9 horas).
 
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|c|c}
-		\toprule
-		Métrica & Media & STD \\
-		\midrule
-		MSE & $1,9 \times 10^{-5}$ & $7,0 \times 10^{-6}$ \\
-		MAE & $3,987 \times 10^{-3}$ & $7,95 \times 10^{-4}$ \\
-		MAPE & $3,902 \times 10^{-2}$ & $9,835 \times 10^{-3}$ \\
-		MSPE & $1,833 \times 10^{-3}$ & $1,036 \times 10^{-3}$ \\
-		RMSE & $4,259 \times 10^{-3}$ & $8,18 \times 10^{-4}$ \\
-		TrainTime(s) & $1,399 \times 10^{4}$ & $5,935 \times 10^{3}$ \\
-		TestTime(s) & $8,254 \times 10^{1}$ & $5,489 \times 10^{0}$ \\
-		\bottomrule
-	\end{tabular}
-	\caption{Yellow Trip data: métricas de rendimiento para Informer}
-	\label{taxiinformer}
-\end{table}
-
 \paragraph{PE sinusoidal}
 
-Para evaluar el rendimiento de un modelo de Transformer casi puramente vanilla, procedemos a realizar el mismo experimento, pero empleando codificación tradicional de tipo seno-coseno. El resultado, como era razonable, se ve afectado negativamente por este cambio (tabla \ref{taxipe}), ya que hemos eliminado prácticamente toda la información relativa a la componente temporal, más allá de la información de posición absoluta aportada por la geometría.\\
+Para evaluar el rendimiento de un modelo de Transformer casi puramente vanilla, procedemos a realizar el mismo experimento, pero empleando codificación tradicional de tipo seno-coseno. El resultado, como era razonable, se ve afectado negativamente por este cambio (tabla \ref{taxitabla}), ya que hemos eliminado prácticamente toda la información relativa a la componente temporal, más allá de la información de posición absoluta aportada por la geometría.\\
 
 A pesar de que la escala se encuentra en valores pequeños, la diferencia de error no es especialmente exagerada, pues empeoramos un 26\% el error en MSE. Si nos fijamos en MAE, algo más estable ante escalas tan pequeñas, podemos ver que también muestra un peor valor, confirmando la tendencia. Sin embargo, sí que es importante destacar que la desviación de los resultados si es considerablemente más alta, indicando que los resultados no son igual de estables numéricamente que en la proposición original de Informer, y se obtiene una peor convergencia.\\
 
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|c|c}
-		\toprule
-		Métrica & Media & STD \\
-		\midrule
-		MSE & $2,4 \times 10^{-5}$ & $1,0 \times 10^{-5}$ \\
-		MAE & $4,307 \times 10^{-3}$ & $1,044 \times 10^{-3}$ \\
-		MAPE & $3,929 \times 10^{-2}$ & $5,720 \times 10^{-3}$ \\
-		MSPE & $1,740 \times 10^{-3}$ & $3,010 \times 10^{-4}$ \\
-		RMSE & $4,718 \times 10^{-3}$ & $1,149 \times 10^{-3}$ \\
-		TrainTime(s) & $1,594 \times 10^{4}$ & $4,134 \times 10^{3}$ \\
-		TestTime(s) & $1,330 \times 10^{2}$ & $1,084 \times 10^{1}$ \\
-		\bottomrule
-	\end{tabular}
-	\caption{Yellow Trip data: métricas de rendimiento para codificación sen/cos}
-	\label{taxipe}
-\end{table}
-
 \paragraph{WinStatFlex}
 
-Tras el análisis de los modelos ya conocidos en el estado del arte, volvemos a evaluar los modelos propuestos en el trabajo. En este caso, veremos WinStatFlex, el cual obtiene los resultados de la tabla \ref{taxiflex}.\\
-
-Podemos apreciar que los valores obtenidos para todas las métricas resultan un mejora considerable sobre el encoding por defecto de Informer, y reduciendo el error en 0,02. Sin embargo, esta diferencia no es tan marcada como en los conjuntos de datos anteriores. En el MAE si que es mucho más apreciable, ya que se mejora de manera relativa un casi 13\% ($0,458 \times 10^{-3}$ menos). Los pesos dan una mayor importancia a tAPE~\ref{taxiflexpesos} (27,98\%) y reducen ligeramente la relevancia de LPE (24,09\%).\\ 
-
-
-
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|c|c}
-		\toprule
-		Métrica & Media & STD \\
-		\midrule
-		MSE & $1,7 \times 10^{-5}$ & $8,0 \times 10^{-6}$ \\
-		MAE & $3,529 \times 10^{-3}$ & $1,027 \times 10^{-3}$ \\
-		MAPE & $3,885 \times 10^{-2}$ & $1,358 \times 10^{-2}$ \\
-		MSPE & $2,482 \times 10^{-3}$ & $1,715 \times 10^{-3}$ \\
-		RMSE & $3,964 \times 10^{-3}$ & $9,70 \times 10^{-4}$ \\
-		TrainTime(s) & $1,379 \times 10^{4}$ & $3,978 \times 10^{3}$ \\
-		TestTime(s) & $1,269 \times 10^{2}$ & $2,414 \times 10^{-1}$ \\
-		\bottomrule
-	\end{tabular}
-	\caption{Yellow Trip data: métricas de rendimiento para codificación WinStatFlex}
-	\label{taxiflex}
-\end{table}
+Para esta primera propuesta de encoding basada en WinStat, podemos apreciar que los valores obtenidos para todas las métricas resultan un mejora considerable sobre el encoding por defecto de Informer, y reduciendo el error en 0,02 (ver Tabla \ref{taxitabla}). Sin embargo, esta diferencia no es tan marcada como en los conjuntos de datos anteriores. En el MAE si que es mucho más apreciable, ya que se mejora de manera relativa un casi 13\% ($0,458 \times 10^{-3}$ menos). Los pesos dan una mayor importancia a tAPE~\ref{taxi_pesos} (27,98\%) y reducen ligeramente la relevancia de LPE (24,09\%).\\ 
 
 En cuanto al tiempo de entrenamiento, resulta interesante observar que, a pesar de que este modelo debe computar toda la información contextual para el embedding y podría considerarse más costoso que Informer, el tiempo registrado es menor. Dado que todos los experimentos se ejecutaron en el mismo equipo, esta diferencia podría explicarse por una mejor inicialización de los valores, o bien, por una mayor capacidad de convergencia del modelo, que compensa el sobrecoste inicial derivado de la creación del embedding. Para comprobarlo, simplemente basta con examinar el número de épocas antes de detenerse de cada uno de ellos, donde podemos ver que Informer ha requerido una media de 9 épocas y WinStatFlex, 7, indicando que parte de esta diferencia puede provenir la velocidad de convergencia. 
 
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|N}
-	\toprule
-	Componente & \text{Peso aprendido} \\
-	\midrule
-	Stats & 0,2657 \\
-	PE & 0,2137 \\
-	LPE & 0,2409 \\
-	tAPE & 0,2798 \\
-	\bottomrule
-\end{tabular}
-	\caption{Yellow Trip data: valores aprendidos en los pesos del encoding WinStatFlex}
-\label{taxiflexpesos}
-\end{table}
-
 \paragraph{WinStatTPE}
 
-Nuestra siguiente prueba emplea el encoding ponderado de TPE, WinStatTPE. La tabla \ref{taxitpe} recoge todos los resultados, mostrando un rendimiento superior a todos los modelos anteriormente evaluados en todas las métricas, y sobre todo en MAE y MSE, que son un 90\% y un 56,5\% mejores que Informer, respectivamente. La reducida varianza de T-PE, ya visualizada en los tres conjuntos anteriores, vuelve a manifestarse constituyendo la principal causa del buen resultado del modelo. El promedio de las ejecuciones presenta una desviación muy pequeña, fruto de la consistencia observada en cada una de las tres iteraciones, y proporciona un rendimiento altamente estable para este conjunto de dato de baja magnitud numérica.\\
+Nuestra siguiente prueba emplea el encoding ponderado de TPE, WinStatTPE. Este muestra un rendimiento superior a todos los modelos anteriormente evaluados en todas las métricas, y sobre todo en MAE y MSE, que son un 90\% y un 56,5\% mejores que Informer, respectivamente (ver cuarta columna de la Tabla \ref{taxitabla}). La reducida varianza de T-PE, ya visualizada en los tres conjuntos anteriores, vuelve a manifestarse constituyendo la principal causa del buen resultado del modelo. El promedio de las ejecuciones presenta una desviación muy pequeña, fruto de la consistencia observada en cada una de las tres iteraciones, y proporciona un rendimiento altamente estable para este conjunto de dato de baja magnitud numérica.\\
 
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|c|c}
-		\toprule
-		Métrica & Media & STD \\
-		\midrule
-		MSE & $1,0 \times 10^{-5}$ & $5,0 \times 10^{-6}$ \\
-		MAE & $2,547 \times 10^{-3}$ & $9,37 \times 10^{-4}$ \\
-		MAPE & $4,867 \times 10^{-2}$ & $3,270 \times 10^{-2}$ \\
-		MSPE & $1,290 \times 10^{-2}$ & $1,578 \times 10^{-2}$ \\
-		RMSE & $3,009 \times 10^{-3}$ & $9,54 \times 10^{-4}$ \\
-		TrainTime(s) & $5,893 \times 10^{4}$ & $2,992 \times 10^{4}$ \\
-		TestTime(s) & $4,151 \times 10^{2}$ & $2,353 \times 10^{0}$ \\
-		\bottomrule
-	\end{tabular}
-	\caption{Yellow Trip data: métricas de rendimiento para codificación WinStatTPE}
-	\label{taxitpe}
-\end{table}
-
-
-\begin{table}[!ht]
-	\centering
-		\begin{tabular}{l|N}
-		\toprule
-		Componente & \text{Peso aprendido} \\
-		\midrule
-		Stats & 0,278 \\
-		PE & 0,238 \\
-		LPE & 0,202 \\
-		TPE & 0,282 \\
-		\bottomrule
-	\end{tabular}
-	\caption{Yellow Trip data: valores aprendidos en los pesos del encoding WinStatTPE}
-	\label{taxitpepesos}
-\end{table}
-
-La proporción de pesos escogida parece ser considerablemente diferente a la variante que usa tAPE, ya que en este caso, una de las componentes más afectadas en el PE aprendible, que desciende su relevancia en la suma final hasta el $20,2\%$, y T-PE adquiere el papel protagonista, siendo la componente de mayor valor (28,2\%) en términos relativos.\\
+La proporción de pesos obtenida parece ser considerablemente diferente a la variante que usa tAPE, ya que en este caso, una de las componentes más afectadas en el PE aprendible, que desciende su relevancia en la suma final hasta el $20,2\%$, y T-PE adquiere el papel protagonista, siendo la componente de mayor valor (28,2\%) en términos relativos (Tabla \ref{taxi_pesos}).\\
 
 Por último, el tiempo de ejecución puede indicar un posible punto débil del modelo, ya que es 4,5 veces mayor al empleado por Informer y algo más que eso en el caso de WinStatFlex. Ante dicho aumento de coste, la viabilidad de este algoritmo podría no estar justificada si el tiempo de entrenamiento y ajuste fuera crítico. Pero, en este caso, se busca modelar comportamientos altamente estacionales y no se requiere una ejecución a tiempo real, por lo que esta limitación realmente no es tan decisivo, motivando, a pesar del sobrecoste, su utilización.
 
 \paragraph{Informer sin PE}
 
-Para cerrar la fase de evaluación, probaremos con el modelo sin codificación temporal, a modo de algoritmo base que, teóricamente, debe ofrecer el peor rendimiento.
+Para cerrar la fase de evaluación, se ha ejecutado el dataset con el modelo sin codificación temporal, a modo de límite inferior que, teóricamente, debe ofrecer el peor rendimiento. Así parece reflejado en la Tabla \ref{taxitabla}, donde podemos apreciar de manera inmediata que los resultados son marcadamente peores que las codificaciones ya probadas. En la mayoría de métricas, obtiene prácticamente el doble de magnitud, indicando por tanto un rendimiento aproximadamente dos veces inferior a Informer.
 
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|c|c}
-		\toprule
-		Métrica & Media & STD \\
-		\midrule
-		MSE & $4,6 \times 10^{-5}$ & $6,0 \times 10^{-5}$ \\
-		MAE & $4,626 \times 10^{-3}$ & $3,954 \times 10^{-3}$ \\
-		MAPE & $4,494 \times 10^{-2}$ & $3,426 \times 10^{-2}$ \\
-		MSPE & $3,702 \times 10^{-3}$ & $3,965 \times 10^{-3}$ \\
-		RMSE & $5,113 \times 10^{-3}$ & $4,488 \times 10^{-3}$ \\
-		TrainTime(s) & $2,288 \times 10^{4}$ & $8,549 \times 10^{3}$ \\
-		TestTime(s) & $1,063 \times 10^{2}$ & $9,637 \times 10^{-1}$ \\
-		\bottomrule
-	\end{tabular}
-	\caption{Yellow Trip data: métricas de rendimiento en ausencia de PE}
-	\label{taxinope}
-\end{table}
-
-Podemos apreciar de manera inmediata que los resultados son marcadamente peores (tabla \ref{taxinope}) que las codificaciones ya probadas para este dataset, obteniendo el doble de los valores en las métricas, e indicando por tanto un rendimiento dos veces inferior a Informer.
-
-\subsubsection{Elección del mejor modelo}
+\subsubsection{Elección del mejor encoding}
 
 Una vez obtenidas y analizadas las tablas de métricas correspondientes a cada uno de los experimentos realizados, debemos realizar un análisis conjunto, ordenando de mayor a menor rendimiento, de manera que podamos comprender las diferencias existentes entre cada uno. Para ello, podemos tener como referencia tanto la tabla \ref{taxifinal} como la representación gráfica, siguiendo el esquema empleado hasta ahora. Para facilitar la lectura, se ha decidido separar por un lado, el error medio absoluto \ref{taxifinalmae}, y por otro, el MSE \ref{taxifinalmse}, debido a la diferencia de escalas de $10^{-2}$ entre ambas. Además, las barras marcadas con una doble línea oblicua de color rojo indican barras que sobresalen sensiblemente por encima el eje del gráfico, y que ha sido cortada para no distorsionar la escala.\\
 
@@ -854,7 +780,7 @@ Este aspecto va referido principalmente al MSE, nuestra principal métrica de re
 
 A la hora de analizar los experimentos, debemos de tener este aspecto claro, y contrastar adecuadamente entre ambos valores.
 
-\subsubsection{Análisis y resultados}
+\subsubsection{Análisis comparativo de las propuestas formuladas}
 
 A continuación, se mostrarán los resultados de los modelos evaluados, siendo de nuevo los 5 modelos ya valorados Yellow Trip y ETTh. En este caso, los parámetros base empleado para todos ellos han sufrido algunas modificaciones considerables para adquirir mayor información de contexto, ya que este dataset tiene un intervalo de medición de 30 segundos. En la tabla \ref{ajustestina}, podemos ver los valores, donde destaca especialmente la longitud de secuencia de 288. Sin embargo, la ventana empleada es de 60, indicando que tomamos únicamente la última media hora. Esto se debe a que aumentar el tamaño hasta alcanzar la heurística comentada en HPC de 1/3 o 1/4 de la longitud de secuencia generaba problemas de reserva de memoria.
 
