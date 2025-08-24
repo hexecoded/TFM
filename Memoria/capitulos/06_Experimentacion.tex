@@ -687,7 +687,7 @@ A modo de referencia, se pueden apreciar los resultados para estas codificacione
 					TPE   & —      & 0,282 \\
 					\bottomrule
 				\end{tabular}
-				\caption{Yellow Trio: Pesos aprendidos en los encodings WinStatFlex y WinStatTPE.}
+				\caption{Yellow Trip: Pesos aprendidos en los encodings WinStatFlex y WinStatTPE.}
 				\label{taxi_pesos}
 		\end{table}
 
@@ -782,7 +782,9 @@ A la hora de analizar los experimentos, debemos de tener este aspecto claro, y c
 
 \subsubsection{Análisis comparativo de las propuestas formuladas}
 
-A continuación, se mostrarán los resultados de los modelos evaluados, siendo de nuevo los 5 modelos ya valorados Yellow Trip y ETTh. En este caso, los parámetros base empleado para todos ellos han sufrido algunas modificaciones considerables para adquirir mayor información de contexto, ya que este dataset tiene un intervalo de medición de 30 segundos. En la tabla \ref{ajustestina}, podemos ver los valores, donde destaca especialmente la longitud de secuencia de 288. Sin embargo, la ventana empleada es de 60, indicando que tomamos únicamente la última media hora. Esto se debe a que aumentar el tamaño hasta alcanzar la heurística comentada en HPC de 1/3 o 1/4 de la longitud de secuencia generaba problemas de reserva de memoria.
+A continuación, se mostrarán los resultados de los modelos evaluados, siendo de nuevo los 5 modelos ya valorados en conjuntos de datos anteriores.\\
+
+En este caso, los parámetros del modelo empleados han requerido algunas modificaciones para adquirir mayor información de contexto, ya que este dataset tiene un intervalo de medición más pequeño, de 30 segundos. En la tabla \ref{ajustestina}, podemos ver los valores, donde destaca especialmente la longitud de secuencia de 288. Sin embargo, la ventana empleada es de 60, indicando que tomamos únicamente la última media hora. Esto se debe a que aumentar el tamaño hasta alcanzar la heurística comentada en HPC de 1/3 o 1/4 de la longitud de secuencia generaba problemas de reserva de memoria.
 
 \begin{table}[!ht]
 	\centering
@@ -804,106 +806,82 @@ A continuación, se mostrarán los resultados de los modelos evaluados, siendo d
 	\label{ajustestina}
 \end{table}
 
+\begin{landscape}
+	\clearpage
+	\setlength{\tabcolsep}{4pt}
+	\centering
+	% --- Tabla tina ---
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{l *{5}{NN}}
+			\toprule
+			& \multicolumn{2}{c}{Informer} & \multicolumn{2}{c}{PE seno-coseno} & \multicolumn{2}{c}{WinStatFlex} & \multicolumn{2}{c}{WinStatTPE} & \multicolumn{2}{c}{Informer sin PE} \\
+			\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
+			Métrica & Media & STD & Media & STD & Media & STD & Media & STD & Media & STD \\
+			\midrule
+				MSE          & 1,0965 & 0,1064 & 1,2470 & 0,1375 & 1,1481 & 0,1012 & 1,1334 & 0,1216 & 1,2251 & 0,2137 \\
+				MAE          & 0,3566 & 0,0200 & 0,3861 & 0,0164 & 0,3170 & 0,0070 & 0,3126 & 0,0215 & 0,3665 & 0,0179 \\
+				MAPE         & 2,7806 & 0,2133 & 3,1304 & 0,2238 & 2,5239 & 0,1584 & 2,5448 & 0,1148 & 2,8721 & 0,1068 \\
+				MSPE         & 110744,1614 & 41945,4380 & 83611,5625 & 5558,4220 & 48155,9020 & 22603,7360 & 49108,3987 & 23029,2045 & 74118,0937 & 52512,9700 \\
+				RMSE         & 1,0459 & 0,0501 & 1,1150 & 0,0605 & 1,0704 & 0,0476 & 1,0630 & 0,0582 & 1,1023 & 0,1001 \\
+				TrainTime(s) & 6437,7355 & 1826,0845 & 10709,4564 & 3030,9543 & 25612,5837 & 2671,7742 & 35866,6918 & 116,1472 & 14390,4460 & 7472,1130 \\
+				TestTime(s)  & 75,9167 & 1,4791 & 191,6501 & 0,5390 & 471,9246 & 4,5382 & 438,9258 & 12,6343 & 212,1488 & 0,7698 \\
+				\bottomrule
+		\end{tabular}
+		\caption{TINA: Métricas de rendimiento para los encodings analizados}
+		\label{tinacomparacion}
+	\end{table}
+	
+	\vspace{0.8cm}
+	
+	% --- Tabla pesos ---
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{lNN}
+			\toprule
+			Componente & \text{WinStatFlex} & \text{WinStatTPE} \\
+			\midrule
+			Stats & 0,3814 & 0,263 \\
+			PE    & 0,2752 & 0,245 \\
+			LPE   & 0,1918 & 0,229 \\
+			tAPE  & 0,1515 & —     \\
+			TPE   & —      & 0,263 \\
+			\bottomrule
+		\end{tabular}
+		\caption{TINA: Pesos aprendidos en los encodings WinStatFlex y WinStatTPE}
+		\label{tinapesos}
+	\end{table}
+	
+	\end{landscape}
+	\clearpage
+
 \paragraph{Informer}
 
-Para disponer de una base de comparación, comenzaremos por el análisis de Informer. En la tabla \ref{tinainformer}, se recopilan los resultados obtenidos por estas métricas. Podemos ver que el valora del MSE es bastante alto en comparación con el obtenido para MAE, como ya anunciábamos en la introducción. Además, el resto de métricas también han subido considerablemente, debido al gran impacto de los errores, potencialmente en los puntos de anomalía, que disparan su penalización.\\
+Para disponer de una base de comparación, comenzaremos por el análisis de Informer. En la primera columna de la Tabla \ref{tinacomparacion}, se recopilan los resultados obtenidos por estas métricas. Podemos ver que el valora del MSE es bastante alto en comparación con el obtenido para MAE, como ya anunciábamos en la introducción. Además, el resto de métricas también han subido considerablemente, debido al gran impacto de los errores, potencialmente en los puntos de anomalía, que disparan su penalización.\\
 
  Los tiempos de ejecución, de manera sorprendente, no han aumentado de forma significativa, manteniéndose entre los valores obtenidos con Household Power o Yellow Trip Data. Esto sugiere que las operaciones asociadas al encoding se están paralelizando de manera adecuada y, en consecuencia, no representan un coste computacional prohibitivo para el modelo. Sin embargo, este aspecto ha de vigilarse de cerca en las codificaciones ponderadas, donde el impacto podrá ser mayor.
-
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|N|N}
-		\toprule
-		\text{Métrica} & \text{Media} & \text{STD} \\
-		\midrule
-		MSE & 1,096588 & 0,106495 \\
-		MAE & 0,356679 & 0,020001 \\
-		MAPE & 2,780652 & 0,213355 \\
-		MSPE & 110744,161458 & 41945,4380 \\
-		RMSE & 1,045978 & 0,050186 \\
-		TrainTime(s) & 6437,735532 & 1826,084507 \\
-		TestTime(s) & 75,916715 & 1,479102 \\
-		\bottomrule
-	\end{tabular}
-	\caption{TINA: métricas de rendimiento para Informer}
-	\label{tinainformer}
-\end{table}
-
+ 
 \paragraph{PE sinusoidal}
 
 Con el fin de evaluar si el modelo Informer, utilizando su esquema de codificación por defecto, ofrece un rendimiento superior al diseño original de los Transformers, analizaremos a continuación los resultados obtenidos al aplicar exclusivamente la codificación seno–coseno a los datos.\\
 
-En la tabla \ref{tinasincos} se muestran los resultados obtenidos para todas las métricas. De nuevo, tenemos que descartar las métricas diferentes a MAE y MSE, que por desgracia, se ven demasiado afectadas por los efectos de las anomalías y aumentan desproporcionadamente su valor. Pero, si nos fijamos en las dos escogidas, podemos ver que se produce un empeoramiento considerable del resultado, especialmente en MSE, debido al efecto potenciador del cuadrado. En MAE también es apreciable, aunque de forma más suave, suponiendo un empeoramiento de $0,03$ sobre Informer. El tiempo de ejecución también ha aumentado, debido a que la convergencia ha sido más lenta y se ha requerido un mayor número de épocas, y no compensa que el coste de la codificación sea menor.
-
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|N|N}
-		\toprule
-		\text{Métrica} & \text{Media} & \text{STD} \\
-		\midrule
-		MSE & 1,247064 & 0,137599 \\
-		MAE & 0,386111 & 0,016464 \\
-		MAPE & 3,130485 & 0,223893 \\
-		MSPE & 83611,562500 & 5558,4220 \\
-		RMSE & 1,115078 & 0,060539 \\
-		TrainTime(s) & 10709,456470 & 3030,954371 \\
-		TestTime(s) & 191,650185 & 0,539033 \\
-		\bottomrule
-	\end{tabular}
-	\caption{TINA: métricas de rendimiento para encoding seno-coseno}
-	\label{tinasincos}
-\end{table}
+En la segunda columna de la Tabla \ref{tinacomparacion} se muestran los resultados obtenidos para todas las métricas. De nuevo, tenemos que descartar las métricas diferentes a MAE y MSE, que por desgracia, se ven demasiado afectadas por los efectos de las anomalías y aumentan desproporcionadamente su valor. Pero, si nos fijamos en las dos escogidas, podemos ver que se produce un empeoramiento considerable del resultado, especialmente en MSE, debido al efecto potenciador del cuadrado. En MAE también es apreciable, aunque de forma más suave, suponiendo un empeoramiento de $0,03$ sobre Informer. El tiempo de ejecución también ha aumentado, debido a que la convergencia ha sido más lenta y se ha requerido un mayor número de épocas, y no compensa que el coste de la codificación sea menor.
 
 \paragraph{WinStatFlex}
 
-Para WinStatFlex, podemos encontrar los resultados para las métricas en la tabla \ref{tinaflex}, mientras que los pesos de la suma ponderada se ubican en la tabla \ref{tinaflexpesos}.
+Para WinStatFlex, podemos encontrar los resultados para las métricas en la Tabla \ref{tinacomparacion}, mientras que los pesos de la suma ponderada se ubican en la tabla \ref{tinapesos}:
 
 \begin{itemize}
 	\item El rendimiento del modelo requiere un análisis cuidadoso de las métricas. Si tomamos como referencia el MSE, su valor, $1,148$, nos hace entender que este modelo es considerablemente peor a Informer, que arrojaba $1,0965$. Sin embargo, si nos fijamos en el MAE, que por definición es más estable para este problema, apreciamos una mejora, pues pasamos del $0,3566$ de Informer a $0,317$, siendo una mejora de 0,038 aproximadamente (11,9\%). Teniendo en cuenta la suposición realizada sobre MAE, estableceremos que el rendimiento de este modelo es, por tanto, positivo.
 	
-	\item Los pesos del modelo (tabla \ref{tinaflexpesos}) arrojan resultados relevantes de comentar. La componente asociada a estadísticos y lags parece ser la más relevante de todas, siendo el 38,14\% de la ponderación. La codificación fija es el encoding absoluto que más predomina de los 3, alcanzando una aportación del 27,52\%. Las variantes LPE, pero especialmente tAPE, cobran un menor protagonismo en los resultados.
+	\item Los pesos del modelo (tabla \ref{tinapesos}) arrojan resultados relevantes de comentar. La componente asociada a estadísticos y lags parece ser la más relevante de todas, siendo el 38,14\% de la ponderación. La codificación fija es el encoding absoluto que más predomina de los 3, alcanzando una aportación del 27,52\%. Las variantes LPE, pero especialmente tAPE, cobran un menor protagonismo en los resultados.
 	
 	\item Por último, el tiempo promedio de entrenamiento ha aumentado hasta las 7 horas, siendo muy más alto que el visto en Informer, concretamente 4 veces más. Observando la escasa distancia entre modelos, Informer ofrece un resultado más equilibrado tiempo-resultados, indicando a priori, a falta de confirmar en TPE, que en series de mayor extensión el impacto de la semántica ayuda, pero el sobrecoste a pagar puede ser demasiado elevado.
 \end{itemize}
  
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|N|N}
-		\toprule
-		\text{Métrica} & \text{Media} & \text{STD} \\
-		\midrule
-		MSE & 1,148123 & 0,101258 \\
-		MAE & 0,317082 & 0,007091 \\
-		MAPE & 2,523967 & 0,158450 \\
-		MSPE & 48155,902018 & 22603,7360 \\
-		RMSE & 1,070447 & 0,047603 \\
-		TrainTime(s) & 25612,583748 & 2671,774248 \\
-		TestTime(s) & 471,924614 & 4,538266 \\
-		\bottomrule
-	\end{tabular}
-	\caption{TINA: métricas de rendimiento para WinStatFlex}
-	\label{tinaflex}
-\end{table}
- 
-\begin{table}[!ht]
-	\centering
-		\begin{tabular}{l|N}
-		\toprule
-		Componente & \text{Peso aprendido} \\
-		\midrule
-		Stats & 0,3814 \\
-		PE & 0,2752 \\
-		LPE & 0,1918 \\
-		tAPE & 0,1515 \\
-		\bottomrule
-	\end{tabular}
-	\caption{TINA: valores aprendidos en los pesos del encoding WinStatFlex}
-	\label{tinaflexpesos}
-\end{table}
-
 \paragraph{WinStatTPE}
 
-El siguiente encoding evaluado es WinStatTPE, cuyas métricas podemos encontrar en la tabla \ref{tinatpe} y los pesos correspondientes a las componentes en la tabla \ref{tinatpepesos}. Podemos destacar los siguientes aspectos:
+El siguiente encoding evaluado es WinStatTPE, cuyas métricas podemos encontrar en la penúltima columna de la Tabla \ref{tinacomparacion} y los pesos correspondientes a las componentes en la Tabla \ref{tinapesos}. Podemos destacar los siguientes aspectos:
 
 \begin{itemize}
 	\item Las métricas de rendimiento siguen el mismo comportamiento que el visto en WinStatFlex: MSE muestra un empeoramiento respecto a Informer, pero MAE establece que se ha producido una mejora, pero tanto con Informer como con WinStatFlex. Por tanto, siguiendo nuestro razonamiento sobre la estabilidad de las métricas, y atendiendo únicamente a MAE, estamos consiguiendo una mejora de $44^{-3}$ con respecto a Flex, pero una considerablemente mayor con Informer, ya que hemos pasado de $0,356679$ a $0,317082$.
@@ -914,68 +892,14 @@ El siguiente encoding evaluado es WinStatTPE, cuyas métricas podemos encontrar 
 \end{itemize}
 
 
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|N|N}
-		\toprule
-		\text{Métrica} & \text{Media} & \text{STD} \\
-		\midrule
-		MSE & 1,133453 & 0,121601 \\
-		MAE & 0,312652 & 0,021571 \\
-		MAPE & 2,544894 & 0,114816 \\
-		MSPE & 49108,398700 & 23029,2045 \\
-		RMSE & 1,063045 & 0,058214 \\
-		TrainTime(s) & 35866,691845 & 116,147264 \\
-		TestTime(s) & 438,925862 & 12,634359 \\
-		\bottomrule
-	\end{tabular}
-	\caption{TINA: métricas de rendimiento para WinStatTPE}
-	\label{tinatpe}
-\end{table}
-
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|N}
-		\toprule
-		Componente & \text{Peso aprendido} \\
-		\midrule
-		Stats & 0,263 \\
-		PE & 0,245 \\
-		LPE & 0,229 \\
-		TPE & 0,263 \\
-		\bottomrule
-	\end{tabular}
-	\caption{TINA: valores aprendidos en los pesos del encoding WinStatTPE}
-	\label{tinatpepesos}
-\end{table}
-
 En definitiva, parece que este modelo es capaz de ofrecer mejor rendimiento que Informer y WinStatFlex, pero asumiendo un coste aún mayor con respecto a ambos en tiempo de ejecución. Dicho incremento podría incluso llevarnos a decantarnos por la variante Flex, debido a la escasa diferencia promedio encontrada en MAE, en caso de que necesitásemos implementar un sistema real de predicción con estos datos.
 
 \paragraph{Informer sin PE}
 
-Por último se ha ejecutado un modelo sin ningún tipo de codificación posicional para medir el impacto de su ausencia. Tal y como se muestra en la tabla \ref{tinanope}, su rendimiento en cuanto MAE es el segundo peor de todos los modelos evaluados, evidenciando la necesidad de encoding. Curiosamente, la codificación seno-coseno sí que se encuentra clasificada por detrás, obteniendo aún peores resultados, emulando una situación muy similar a la ya vista con ETTh2. Al igual que en este último, es probable que la ausencia de contenido semántico en la codificación posicional tradicional no permita un correcto ordenamiento de la información al no apoyarse en la relatividad y la semática y los resultados se vean alterados negativamente.
-
-\begin{table}[!ht]
-	\centering
-	\begin{tabular}{l|N|N}
-		\toprule
-		Métrica & \text{Media} & \text{STD} \\
-		\midrule
-		MSE & 1,225175 & 0,213712 \\
-		MAE & 0,366518 & 0,017925 \\
-		MAPE & 2,872100 & 0,106873 \\
-		MSPE & 74118,093750 & 52512,970000 \\
-		RMSE & 1,102336 & 0,100149 \\
-		TrainTime(s) & 14390,446017 & 7472,113055 \\
-		TestTime(s) & 212,148864 & 0,769808 \\
-		\bottomrule
-	\end{tabular}
-	\caption{TINA: métricas de rendimiento  en ausencia de PE}
-	\label{tinanope}
-\end{table}
+Por último se ha ejecutado un modelo sin ningún tipo de codificación posicional para medir el impacto de su ausencia. Tal y como se muestra en la Tabla \ref{tinacomparacion}, su rendimiento en cuanto MAE es el segundo peor de todos los modelos evaluados, evidenciando la necesidad de encoding. Curiosamente, la codificación seno-coseno sí que se encuentra clasificada por detrás, obteniendo aún peores resultados, emulando una situación muy similar a la ya vista con ETTh2. Al igual que en este último, es probable que la ausencia de contenido semántico en la codificación posicional tradicional no permita un correcto ordenamiento de la información al no apoyarse en la relatividad y la semántica y los resultados se vean alterados negativamente.
 
 
-\subsubsection{Eleccióin del mejor modelo}
+\subsubsection{Elección del mejor encoding}
 
 Ahora que disponemos de todas las métricas recopiladas para cada modelo, podemos proceder a ordenar los resultados y ver las diferencias entre todas las propuestas. Al igual que en los conjuntos anteriores, podemos observar los resultados en la tabla \ref{tinafinal}, donde los modelos han sido ordenados por MSE. Adicionalmente, se han incluido las variantes barajadas de WinStatFlex y WinStatTPE para verificar el comportamiento de los modelos cuando se rompe el orden temporal. Para una comparación más intuitiva, se ha incluido adicionalmente el gráfico de barras \ref{tinafinal1}.
 
