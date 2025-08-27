@@ -7,7 +7,7 @@ Una vez expuestas todas las condiciones del entrenamiento, como los modelos a pr
 
 Antes de comenzar con la comparativa de los encodings formulados, debemos tener en cuenta un parámetro clave en el rendimiento: ¿Qué tamaño de ventana es el adecuado?.\\
 
-Este valor es un parámetro de entrada común a las cinco variantes de encodings propuestas en este trabajo, y determina cuánta información del entorno se toma como parte del contexto de cada posición, enriqueciéndolo con información asociada a estadísticas y los rezagos anteriores. Un tamaño de ventana excesivamente grande puede provocar que los valores estadísticos sean demasiado genéricos, y no aporten información útil al mecanismo de atención, mientras que una ventana demasiado pequeña puede contener demasiado ruido, y no sea útil para el modelo, e incluso, dificulte la detección de patrones.\\
+Este valor es un parámetro de entrada común a las cinco variantes de encodings propuestas en este trabajo, y determina cuánta información del entorno se toma como parte del contexto de cada posición, enriqueciéndolo con información asociada a estadísticas y los rezagos anteriores. Un tamaño de ventana excesivamente grande puede provocar que los valores estadísticos sean demasiado genéricos y no aporten información útil al mecanismo de atención, mientras que una ventana demasiado pequeña puede contener demasiado ruido y no sea útil para el modelo, e incluso, dificulte la detección de patrones.\\
 
 Por tanto, lo ideal es emplear algún método de búsqueda de parámetros que nos permita probar con diferentes configuraciones y escoger la que mejor resultado ofrezca. Pero en conjuntos de datos de gran tamaño, esa tarea es prácticamente imposible debido al tiempo que sería necesario para realizar cada prueba. Por tanto, para disponer de una heurística a seguir, y que sea estimable en un tiempo reducido, podemos tomar las variantes horarias del dataset ETT, de tamaño reducido, y realizar un pequeño experimento: tomar los valores de longitud de secuencia, etiqueta y predicción empleados en el paper original de Informer y probar con diferentes tamaños de ventana entre 3 y longitud de secuencia.\\
 
@@ -105,9 +105,9 @@ A modo de resumen, se pueden encontrar los resultados de los PE en las tablas \r
 			MSE          & 0,5329 & 0,0109 & 0,5377 & 0,0113 & 0,5448 & 0,0054 \\
 			MAE          & 0,4152 & 0,0122 & 0,4140 & 0,0067 & 0,4213 & 0,0058 \\
 			MAPE         & 2,5987 & 0,0668 & 2,5730 & 0,0942 & 2,3946 & 0,0558 \\
-			MSPE         & 1345,9031 & 113,7307 & 1363,1084 & 117,1561 & 1053,8626 & 84,2042 \\
+			MSPE         & 1.345,9031 & 113,7307 & 1.363,1084 & 117,1561 & 1.053,8626 & 84,2042 \\
 			RMSE         & 0,7300 & 0,0075 & 0,7332 & 0,0077 & 0,7381 & 0,0036 \\
-			TrainTime(s) & 7817,0202 & 821,2709 & 10741,0355 & 422,8372 & 10382,2665 & 2083,3163 \\
+			TrainTime(s) & 7.817,0202 & 821,2709 & 10.741,0355 & 422,8372 & 10.382,2665 & 2.083,3163 \\
 			TestTime(s)  & 91,9412 & 1,2444 & 225,1459 & 63,8366 & 125,0538 & 2,8330 \\
 			\bottomrule
 		\end{tabular}
@@ -131,8 +131,8 @@ A modo de resumen, se pueden encontrar los resultados de los PE en las tablas \r
 			MAPE         & 2,4877 & 0,0900 & 2,3121 & 0,0862 & 2,2511 & 0,0912 & 2,2524 & 0,0017 & 2,5582 & 0,1217 \\
 			MSPE         & 1196,1313 & 105,1076 & 1012,2817 & 108,0179 & 986,0805 & 128,4461 & 954,1710 & 38,3967 & 1388,2034 & 147,0223 \\
 			RMSE         & 0,7085 & 0,0032 & 0,7007 & 0,0035 & 0,6796 & 0,0035 & 0,6809 & 0,0014 & 0,7627 & 0,0297 \\
-			TrainTime(s) & 17697,7901 & 3174,4148 & 13071,5686 & 1403,3971 & 18652,7244 & 128,3429 & 18913,6335 & 28,7927 & 131450,3388 & — \\
-			TestTime(s)  & 253,9804 & 3,7659 & 229,3123 & 3,0867 & 350,8360 & 5,5675 & 296,2529 & 1,9551 & 1730,3306 & — \\
+			TrainTime(s) & 17.697,7901 & 3.174,4148 & 13.071,5686 & 1.403,3971 & 18.652,7244 & 128,3429 & 18.913,6335 & 28,7927 & 131.450,3388 & — \\
+			TestTime(s)  & 253,9804 & 3,7659 & 229,3123 & 3,0867 & 350,8360 & 5,5675 & 296,2529 & 1,9551 & 1.730,3306 & — \\
 			\bottomrule
 		\end{tabular}
 		\caption{HPC: Comparación de familia de encodings propuesta WinStat}
@@ -168,15 +168,15 @@ En primer lugar, comenzaremos por el modelo original de Informer. De esta forma,
 
 Los resultados de la ejecución pueden apreciarse en la primera columna de la Tabla \ref{hpcorigs}. En ella, podemos notar que la varianza en los resultados, tras ejecutar 3 iteraciones, es bastante pequeña, e inferior a la centésima tanto para MAE como MSE. Sin embargo, las tasas de error en las métricas de MAPE y MSPE se disparan: esto se debe a su gran sensibilidad a valores pequeños, ya que todas las mediciones han sido normalizadas, por lo que no deberían ser consideradas como una forma de comparación debida su inestabilidad. En el caso de RMSE, el error también es bastante alto, de un 73\%, fruto de la misma debilidad que la mostrada en MAPE y MSPE.\\
 
-En términos de eficiencia computacional, podemos utilizar el tiempo medio de ejecución como referencia. En promedio, una ejecución del modelo por defecto requiere aproximadamente 7817 segundos, equivalentes a casi 2,17 horas. Aunque este tiempo resulta razonable considerando la longitud del conjunto de datos, su utilidad real es servir como valor de referencia para evaluar el coste adicional que implican las operaciones introducidas en los modelos alternativos que veremos a continuación.
+En términos de eficiencia computacional, podemos utilizar el tiempo medio de ejecución como referencia. En promedio, una ejecución del modelo por defecto requiere aproximadamente $7.817$ segundos, equivalentes a casi 2,17 horas. Aunque este tiempo resulta razonable considerando la longitud del conjunto de datos, su utilidad real es servir como valor de referencia para evaluar el coste adicional que implican las operaciones introducidas en los modelos alternativos que veremos a continuación.
 
 \paragraph{PE sinusoidal}
 
 Continuando con el modelo de referencia, daremos un segundo paso. Teniendo en cuenta el impacto limitado de la información añadida por timeF, ¿es realmente relevante frente a la información proporcionada por el encoding de tipo seno-coseno?. Para conocerlo, hemos realizado una ejecución suprimiendo esta componente, convirtiendo la arquitectura en prácticamente la definición de un Transformer vanilla para procesamiento de lenguaje.\\
 
-Los resultados obtenidos, visibles en la Tabla \ref{hpcorigs} son muy similares a los vistos en el modelo original: la pérdida de rendimiento en métricas es prácticamente despreciable, con una diferencia de rendimiento inferior a la centésima para el MSE (0,5329 vs 0,5377) y un caso similar en MAE (0,4152 vs 0,414), obteniendo incluso un mejor el resultado para esta codificación. Esto nos indica que la información adicional aportada en el modelo original no estaba aumentando considerablemente el rendimiento del modelo.\\
+Los resultados obtenidos, visibles en la Tabla \ref{hpcorigs} son muy similares a los vistos en el modelo original: la pérdida de rendimiento en métricas es prácticamente despreciable, con una diferencia de rendimiento inferior a la centésima para el MSE ($0,5329$ vs $0,5377$) y un caso similar en MAE ($0,4152$ vs $0,414$), obteniendo incluso un mejor el resultado para esta codificación. Esto nos indica que la información adicional aportada en el modelo original no estaba aumentando considerablemente el rendimiento del modelo.\\
 
-Sin embargo, resulta relevante destacar que el tiempo de ejecución aumenta significativamente, alcanzando aproximadamente 10741 segundos (cerca de 3 horas) en el entrenamiento. Aunque este resultado pueda parecer contraintuitivo, ya que eliminar componentes debería reducir el coste, al emplear esta variante el proceso de convergencia del modelo se desarrolla de forma más lenta, y provoca un aumento del tiempo de ejecución. En defintiva, suprimir la información contextual adicional de Informer no empeora gravemente los resultados, pero disminuye la velocidad de convergencia durante el aprendizaje.\\
+Sin embargo, resulta relevante destacar que el tiempo de ejecución aumenta significativamente, alcanzando aproximadamente $10.741$ segundos (cerca de 3 horas) en el entrenamiento. Aunque este resultado pueda parecer contraintuitivo, ya que eliminar componentes debería reducir el coste, al emplear esta variante el proceso de convergencia del modelo se desarrolla de forma más lenta, y provoca un aumento del tiempo de ejecución. En defintiva, suprimir la información contextual adicional de Informer no empeora gravemente los resultados, pero disminuye la velocidad de convergencia durante el aprendizaje.\\
 
 A continuación, comenzaremos a analizar las nuevas alternativas, para ver si consiguen mejorar estos resultados.
 
@@ -186,7 +186,7 @@ Comenzamos por la primera de las propuestas, la cual se basa únicamente en la a
 
 Los resultados para esta alternativa son significativamente mejores y más estables (primera columna de la Tabla \ref{hpcwinstatvariants}) que en los casos anteriores, ya que hemos conseguido reducir tanto MAE como MSE, reduciendo además la varianza de los resultados. Tomando esta última como referencia, podemos apreciar que la mejora es superior a las tres centésimas ($0,502$ vs $0,537$), aportando una mejora considerable del 6\%. Sin embargo, esta mejora de rendimiento ha tenido un gran impacto en el tiempo de cómputo: este es ahora mucho mayor que en casos anteriores, con una variabilidad además mucho más alta, de casi una hora.\\
 
-En promedio, se ha requerido $17697$ segundos, unas 4,9 horas, para completar cada ejecución, lo cual es aumento del tiempo de ejecución a prácticamente el doble de Informer original (Tabla \ref{hpcorigs}). Si bien la mejora ha sido notable, sería deseable observar si alguna de las siguientes alternativas consigue mejorar la estabilidad numérica y la convergencia de los resultados.
+En promedio, se ha requerido $17.697$ segundos, unas 4,9 horas, para completar cada ejecución, lo cual supone un aumento del tiempo de ejecución a prácticamente el doble de Informer original (Tabla \ref{hpcorigs}). Si bien la mejora ha sido notable, sería deseable observar si alguna de las siguientes alternativas consigue mejorar la estabilidad numérica y la convergencia de los resultados.
 
 \paragraph{WinStatLags}
 
@@ -202,7 +202,7 @@ Los resultados de este algoritmo requieren una mayor atención, dada la multitud
 
 \begin{itemize}
 	 \item El rendimiento obtenido, tomando como referencia la métrica MSE, es notable. En comparación con el modelo basado en lags y estadísticos, se ha logrado una mejora absoluta de $0,03$, equivalente a un 5,9\%. Este incremento es prácticamente idéntico al observado entre {WinStat} y la codificación original de {Informer}. En términos acumulados, la mejora con respecto a este último alcanza el 13,4\%, lo que representa un avance significativo en el desempeño del modelo. Estos valores demuestran la eficacia de la combinación mediante pesos entrenables.
-	\item El tiempo de ejecución, por contra, es el más alto medido hasta el momento, siendo necesario un promedio de 18652 segundos, o 5,2 horas de ejecución, frente a las algo más de 2 horas requeridas por la versión original de Informer. Esta configuración incrementa el tiempo medio de ejecución a más del doble, lo que supone un coste computacional significativamente mayor. No se trata de un enfoque que sobresalga por su rapidez en las fases de entrenamiento e inferencia, pero, sin embargo, la mejora de rendimiento podría convertir esta diferencia en un coste asumible.
+	\item El tiempo de ejecución, por contra, es el más alto medido hasta el momento, siendo necesario un promedio de $18.652$ segundos, o 5,2 horas de ejecución, frente a las algo más de 2 horas requeridas por la versión original de Informer. Esta configuración incrementa el tiempo medio de ejecución a más del doble, lo que supone un coste computacional significativamente mayor. No se trata de un enfoque que sobresalga por su rapidez en las fases de entrenamiento e inferencia, pero, sin embargo, la mejora de rendimiento podría convertir esta diferencia en un coste asumible.
 	\item El valor final de los pesos (Tabla \ref{hpc_pesos_combinados}) tras el entrenamiento nos ofrece información muy valiosa sobre las necesidades de los datos. Las proporciones en promedio alcanzadas por estos indican una mayor inclinación hacia la información semántica de los valores estadísticos, con un 32,41\% de contribución. En el caso de los encodings aditivos, destaca especialmente la componente aprendida por LPE, la cual se adapta lo máximo posible a los datos, y ha adquirido una relevancia del 28,09\%. Tan solo con estas componentes, se cubre una ponderación de 0,605 de los datos, indicando que el modelo tiene una mayor preferencia por aumenta el contexto local de los datos.ç
 	
 	 El resto de codificaciones presentan valores inferiores, destacando tAPE como la de menor relevancia. Este resultado se explica principalmente por su alta similitud con el resto de codificaciones ponderadas, reduciendo su aporte diferencial dentro del modelo.
@@ -234,7 +234,7 @@ WinStatSPE será nuestra última variante a probar de las propuestas por este tr
 \begin{itemize}
 	\item Las métricas proporcionadas por el modelo contienen peores resultados que el modelo de referencia. Esto indica que evidentemente, algo no esta funcionando adecuadamente a la hora de modificar la atención, ya que de por sí sola, la codificación complementaria que se ha utilizado sí que ofrece buenos resultados. Esto confirma las intuiciones anteriores, y muestra que posiblemente SPE sea efectivamente un método propio de clasificación.
 	
-	\item El tiempo de ejecución es muy alto en comparación con todos los métodos vistos. Debido a un problema de desbordamiento con las variables de tiempo, no se dispone de varianza, pero teniendo en cuenta el tiempo total y realizando el promedio, se estima que cada iteración de las realizadas duró una media de $131450$ segundos, lo cual equivale aproximadamente a un día y medio (36 horas). Esto pone en evidencia la ineficacia del método tanto a nivel de resultados como computacionalmente. 
+	\item El tiempo de ejecución es muy alto en comparación con todos los métodos vistos. Debido a un problema de desbordamiento con las variables de tiempo, no se dispone de varianza, pero teniendo en cuenta el tiempo total y realizando el promedio, se estima que cada iteración de las realizadas duró una media de $131.450$ segundos, lo cual equivale aproximadamente a un día y medio (36 horas). Esto pone en evidencia la ineficacia del método tanto a nivel de resultados como computacionalmente. 
 	
 	El resultado es sorprendente, dado que la definición original de este método lo proponía como una aproximación de la atención completa mediante una distribución normal. Sin embargo, debido probablemente a limitaciones de memoria o de capacidad de cómputo de la CPU, esta alternativa ha mostrado ser más lenta que el cálculo directo de la atención completa. Incluso el tiempo de inferencia ha crecido rozando un rendimiento casi 20 veces más lento.
 	
@@ -296,13 +296,13 @@ En la Tabla \ref{hpcresultados_modelos}, podemos encontrar los resultados, del c
 		\toprule
 		Modelo & \text{Tº Test(s)} & \text{Tº Test(s)-STD} & \text{Tº Train(s)} & \text{Tº Train(s)-STD} \\
 		\midrule
-		WinStatFlex & 350,8360 & 5,5675 & 18652,7244 & 128,3429 \\
-		WinStatTPE & 296,2529 & 1,9551 & 18913,6335 & 28,7927 \\
-		Informer & 91,9412 & 1,2444 & 7817,0202 & 821,2709 \\
-		No PE & 125,0538 & 2,8330 & 10382,2665 & 2083,3163 \\
-		Informer (Shuffled) & 85,9877 & 0,7681 & 7923,0834 & 1508,2765 \\
-		WinStatFlex (Shuffled) & 330,9885 & 6,0409 & 20842,9511 & 1877,7778 \\
-		WinStatTPE (Shuffled) & 295,0051 & 1,2049 & 20580,5136 & 2278,5627 \\
+		WinStatFlex & 350,8360 & 5,5675 & 18.652,7244 & 128,3429 \\
+		WinStatTPE & 296,2529 & 1,9551 & 18.913,6335 & 28,7927 \\
+		Informer & 91,9412 & 1,2444 & 7.817,0202 & 821,2709 \\
+		No PE & 125,0538 & 2,8330 & 10.382,2665 & 2.083,3163 \\
+		Informer (Shuffled) & 85,9877 & 0,7681 & 7.923,0834 & 1.508,2765 \\
+		WinStatFlex (Shuffled) & 330,9885 & 6,0409 & 20.842,9511 & 1.877,7778 \\
+		WinStatTPE (Shuffled) & 295,0051 & 1,2049 & 20.580,5136 & 2.278,5627 \\
 		\bottomrule
 	\end{tabular}
 	\caption{HPC: Tiempos de ejecución para cada modelo tras el mezclado}
@@ -389,7 +389,7 @@ En la Tabla \ref{etth1tabla} se pueden encontrar los resultados finales para el 
 			MSE          & 0,5458 & 0,0204 & 0,5775 & 0,0755 & 0,4676 & 0,1017 & 0,4896 & 0,0481 & 0,9234 & 0,0841 \\
 			MAE          & 0,5323 & 0,0170 & 0,5552 & 0,0530 & 0,5128 & 0,0651 & 0,5071 & 0,0312 & 0,7419 & 0,0509 \\
 			MAPE         & 11,7991 & 1,6264 & 11,8695 & 1,1729 & 3,3438 & 0,7678 & 11,0850 & 0,7300 & 14,2329 & 4,2950 \\
-			MSPE         & 48779,9515 & 13908,2080 & 47931,0582 & 10247,6900 & 1530,2028 & 410,7895 & 45770,9078 & 7129,3390 & 76807,5121 & 46287,2800 \\
+			MSPE         & 48.779,9515 & 13.908,2080 & 47.931,0582 & 10.247,6900 & 1.530,2028 & 410,7895 & 45.770,9078 & 7.129,3390 & 76.807,5121 & 46.287,2800 \\
 			RMSE         & 0,7386 & 0,0137 & 0,7583 & 0,0494 & 0,6797 & 0,0749 & 0,6988 & 0,0348 & 0,9600 & 0,0430 \\
 			TrainTime(s) & 16,8195 & 1,7489 & 25,5205 & 0,3850 & 32,9894 & 3,7753 & 52,7320 & 0,9542 & 17,3358 & 3,1498 \\
 			TestTime(s)  & 0,3835 & 0,0025 & 0,6075 & 0,0037 & 0,8347 & 0,0243 & 1,3399 & 0,0432 & 0,4510 & 0,0435 \\
@@ -520,7 +520,7 @@ Por otro lado, tenemos el comportamiento de ETTh2 (Tabla \ref{etth2tabla}), el c
  	\item Los valores de los pesos vuelven a ser prácticamente equilibrados, siguiendo las tendencias vistas hasta ahora (Tabla \ref{etth1_pesos}).
  \end{itemize}
  
- Para ETTh2, la tónica es bastante similar (ver Tabla \ref{etth2tabla}); las métricas reflejan un empeoramiento de los resultados en todas las medidas, destacando el $0,5963$ de MSE, y el tiempo de ejecución es de 54 segundos de media, aumentando así considerablemente el coste de entrenar este modelo. Los pesos, por su lado, vuelven a mostrar un comportamiento equilibrado entre las 4 componentes (Tabla \ref{etth2pesos}). Por lo tanto, el modelado del segundo transformador tiene un comportamiento similar a ETTh1, y WinStatTPE parece no adaptarse del todo a sus condiciones.\\
+ Para ETTh2, la tónica es bastante similar (ver Tabla \ref{etth2tabla}); las métricas reflejan un empeoramiento de los resultados en todas las medidas, destacando el $0,5963$ de MSE, y el tiempo de ejecución es de 54 segundos de media, aumentando así considerablemente el coste de entrenar este modelo. Los pesos, por su lado, vuelven a mostrar un comportamiento equilibrado entre las 4 componentes (Tabla \ref{etth2_pesos}). Por lo tanto, el modelado del segundo transformador tiene un comportamiento similar a ETTh1, y WinStatTPE parece no adaptarse del todo a sus condiciones.\\
  
  No obstante, es importante destacar que estos resultados continúan siendo significativamente superiores a los obtenidos con Informer, lo que confirma que hemos alcanzado el objetivo propuesto de mejorar los encodings analizados.
  
@@ -813,6 +813,7 @@ En este caso, los parámetros del modelo empleados han requerido algunas modific
 	% --- Tabla tina ---
 	\begin{table}[H]
 		\centering
+		\resizebox{\linewidth}{!}{%
 		\begin{tabular}{l *{5}{NN}}
 			\toprule
 			& \multicolumn{2}{c}{Informer} & \multicolumn{2}{c}{PE seno-coseno} & \multicolumn{2}{c}{WinStatFlex} & \multicolumn{2}{c}{WinStatTPE} & \multicolumn{2}{c}{Informer sin PE} \\
@@ -822,12 +823,12 @@ En este caso, los parámetros del modelo empleados han requerido algunas modific
 				MSE          & 1,0965 & 0,1064 & 1,2470 & 0,1375 & 1,1481 & 0,1012 & 1,1334 & 0,1216 & 1,2251 & 0,2137 \\
 				MAE          & 0,3566 & 0,0200 & 0,3861 & 0,0164 & 0,3170 & 0,0070 & 0,3126 & 0,0215 & 0,3665 & 0,0179 \\
 				MAPE         & 2,7806 & 0,2133 & 3,1304 & 0,2238 & 2,5239 & 0,1584 & 2,5448 & 0,1148 & 2,8721 & 0,1068 \\
-				MSPE         & 110744,1614 & 41945,4380 & 83611,5625 & 5558,4220 & 48155,9020 & 22603,7360 & 49108,3987 & 23029,2045 & 74118,0937 & 52512,9700 \\
+				MSPE         & 110.744,1614 & 41.945,4380 & 83.611,5625 & 5.558,4220 & 48.155,9020 & 22.603,7360 & 49.108,3987 & 23.029,2045 & 74.118,0937 & 52.512,9700 \\
 				RMSE         & 1,0459 & 0,0501 & 1,1150 & 0,0605 & 1,0704 & 0,0476 & 1,0630 & 0,0582 & 1,1023 & 0,1001 \\
-				TrainTime(s) & 6437,7355 & 1826,0845 & 10709,4564 & 3030,9543 & 25612,5837 & 2671,7742 & 35866,6918 & 116,1472 & 14390,4460 & 7472,1130 \\
+				TrainTime(s) & 6.437,7355 & 1.826,0845 & 10.709,4564 & 3.030,9543 & 25.612,5837 & 2.671,7742 & 35.866,6918 & 116,1472 & 14.390,4460 & 7.472,1130 \\
 				TestTime(s)  & 75,9167 & 1,4791 & 191,6501 & 0,5390 & 471,9246 & 4,5382 & 438,9258 & 12,6343 & 212,1488 & 0,7698 \\
 				\bottomrule
-		\end{tabular}
+		\end{tabular}}
 		\caption{TINA: Métricas de rendimiento para los encodings analizados}
 		\label{tinacomparacion}
 	\end{table}
