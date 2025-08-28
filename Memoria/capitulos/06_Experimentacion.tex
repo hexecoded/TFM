@@ -66,7 +66,7 @@ Para realizar una comparativa justa de los resultados, se han empleado en todos 
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|l}
+	\begin{tabular}{l|c}
 		\toprule
 		Parámetro & Valor \\
 		\midrule
@@ -272,9 +272,9 @@ Y ahora, debemos volver a hacer hincapié sobre el objetivo que estamos persigui
 En la Tabla \ref{hpcresultados_modelos}, podemos encontrar los resultados, del cual podemos extraer varias conclusiones:
 \begin{table}[ht]
 	\centering
-	\begin{tabular}{l|N|N|N|N}
+	\begin{tabular}{l|NN|NN}
 		\toprule
-		Modelo & \text{MAE (Media)} & \text{MAE (STD)} & \text{MSE (Media)} & \text{MSE (STD)} \\
+		Modelo & \text{Test [s] (Media)} & \text{Test [s] (STD)} & \text{Train [s] (Media)} & \text{Train [s] (STD)} \\
 		\midrule
 		WinStatFlex & 0,373488 & 0,006858 & 0,461892 & 0,004841 \\
 		WinStatTPE & 0,374392 & 0,004132 & 0,463651 & 0,001917 \\
@@ -292,9 +292,10 @@ En la Tabla \ref{hpcresultados_modelos}, podemos encontrar los resultados, del c
 
 \begin{table}[ht]
 	\centering
-	\begin{tabular}{l|N|N|N|N}
+	\begin{tabular}{l|NN|NN}
 		\toprule
-		Modelo & \text{Tº Test(s)} & \text{Tº Test(s)-STD} & \text{Tº Train(s)} & \text{Tº Train(s)-STD} \\
+		Modelo & \text{Test [s] (Media)} & \text{Test [s] (STD)} & \text{Train [s] (Media)} & \text{Train [s] (STD)} \\
+	
 		\midrule
 		WinStatFlex & 350,8360 & 5,5675 & 18.652,7244 & 128,3429 \\
 		WinStatTPE & 296,2529 & 1,9551 & 18.913,6335 & 28,7927 \\
@@ -343,7 +344,7 @@ Una vez configurado el entorno de pruebas, podemos pasar a la evaluación del mo
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|l}
+	\begin{tabular}{l|c}
 		\toprule
 		Parámetro & Valor \\
 		\midrule
@@ -546,7 +547,7 @@ Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos de
 
 \begin{table}[ht]
 	\centering
-	\begin{tabular}{l|N|N|N|N}
+	\begin{tabular}{l|NN|NN}
 		\toprule
 		Modelo & \text{MAE (Media)} & \text{MAE (STD)} & \text{MSE (Media)} & \text{MSE (STD)} \\
 		\midrule
@@ -575,7 +576,7 @@ Con todos los algoritmos ejecutados, y sus correspondientes análisis podemos de
 
 \begin{table}[ht]
 	\centering
-	\begin{tabular}{l|N|N|N|N}
+	\begin{tabular}{l|NN|NN}
 		\toprule
 		Modelo & \text{MAE (Media)} & \text{MAE (STD)} & \text{MSE (Media)} & \text{MSE (STD)} \\
 		\midrule
@@ -615,7 +616,7 @@ Una vez presentados los aspectos relevantes, podemos pasar a realizar las ejecuc
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|l}
+	\begin{tabular}{l|c}
 		\toprule
 		Parámetro & Valor \\
 		\midrule
@@ -733,7 +734,7 @@ Una vez obtenidas y analizadas las tablas de métricas correspondientes a cada u
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|c|c|c|c}
+	\begin{tabular}{l|cc|cc}
 		\toprule
 		Modelo & MSE (Media) & MSE (STD) & MAE (Media) & MAE (STD) \\
 		\midrule
@@ -788,13 +789,13 @@ En este caso, los parámetros del modelo empleados han requerido algunas modific
 
 \begin{table}[!ht]
 	\centering
-	\begin{tabular}{l|l}
+	\begin{tabular}{l|c}
 		\toprule
 		Parámetro & Valor \\
 		\midrule
 		{Modelo de atención} & Vanilla \\
 		{Tamaño de batch} & 32 \\
-		{Dropout} & 0.2 \\
+		{Dropout} & 0,2 \\
 		{Nº de ejecuciones} & 3 \\
 		{Tamaño de ventana} & 60 \\
 		{Longitud de secuencia} & 288 \\
@@ -906,7 +907,7 @@ Ahora que disponemos de todas las métricas recopiladas para cada modelo, podemo
 
 \begin{table}[h!]
 	\centering
-	\begin{tabular}{l|N|N|N|N}
+	\begin{tabular}{l|NN|NN}
 		\toprule
 		Modelo & \text{MSE (Media)} & \text{MSE (STD)} & \text{MAE (Media)} & \text{MAE (STD)} \\
 		\midrule
@@ -914,7 +915,7 @@ Ahora que disponemos de todas las métricas recopiladas para cada modelo, podemo
 		WinStatTPE & 1,1334 & 0,1216 & 0,3126 & 0,0215 \\
 		WinStatFlex & 1,1481 & 0,1012 & 0,3170 & 0,0070 \\
 		No PE & 1,2251 & 0,2137 & 0,3665 & 0,0179 \\
-		PE (sin/cos) & 1,2470 & 0,13759 & 0,3861 & 0,0164 \\
+		PE (sin/cos) & 1,2470 & 0,1375 & 0,3861 & 0,0164 \\
 		WinStatFlex (Shuf.) & 1,3399 & 0,1100 & 0,5094	 & 0,1025 \\
 		WinStatTPE (Shuf.) & 1,4412 & 0,1025 & 0,4511 & 0,0061 \\
 		\bottomrule 
@@ -981,6 +982,7 @@ Por tanto, tal y como se puede apreciar en la Tabla \ref{resumenfinal}, siguiend
 			\setlength{\tabcolsep}{7pt}%
 			\renewcommand{\arraystretch}{2}%
 			\begin{tabular}{ccccccccccc}
+				\toprule
 				\multirow{2}{*}{\begin{tabular}{c}Modelo \\ Métrica\end{tabular}} 
 				& \multicolumn{2}{c}{Informer} 
 				& \multicolumn{2}{c}{PE (sin/cos)} 
