@@ -380,3 +380,4 @@
 %\end{minipage}
   }
 \newcolumntype{N}{>{$}c<{$}}
+\newcolumntype{D}{>{$}r<{$}}

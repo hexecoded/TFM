@@ -96,7 +96,7 @@ A modo de resumen, se pueden encontrar los resultados de los PE en las tablas \r
 	% --- Tabla 1: Informer y PE ---
 	\begin{table}[H]
 		\centering
-			\begin{tabular}{l|NNNNNN}
+			\begin{tabular}{l|DDDDDD}
 			\toprule
 			& \multicolumn{2}{c}{Informer} & \multicolumn{2}{c}{PE seno-coseno} & \multicolumn{2}{c}{Informer sin PE} \\
 			\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
@@ -120,7 +120,7 @@ A modo de resumen, se pueden encontrar los resultados de los PE en las tablas \r
 	% --- Tabla 2: WinStat ---
 	\begin{table}[H]
 		\centering
-			\begin{tabular}{l|NNNNNNNNNN}
+			\begin{tabular}{l|DDDDDDDDDD}
 			\toprule
 			& \multicolumn{2}{c}{WinStat} & \multicolumn{2}{c}{WinStatLags} & \multicolumn{2}{c}{WinStatFlex} & \multicolumn{2}{c}{WinStatTPE} & \multicolumn{2}{c}{WinStatSPE} \\
 			\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
@@ -292,7 +292,7 @@ En la Tabla \ref{hpcresultados_modelos}, podemos encontrar los resultados, del c
 
 \begin{table}[ht]
 	\centering
-	\begin{tabular}{l|NN|NN}
+	\begin{tabular}{l|DD|DD}
 		\toprule
 		Modelo & \text{Test [s] (Media)} & \text{Test [s] (STD)} & \text{Train [s] (Media)} & \text{Train [s] (STD)} \\
 	
@@ -381,7 +381,8 @@ En la Tabla \ref{etth1tabla} se pueden encontrar los resultados finales para el 
 	% --- Tabla ETTh1 ---
 	\begin{table}[H]
 		\centering
-			\begin{tabular}{l|NNNNNNNNNN}
+		\resizebox{\linewidth}{!}{
+			\begin{tabular}{l|DDDDDDDDDD}
 			\toprule
 			& \multicolumn{2}{c}{Informer} & \multicolumn{2}{c}{PE seno-coseno} & \multicolumn{2}{c}{WinStatFlex} & \multicolumn{2}{c}{WinStatTPE} & \multicolumn{2}{c}{Informer sin PE} \\
 			\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
@@ -395,7 +396,7 @@ En la Tabla \ref{etth1tabla} se pueden encontrar los resultados finales para el 
 			TrainTime(s) & 16,8195 & 1,7489 & 25,5205 & 0,3850 & 32,9894 & 3,7753 & 52,7320 & 0,9542 & 17,3358 & 3,1498 \\
 			TestTime(s)  & 0,3835 & 0,0025 & 0,6075 & 0,0037 & 0,8347 & 0,0243 & 1,3399 & 0,0432 & 0,4510 & 0,0435 \\
 			\bottomrule
-		\end{tabular}
+		\end{tabular}}
 		\caption{ETTh1: métricas de rendimiento para los encodings ejecutados}
 		\label{etth1tabla}
 	\end{table}
@@ -405,7 +406,7 @@ En la Tabla \ref{etth1tabla} se pueden encontrar los resultados finales para el 
 	% --- Tabla ETTh2 ---
 	\begin{table}[H]
 		\centering
-			\begin{tabular}{l|NNNNNNNNNN}
+			\begin{tabular}{l|DDDDDDDDDD}
 			\toprule
 			& \multicolumn{2}{c}{Informer} & \multicolumn{2}{c}{PE seno-coseno} & \multicolumn{2}{c}{WinStatFlex} & \multicolumn{2}{c}{WinStatTPE} & \multicolumn{2}{c}{Informer sin PE} \\
 			\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
@@ -815,7 +816,7 @@ En este caso, los parámetros del modelo empleados han requerido algunas modific
 	\begin{table}[H]
 		\centering
 		\resizebox{\linewidth}{!}{%
-			\begin{tabular}{l|NNNNNNNNNN}
+			\begin{tabular}{l|DDDDDDDDDD}
 			\toprule
 			& \multicolumn{2}{c}{Informer} & \multicolumn{2}{c}{PE seno-coseno} & \multicolumn{2}{c}{WinStatFlex} & \multicolumn{2}{c}{WinStatTPE} & \multicolumn{2}{c}{Informer sin PE} \\
 			\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7} \cmidrule(lr){8-9} \cmidrule(lr){10-11}
@@ -962,7 +963,7 @@ Con la finalización del análisis y experimentación sobre el dataset TINA, dis
 	 \item WinStatTPE resulta una alternativa interesante para WinStatFlex, pero se ve lastrado por su rendimiento. Los resultados generados por este encoding son también atractivos, dejándolo en segunda posición en cuanto a lo que rendimiento respecta. Su baja varianza en los resultados indica que se trata de un algoritmo muy estable numéricamente y que suele converger en puntos similares en sucesivas ejecuciones. Sin embargo, su tiempo de ejecución es considerablemente más elevado, por lo que en problemas donde la estabilidad numérica es crítica, como vimos en Yellow Trip o TINA, su rendimiento destaca, pero por lo general, se recomendaría el uso de WinStatFlex.
 \end{itemize}
 
-Por tanto, tal y como se puede apreciar en la Tabla \ref{resumenfinal}, siguiendo la metodología aplicada en el paper de Informer\cite{zhou2021informerefficienttransformerlong} y realizando el recuento de ejecuciones en primer lugar, obtenemos el siguiente orden por rendimiento:
+Por tanto, tal y como se puede apreciar en la Tabla \ref{resumenfinal}, siguiendo la metodología aplicada en el paper de Informer\cite{zhou2021informerefficienttransformerlong} y realizando el recuento de ejecuciones en primer lugar, estimamos el siguiente orden por rendimiento:
 
 \begin{enumerate}
 	\item \textit{WinStatFlex}
