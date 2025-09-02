@@ -1,0 +1,113 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Thanks to Xu Minghao's work                        %
+% I modify it into uchicago version                  %
+% to not make new bug, I don't alter "Ritsumeikan"   %
+% keywords in file. Pls feel free to use             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A Beamer template for Ritsumeikan University       %
+% Author: Ming-Hao Xu (Xu Minghao)                   %
+% Date:   April 2022.                                %
+% LPPL Licensed.                                     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[compress]{beamer}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{lipsum}
+\usepackage{ragged2e}
+\usepackage{hyperref}
+\usepackage{float}
+\usepackage{url}
+\usepackage{multicol}
+\usepackage{subfigure}
+
+\usetheme{Berlin}
+\useoutertheme{miniframes}
+\setbeamertemplate{navigation symbols}{} 
+
+
+\newcommand{\celda}[1]{
+	\begin{minipage}{2.5cm}
+		\vspace{5mm}
+		#1
+		\vspace{5mm}
+	\end{minipage}
+}
+
+\author[Cristhian Moya Mota]{Cristhian Moya Mota}
+\title[PE en Series Temporales]{Estudio sobre la Efectividad del Positional Encoding en Transformers para Series Temporales y Diseño de Mecanismos Adaptados}
+\date{8 de septiembre de 2025} 
+
+\logo{\includegraphics[scale=0.04]{pic/logo}}
+\institute[UGR]{
+	\inst{}
+	Tutor: Julián Luengo Martín\\Departamento de Ciencias de la Computación e Inteligencia Artificial\\
+	\inst{ }
+	Cotutor: Diego Jesús García Gil\\Departamento de Lenguajes y Sistemas Informáticos\\
+	\vspace{2mm}	
+}
+
+\AtBeginSection[]
+{
+	\begin{frame}<beamer>{Contenido}
+		\tableofcontents[currentsection,currentsubsection]
+	\end{frame}
+}
+
+
+\begin{document}
+	
+	\begin{frame}
+		\maketitle
+	\end{frame}
+	
+	\begin{frame}{Contenido}
+		\tableofcontents
+	\end{frame}
+	
+	
+	\section{Introducción}
+	
+	
+	\section{Estado del arte}
+	
+	\section{Propuestas de codificación y evaluación empírica de su rendimiento}
+
+
+\section{Conclusiones y trabajos futuros}
+\subsection{Conclusiones}
+\begin{frame}{}
+		El proyecto ha conseguido:
+	
+\end{frame}
+
+
+\subsection{Trabajos futuros}
+\begin{frame}{}
+	\
+\end{frame}
+
+
+\begin{frame}
+	\centering \textbf{Gracias}
+
+	\begin{figure}[H,font=\Small]
+		\centering
+		\subfigure{\includegraphics[width=0.2\textwidth]{pic/QRTFM}} 
+		\label{fig:calidad}
+		
+		¿Preguntas?
+		
+	\end{figure}
+	
+	
+\end{frame}
+
+
+\end{document}
