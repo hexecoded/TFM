@@ -26,11 +26,17 @@
 \usepackage{url}
 \usepackage{multicol}
 \usepackage{subfigure}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
 
 \usetheme{Berlin}
 \useoutertheme{miniframes}
 \setbeamertemplate{navigation symbols}{} 
 
+
+\newcolumntype{N}{>{$}c<{$}}
+\newcolumntype{D}{>{$}r<{$}}
 
 \newcommand{\celda}[1]{
 	\begin{minipage}{2.5cm}
@@ -151,7 +157,7 @@
 	
 	\end{frame}	 
 		
-	\section{Propuestas de positional encoding}
+	\section{Propuestas de PE}
 	\begin{frame}{Encodings propuestos: Aspectos clave}
 		Para mejorar la calidad del encoding, hay dos alternativas:
 		\begin{itemize}
@@ -162,15 +168,21 @@
 		Resultado: familia de modelos WinStat:
 		\begin{enumerate}
 			\item Sólo modificar la codificación posicional
-			\item Concatenar información en lugar únicamente sumarla
-			\item Combinar PE existentes de manera ponderada (normalizada con Softmax):
-			
-			$$X_{\text{final}} \gets \tilde{w}_0 \cdot \tilde{X} + \tilde{w}_1 \cdot X_{pe1} + \tilde{w}_2 \cdot X_{pe2} + \tilde{w}_3 \cdot X_{pe3}$$
+			\item \emph{Concatenar} información en lugar únicamente sumarla
+			\item \emph{Combinar PE existentes de manera ponderada} (normalizada con Softmax):
 			
 			 \end{enumerate}
 	\end{frame}
 	
-	\begin{frame}{Encodings propuestos: WinStat (Variante base)}
+	
+	\begin{frame}
+		\begin{figure}
+			\includegraphics[width=\linewidth]{pic/enhancedhybrid.png}
+		\end{figure}
+		
+	\end{frame}
+	
+	\begin{frame}{Encodings propuestos: \textbf{WinStat} (Variante base)}
 	Ventana local de tamaño $W$ fijo, en cada posición $t$:
 	
 	\begin{itemize}
@@ -184,7 +196,7 @@
 	s_t = [\,\mu_t,\, \sigma_t,\, m^{\min}_t,\, m^{\max}_t\,] \in \mathbb{R}^{4}
 	\]
 	
-	Y, finalmente, el embedding enriquecido de la posición $t$ es:
+	El embedding enriquecido de la posición $t$ es:
 	
 	\[
 	\tilde{x}_t = [\,x_t \, \| \, s_t\,] \in \mathbb{R}^{d+4}
@@ -205,7 +217,7 @@
 	\delta_t^{(\ell_j)} = | x_t - x_{t - \ell_j}|, \quad \text{si } t - \ell_j \geq 1
 	\]
 	
-	El \textit{embedding} enriquecido es la concatenaciçon de $s_t$ y $\delta_t^{(\ell_j)}$
+	El \textit{embedding} enriquecido es la concatenación de $s_t$ y $\delta_t^{(\ell_j)}$
 	\[
 	\tilde{x}_t = [\,x_t \,\|\, s_t \,\|\, \delta_t^{(\ell_1)} \,\|\, \dots \,\|\, \delta_t^{(\ell_p)}\,] \in \mathbb{R}^{d + 4 + p}
 	\]
@@ -270,7 +282,7 @@
 	 \end{itemize}
 	\end{frame}
 	
-	\section{Evaluación de los PE mediante conjuntos de datos}
+	\section{Evaluación de PE mediante conjuntos de datos}
 	
 	\begin{frame}{Evaluación. Conjuntos de datos}
 		Conjuntos de datos para la evaluación:
@@ -295,19 +307,259 @@
 		
 		\end{columns} 
 				
-	\end{frame}	
+	\end{frame}
+	
+	\begin{frame}{Evaluación. Condiciones de entrenamiento}
+		\begin{columns}
+			\column{0.55\linewidth}
+			\begin{enumerate}
+				\item Resultado a partir de ejecuciones múltiples promedio (semilla \textit{random})
+				\item Ejecución de encoding barajado para comprobar alcance de su aportación en cada modelo.
+				\item Métricas: MSE y MAE
+				\item Heurística para el tamaño de ventana: entre 1/3 y 1/4 de longitud de secuencia.
+			\end{enumerate}
+			
+			\column{0.45\linewidth}
+			\centering
+			\begin{figure}
+				\includegraphics[height=\columnwidth]{pic/wind.png}
+				\caption{Elección del tamaño de ventana}
+			\end{figure}
+			
+		\end{columns} 
+		
+		
+	\end{frame}
+	
+	\subsection{}
+	\begin{frame}{Evaluación. Household Power Consumption (I)}	
+		\begin{figure}
+			\includegraphics[width=\linewidth]{pic/hpcgraph.png}
+			\caption{Resultados de Household Power Consumption}
+		\end{figure}
+	\end{frame}
+	
+		\begin{frame}{Evaluación. Household Power Consumption (II)}	
+		\begin{figure}
+			\includegraphics[width=\linewidth]{pic/hpcgraphshuffled.png}
+			\caption{Resultados de HPC, con barajado en el PE}
+		\end{figure}
+	\end{frame}
+	
+	
+	\begin{frame}{Evaluación. Household Power Consumption (III)}
+		
+		\begin{table}[ht]
+		\centering
+		\resizebox{\textwidth}{!}{%
+		\begin{tabular}{l|N N|N N}
 
-\section{Conclusiones y trabajos futuros}
+			\toprule
+			Modelo & \text{MAE (Media)} & \text{MAE (STD)} & \text{MSE (Media)} & \text{MSE (STD)} \\
+			\midrule
+			WinStatFlex & 0,373488 & 0,006858 & 0,461892 & 0,004841 \\
+			WinStatTPE & 0,374392 & 0,004132 & 0,463651 & 0,001917 \\
+			Informer & 0,415272 & 0,012216 & 0,532965 & 0,010976 \\
+			No PE & 0,421343 & 0,005856 & 0,544844 & 0,005447 \\
+			Informer (Shuffled) & 0,419960 & 0,002769 & 0,548443 & 0,009148 \\
+			WinStatFlex (Shuffled) & 0,581124 & 0,021991 & 0,782092 & 0,027368 \\
+			WinStatTPE (Shuffled) & 0,581001 & 0,046717 & 0,851115 & 0,024083 \\
+			\bottomrule
+		\end{tabular}}
+		\label{hpcresultados_modelos}
+	\end{table}
+	\end{frame}
+	
+	\subsection{ETTh1}
+	\begin{frame}{Evaluación. ETTh1 y ETTh2 (I)}
+
+	\begin{figure}
+		\includegraphics[scale=0.225]{pic/etth1fin.png}
+	\end{figure}
+	
+	\begin{table}
+	\centering
+
+	\resizebox{!}{0.14\textheight}{%
+
+	\begin{tabular}{l|NN|NN}
+		\toprule
+		Modelo & \text{MAE (Media)} & \text{MAE (STD)} & \text{MSE (Media)} & \text{MSE (STD)} \\
+		\midrule
+		WinStatFlex            & 0,4947 & 0,0195 & 0,4660 & 0,0277 \\
+		WinStatTPE             & 0,5072 & 0,0312 & 0,4896 & 0,0482 \\
+		Informer               & 0,5324 & 0,0171 & 0,5458 & 0,0204 \\
+		PE (sin/cos)           & 0,5552 & 0,0531 & 0,5776 & 0,0755 \\
+		WinStatFlex (Shuf.)    & 0,6313 & 0,0276 & 0,6897 & 0,0461 \\
+		WinStatTPE (Shuf.)     & 0,6728 & 0,0358 & 0,8036 & 0,0667 \\
+		No PE                  & 0,7419 & 0,0509 & 0,9235 & 0,0841 \\
+		\bottomrule
+	\end{tabular}}	
+	\end{table}
+	
+	\end{frame}
+
+
+	\subsection{ETTh2}
+	\begin{frame}{Evaluación. ETTh1 y ETTh2 (II)}
+		
+		\begin{figure}
+			\includegraphics[scale=0.225]{pic/etth2fin.png}
+		\end{figure}
+		
+		\begin{table}
+			\centering
+			
+			\resizebox{!}{0.14\textheight}{%
+				
+			\begin{tabular}{l|NN|NN}
+			\toprule
+			Modelo & \text{MAE (Media)} & \text{MAE (STD)} & \text{MSE (Media)} & \text{MSE (STD)} \\
+			\midrule
+			WinStatFlex            & 0,5128 & 0,0651 & 0,4677 & 0,1018 \\
+			WinStatTPE             & 0,5889 & 0,0496 & 0,5964 & 0,0760 \\
+			WinStatTPE (Shuf.)     & 0,6892 & 0,0714 & 0,8294 & 0,1418 \\
+			WinStatFlex (Shuf.)    & 0,6929 & 0,0671 & 0,8608 & 0,1625 \\
+			Informer               & 0,7549 & 0,0540 & 0,8866 & 0,1001 \\
+			No PE                  & 0,7777 & 0,1199 & 1,0132 & 0,2417 \\
+			PE (sin/cos)           & 0,9355 & 0,0514 & 1,3881 & 0,1582 \\
+			\bottomrule
+		\end{tabular}
+				
+				}	
+		\end{table}
+		
+	\end{frame}
+	
+	\subsection{}
+	
+	\begin{frame}{Evaluación. Yellow Trip Data (I)}
+		
+		\begin{table}[!ht]
+			\centering
+			\resizebox{\textwidth}{!}{%
+				
+			\begin{tabular}{l|cc|cc}
+				\toprule
+				Modelo & MSE (Media) & MSE (STD) & MAE (Media) & MAE (STD) \\
+				\midrule
+				WinStatTPE & $1,0 \times 10^{-5}$ & $5,0 \times 10^{-6}$ & $2,547 \times 10^{-3}$ & $9,37 \times 10^{-4}$ \\
+				WinStatFlex & $1,7 \times 10^{-5}$ & $8,0 \times 10^{-6}$ & $3,529 \times 10^{-3}$ & $1,027 \times 10^{-3}$ \\
+				Informer & $1,9 \times 10^{-5}$ & $7,0 \times 10^{-6}$ & $3,987 \times 10^{-3}$ & $7,95 \times 10^{-4}$ \\
+				PE (sin/cos) & $2,4 \times 10^{-5}$ & $1,0 \times 10^{-5}$ & $4,307 \times 10^{-3}$ & $1,044 \times 10^{-3}$ \\
+				No PE & $4,6 \times 10^{-5}$ & $6,0 \times 10^{-5}$ & $4,626 \times 10^{-3}$ & $3,954 \times 10^{-3}$ \\
+				WinStatTPE (Shuf.) & $5,6 \times 10^{-5}$ & $6,3 \times 10^{-5}$ & $5,688 \times 10^{-3}$ & $3,983 \times 10^{-3}$ \\
+				WinStatFlex (Shuf.) & $1,302 \times 10^{-1}$ & $1,838 \times 10^{-1}$ & $7,203 \times 10^{-2}$ & $9,583 \times 10^{-2}$ \\
+				\bottomrule
+			\end{tabular}}
+
+			\label{taxifinal}
+		\end{table}
+		
+	\end{frame}
+	
+	\begin{frame}{Evaluación. Yellow Trip Data (II)}
+			\begin{figure}
+			\includegraphics[scale=0.26]{pic/taxifinalmse.png}
+		\end{figure}
+		
+		\begin{figure}
+			\includegraphics[scale=0.26]{pic/taxifinalmae.png}
+		\end{figure}
+	\end{frame}
+
+
+	\begin{frame}{Evaluación. TINA}
+		
+		
+		\begin{figure}
+			\includegraphics[scale=0.25]{pic/tinafinal2.png}
+		\end{figure}
+		
+		\begin{table}
+			\centering
+			
+			\resizebox{!}{0.14\textheight}{%
+				\begin{tabular}{l|NN|NN}
+					\toprule
+					Modelo & \text{MSE (Media)} & \text{MSE (STD)} & \text{MAE (Media)} & \text{MAE (STD)} \\
+					\midrule
+					Informer & 1,0965 & 0,1064 & 0,3566 & 0,0200 \\
+					WinStatTPE & 1,1334 & 0,1216 & 0,3126 & 0,0215 \\
+					WinStatFlex & 1,1481 & 0,1012 & 0,3170 & 0,0070 \\
+					No PE & 1,2251 & 0,2137 & 0,3665 & 0,0179 \\
+					PE (sin/cos) & 1,2470 & 0,1375 & 0,3861 & 0,0164 \\
+					WinStatFlex (Shuf.) & 1,3399 & 0,1100 & 0,5094	 & 0,1025 \\
+					WinStatTPE (Shuf.) & 1,4412 & 0,1025 & 0,4511 & 0,0061 \\
+					\bottomrule 
+				\end{tabular}
+				
+			}	
+		\end{table}
+		
+	\end{frame}
+	
+\begin{frame}{Evaluación. Resultados finales}
+	\begin{table}
+		\centering
+		\resizebox{\linewidth}{!}{%
+			\setlength{\tabcolsep}{7pt}%
+			\renewcommand{\arraystretch}{1.3}%
+			\begin{tabular}{c|cccccccccc}
+				\toprule
+				\multirow{2}{*}{\parbox{2cm}{\centering Modelo \\ Métrica}} 
+				& \multicolumn{2}{c}{Informer} 
+				& \multicolumn{2}{c}{PE (sin/cos)} 
+				& \multicolumn{2}{c}{WinStatFlex} 
+				& \multicolumn{2}{c}{WinStatTPE} 
+				& \multicolumn{2}{c}{No PE} \\
+				\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}\cmidrule(lr){10-11}
+				& MSE & MAE & MSE & MAE & MSE & MAE & MSE & MAE & MSE & MAE \\
+				\midrule
+				HPC   & $0.5329$ & $0.4152$ & $0.5377$ & $0.4140$ & $\mathbf{0.4618}$ & $\mathbf{0.3734}$ & $0.4636$ & $0.3743$ & $0.5448$ & $0.4213$ \\
+				ETTh1 & $0.5458$ & $0.5324$ & $0.5776$ & $0.5552$ & $\mathbf{0.4660}$ & $\mathbf{0.4947}$ & $0.4896$ & $0.5072$ & $0.9235$ & $0.7419$ \\
+				ETTh2 & $0.8866$ & $0.7549$ & $1.3881$ & $0.9355$ & $\mathbf{0.4677}$ & $\mathbf{0.5128}$ & $0.5964$ & $0.5889$ & $1.0132$ & $0.7777$ \\
+				Yellow Trip & $1.9\times10^{-5}$ & $3.987\times10^{-3}$ & $2.4\times10^{-5}$ & $4.307\times10^{-3}$ & $1.7\times10^{-5}$ & $3.529\times10^{-3}$ & $\mathbf{1.0\times10^{-5}}$ & $\mathbf{2.547\times10^{-3}}$ & $4.6\times10^{-5}$ & $4.626\times10^{-3}$ \\
+				TINA  & $\mathbf{1.0965}$ & $0.3566$ & $1.2470$ & $0.3861$ & $1.1481$ & $0.3170$ & $1.1334$ & $\mathbf{0.3126}$ & $1.2251$ & $0.3665$ \\
+				\midrule\midrule
+				Count & \multicolumn{2}{c}{1} & \multicolumn{2}{c}{0} & \multicolumn{2}{c}{\textbf{6}} & \multicolumn{2}{c}{3} & \multicolumn{2}{c}{0} \\
+				\bottomrule
+			\end{tabular}}
+		\caption{Resumen de resultados finales}
+		\label{resumenfinal}
+	\end{table}
+\end{frame}
+		
+	
+\section{Conclusiones}
 \subsection{Conclusiones}
 \begin{frame}{}
 		El proyecto ha conseguido:
+		\begin{itemize}
+			\item Detectar el principal problema de la falta de localidad, asociada al encoding escaso proporcionado por el enfoque tradicional.
+			\item Ofrecer un conjunto de modelos que demuestran una mejora considerable de los resultados.
+			\item Demostrar empíricamente los resultados en varios conjuntos de datos sobre los que han sido evaluados.
+			\item Proponer un enfoque sencillo de comprender,  mediante estadísticos básicos y ponderaciones normalizadas.
+			\item Obtener, del conjunto de propuestas, un modelo novedoso y versátil, WinStatFlex, gracias a la creación de un entorno de pruebas estable.
+		\end{itemize}
 	
 \end{frame}
 
 
 \subsection{Trabajos futuros}
 \begin{frame}{}
-	\
+
+\begin{itemize}
+	\item Aplicación de las técnicas expuestas en la clasificación de series temporales.
+	\item Adaptación de los mecanismos de localidad para su uso en la detección de anomalías\footnote{https://timeeval.github.io/evaluation-paper/}
+	\item Mejorar el aprovechamiento de recursos: aprendizaje federado para la optimización de recursos y privacidad del dato.
+\end{itemize}
+
+
+\begin{figure}
+	\includegraphics[scale=0.3]{pic/anomaly.png}
+\end{figure}
+	
 \end{frame}
 
 
@@ -316,7 +568,7 @@
 
 	\begin{figure}[H,font=\Small]
 		\centering
-		\subfigure{\includegraphics[width=0.2\textwidth]{pic/QRTFM}} 
+		\subfigure{\includegraphics[width=0.25\textwidth]{pic/QRTFM}} 
 		\label{fig:calidad}
 		
 		¿Preguntas?
