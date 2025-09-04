@@ -1,11 +1,4 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Thanks to Xu Minghao's work                        %
-% I modify it into uchicago version                  %
-% to not make new bug, I don't alter "Ritsumeikan"   %
-% keywords in file. Pls feel free to use             %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % A Beamer template for Ritsumeikan University       %
 % Author: Ming-Hao Xu (Xu Minghao)                   %
 % Date:   April 2022.                                %
@@ -169,7 +162,7 @@
 		\begin{enumerate}
 			\item Sólo modificar la codificación posicional
 			\item \emph{Concatenar} información en lugar únicamente sumarla
-			\item \emph{Combinar PE existentes de manera ponderada} (normalizada con Softmax):
+			\item \emph{Combinar PE existentes de manera ponderada} (normalizada con Softmax)
 			
 			 \end{enumerate}
 	\end{frame}
@@ -178,6 +171,7 @@
 	\begin{frame}
 		\begin{figure}
 			\includegraphics[width=\linewidth]{pic/enhancedhybrid.png}
+			\caption{Arquitectura y proceso de adición del encoding}
 		\end{figure}
 		
 	\end{frame}
@@ -311,7 +305,7 @@
 	
 	\begin{frame}{Evaluación. Condiciones de entrenamiento}
 		\begin{columns}
-			\column{0.55\linewidth}
+			\column{0.5\linewidth}
 			\begin{enumerate}
 				\item Resultado a partir de ejecuciones múltiples promedio (semilla \textit{random})
 				\item Ejecución de encoding barajado para comprobar alcance de su aportación en cada modelo.
@@ -319,11 +313,11 @@
 				\item Heurística para el tamaño de ventana: entre 1/3 y 1/4 de longitud de secuencia.
 			\end{enumerate}
 			
-			\column{0.45\linewidth}
+			\column{0.5\linewidth}
 			\centering
 			\begin{figure}
 				\includegraphics[height=\columnwidth]{pic/wind.png}
-				\caption{Elección del tamaño de ventana}
+				\caption{Estudio tamaño de ventana}
 			\end{figure}
 			
 		\end{columns} 
@@ -367,10 +361,11 @@
 			\bottomrule
 		\end{tabular}}
 		\label{hpcresultados_modelos}
+			\caption{Resultados de las métricas de HPC}
 	\end{table}
 	\end{frame}
 	
-	\subsection{ETTh1}
+
 	\begin{frame}{Evaluación. ETTh1 y ETTh2 (I)}
 
 	\begin{figure}
@@ -394,15 +389,15 @@
 		WinStatTPE (Shuf.)     & 0,6728 & 0,0358 & 0,8036 & 0,0667 \\
 		No PE                  & 0,7419 & 0,0509 & 0,9235 & 0,0841 \\
 		\bottomrule
-	\end{tabular}}	
+	\end{tabular}}
+	\caption{Resultados obtenidos en ETTh1}		
 	\end{table}
 	
 	\end{frame}
 
 
-	\subsection{ETTh2}
+
 	\begin{frame}{Evaluación. ETTh1 y ETTh2 (II)}
-		
 		\begin{figure}
 			\includegraphics[scale=0.225]{pic/etth2fin.png}
 		\end{figure}
@@ -426,15 +421,16 @@
 			\bottomrule
 		\end{tabular}
 				
-				}	
+				}
+		\caption{Resultados obtenidos en ETTh2}	
 		\end{table}
+		
 		
 	\end{frame}
 	
-	\subsection{}
+
 	
 	\begin{frame}{Evaluación. Yellow Trip Data (I)}
-		
 		\begin{table}[!ht]
 			\centering
 			\resizebox{\textwidth}{!}{%
@@ -454,17 +450,19 @@
 			\end{tabular}}
 
 			\label{taxifinal}
+			\caption[]{Métricas obtenidas para Yellow Trip}
 		\end{table}
 		
 	\end{frame}
 	
 	\begin{frame}{Evaluación. Yellow Trip Data (II)}
 			\begin{figure}
-			\includegraphics[scale=0.26]{pic/taxifinalmse.png}
+			\includegraphics[scale=0.22]{pic/taxifinalmse.png}
 		\end{figure}
 		
 		\begin{figure}
-			\includegraphics[scale=0.26]{pic/taxifinalmae.png}
+			\includegraphics[scale=0.22]{pic/taxifinalmae.png}
+			\caption[]{MSE (arriba) y MSE (abajo) obtenido para cada modelo}
 		\end{figure}
 	\end{frame}
 
@@ -473,7 +471,7 @@
 		
 		
 		\begin{figure}
-			\includegraphics[scale=0.25]{pic/tinafinal2.png}
+			\includegraphics[scale=0.24]{pic/tinafinal2.png}
 		\end{figure}
 		
 		\begin{table}
@@ -494,17 +492,20 @@
 					\bottomrule 
 				\end{tabular}
 				
-			}	
+			}
+			\caption[]{Resultados para dataset TINA}	
 		\end{table}
 		
 	\end{frame}
 	
 \begin{frame}{Evaluación. Resultados finales}
 	\begin{table}
+
 		\centering
-		\resizebox{\linewidth}{!}{%
+		\hspace*{-0.55cm}\resizebox{1.1\linewidth}{!}{
 			\setlength{\tabcolsep}{7pt}%
 			\renewcommand{\arraystretch}{1.3}%
+			
 			\begin{tabular}{c|cccccccccc}
 				\toprule
 				\multirow{2}{*}{\parbox{2cm}{\centering Modelo \\ Métrica}} 
@@ -525,7 +526,7 @@
 				Count & \multicolumn{2}{c}{1} & \multicolumn{2}{c}{0} & \multicolumn{2}{c}{\textbf{6}} & \multicolumn{2}{c}{3} & \multicolumn{2}{c}{0} \\
 				\bottomrule
 			\end{tabular}}
-		\caption{Resumen de resultados finales}
+		\caption{Resumen final de resultados}
 		\label{resumenfinal}
 	\end{table}
 \end{frame}
@@ -537,10 +538,9 @@
 		El proyecto ha conseguido:
 		\begin{itemize}
 			\item Detectar el principal problema de la falta de localidad, asociada al encoding escaso proporcionado por el enfoque tradicional.
-			\item Ofrecer un conjunto de modelos que demuestran una mejora considerable de los resultados.
 			\item Demostrar empíricamente los resultados en varios conjuntos de datos sobre los que han sido evaluados.
 			\item Proponer un enfoque sencillo de comprender,  mediante estadísticos básicos y ponderaciones normalizadas.
-			\item Obtener, del conjunto de propuestas, un modelo novedoso y versátil, WinStatFlex, gracias a la creación de un entorno de pruebas estable.
+			\item Obtener, del conjunto de propuestas, un conjunto de PE alternativos que mejoren los resultados, como WinStatFlex, gracias a la creación de un entorno de pruebas estable.
 		\end{itemize}
 	
 \end{frame}
@@ -551,13 +551,14 @@
 
 \begin{itemize}
 	\item Aplicación de las técnicas expuestas en la clasificación de series temporales.
-	\item Adaptación de los mecanismos de localidad para su uso en la detección de anomalías\footnote{https://timeeval.github.io/evaluation-paper/}
+	\item Adaptación de los mecanismos de localidad para su uso en la detección de anomalías\footnote{https://timeeval.github.io/evaluation-paper/}.
 	\item Mejorar el aprovechamiento de recursos: aprendizaje federado para la optimización de recursos y privacidad del dato.
 \end{itemize}
 
 
 \begin{figure}
 	\includegraphics[scale=0.3]{pic/anomaly.png}
+	\caption{Detección de anomalías en series temporales}
 \end{figure}
 	
 \end{frame}

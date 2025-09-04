@@ -3,8 +3,6 @@
 \beamer@sectionintoc {2}{Estado del arte}{7}{0}{2}
 \beamer@sectionintoc {3}{Propuestas de PE}{10}{0}{3}
 \beamer@sectionintoc {4}{Evaluación de PE mediante conjuntos de datos}{17}{0}{4}
-\beamer@subsectionintoc {4}{2}{ETTh1}{23}{0}{4}
-\beamer@subsectionintoc {4}{3}{ETTh2}{24}{0}{4}
 \beamer@sectionintoc {5}{Conclusiones}{29}{0}{5}
 \beamer@subsectionintoc {5}{1}{Conclusiones}{30}{0}{5}
 \beamer@subsectionintoc {5}{2}{Trabajos futuros}{31}{0}{5}
